@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 
 
 public class MainActivity extends AppCompatActivity
@@ -114,6 +115,10 @@ public class MainActivity extends AppCompatActivity
          * fragment.
          */
         private static final String ARG_SECTION_NUMBER = "section_number";
+        /**
+         * Create AudioPlayer instance
+         */
+        public AudioPlayer mPlayer;
 
         /**
          * Returns a new instance of this fragment for the given section
@@ -133,7 +138,53 @@ public class MainActivity extends AppCompatActivity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_main, container, false);
+            View view = inflater.inflate(R.layout.fragment_main, container, false);
+
+            mPlayer = new AudioPlayer(getActivity());
+
+            final ImageButton playPause = (ImageButton) view.findViewById(R.id.buttonPlay);
+            // Set Image depending on play state
+            if (mPlayer.getIsPlaying()) {
+                //noinspection deprecation
+                playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+            } else {
+                //noinspection deprecation
+                playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
+            }
+
+            // Create listener
+            playPause.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (mPlayer.getIsPlaying()) {
+                        mPlayer.pause();
+                        playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
+                    } else {
+                        mPlayer.resume();
+                        playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+                    }
+                }
+            });
+
+            ImageButton rewind = (ImageButton) view.findViewById(R.id.buttonRewind);
+            rewind.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    mPlayer.rewind();
+                }
+            });
+
+            ImageButton forward = (ImageButton) view.findViewById(R.id.buttonForward);
+            forward.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    mPlayer.forward();
+                }
+            });
+
+            mPlayer.play(getActivity());
+
+            return view;
         }
 
         @Override
@@ -141,6 +192,12 @@ public class MainActivity extends AppCompatActivity
             super.onAttach(activity);
             ((MainActivity) activity).onSectionAttached(
                     getArguments().getInt(ARG_SECTION_NUMBER));
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            mPlayer.stop();
         }
     }
 
