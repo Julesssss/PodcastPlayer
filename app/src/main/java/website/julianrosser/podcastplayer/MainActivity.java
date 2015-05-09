@@ -13,7 +13,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 
+/**
+ * TODO
+ * - Call  MediaPlayer.onPrepare()
+ */
 
 public class MainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
@@ -118,7 +123,13 @@ public class MainActivity extends AppCompatActivity
         /**
          * Create AudioPlayer instance
          */
+
+        SeekBar seekBar;
+
         public AudioPlayer mPlayer;
+
+        public LibraryFragment() {
+        }
 
         /**
          * Returns a new instance of this fragment for the given section
@@ -130,9 +141,6 @@ public class MainActivity extends AppCompatActivity
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
             fragment.setArguments(args);
             return fragment;
-        }
-
-        public LibraryFragment() {
         }
 
         @Override
@@ -182,9 +190,43 @@ public class MainActivity extends AppCompatActivity
                 }
             });
 
-            mPlayer.play(getActivity());
+            seekBar = (SeekBar) view.findViewById(R.id.seekBar);
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                    mPlayer.seekTo(i);
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                }
+            });
+
+            mPlayer.play();
+
+            startProgressTracker();
 
             return view;
+        }
+
+        private void startProgressTracker() {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (mPlayer.getIsPlaying()) {
+                        seekBar.setProgress(mPlayer.getCurrentProgress());
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
         }
 
         @Override

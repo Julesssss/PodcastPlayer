@@ -7,7 +7,6 @@ import android.util.Log;
 public class AudioPlayer {
 
     private MediaPlayer mPlayer;
-    private Boolean isPlaying;
 
     public AudioPlayer(Context c) {
         Log.i("context", "Context: " + c.toString());
@@ -18,28 +17,23 @@ public class AudioPlayer {
                 stop();
             }
         });
-        isPlaying = false;
     }
 
-    public void play(Context c) {
+    public void play() {
         // Start MediaPlayer
         mPlayer.start();
-        isPlaying = true;
     }
 
     public void pause() {
         mPlayer.pause();
-        isPlaying = false;
     }
 
     public void resume() {
         mPlayer.start();
-        isPlaying = true;
     }
 
     public void stop() {
         mPlayer.stop();
-        isPlaying = false;
     }
 
     public int getPlayTime() {
@@ -54,6 +48,18 @@ public class AudioPlayer {
         mPlayer.seekTo(getPlayTime() + 2500);
     }
 
+    public void seekTo(int i) {
+        mPlayer.seekTo((this.getLength() / 100) * i);
+    }
+
+    public int getCurrentProgress() {
+        return mPlayer.getCurrentPosition();
+    }
+
+    public int getLength() {
+        return mPlayer.getDuration();
+    }
+
     public void release() {
         if (mPlayer != null) {
             mPlayer.release();
@@ -65,7 +71,7 @@ public class AudioPlayer {
         if (null == mPlayer) {
             return false;
         } else {
-            return isPlaying;
+            return mPlayer.isPlaying();
         }
 
     }
