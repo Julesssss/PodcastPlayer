@@ -1,16 +1,29 @@
 package website.julianrosser.podcastplayer;
 
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.ArrayList;
+
 /**
  * TODO
- * -
+ * - Keep functions in PlayerFragment and just call static mPlayer?
  */
 
 public class MainActivity extends AppCompatActivity
@@ -21,11 +34,22 @@ public class MainActivity extends AppCompatActivity
 
     // Used to store the last screen title. For use in {@link #restoreActionBar()}.
     private CharSequence mTitle;
+    private String TAG = getClass().getSimpleName();
+    public static ArrayList<Song> songList;
+
+    public static MusicService musicSrv;
+    private Intent playIntent;
+    private boolean musicBound=false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        songList = new ArrayList<Song>();
+
+        getSongList();
 
         // Get Navigation Drawer
         mNavigationDrawerFragment = (NavigationDrawerFragment)
@@ -38,6 +62,83 @@ public class MainActivity extends AppCompatActivity
 
         mTitle = getTitle();
 
+        // Create and start service, don't play yet
+        Log.i(TAG, "Start Service:");
+        //Intent mAudioPlayerService = new Intent(this, AudioPlayerService.class);
+        //mAudioPlayerService.setAction(AudioPlayerService.ACTION_INIT);
+        //startService(mAudioPlayerService);
+
+        //startService(new Intent(AudioPlayerService.ACTION_FOREGROUND).setClass(this, AudioPlayerService.class));
+
+        /**
+         * Stop service
+         *
+         * stopService(new Intent(this, AudioPlayerService.class));
+         *
+         */
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if(playIntent == null){
+            playIntent = new Intent(this, MusicService.class);
+            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+            startService(playIntent);
+        }
+    }
+
+    //connect to the service
+    private ServiceConnection musicConnection = new ServiceConnection(){
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
+            //get service
+            musicSrv = binder.getService();
+            //pass list
+            musicSrv.setList(MainActivity.songList);
+            musicBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            musicBound = false;
+        }
+    };
+
+    public void getSongList() {
+        Log.i(TAG, "getSongList");
+        //retrieve song info
+        ContentResolver musicResolver = getContentResolver();
+        Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+
+        if(musicCursor!=null && musicCursor.moveToFirst()){
+            //get columns
+            int titleColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media.TITLE);
+            int idColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media._ID);
+            int artistColumn = musicCursor.getColumnIndex
+                    (android.provider.MediaStore.Audio.Media.ARTIST);
+            //add songs to list
+            do {
+                long thisId = musicCursor.getLong(idColumn);
+                String thisTitle = musicCursor.getString(titleColumn);
+                String thisArtist = musicCursor.getString(artistColumn);
+                songList.add(new Song(thisId, thisTitle, thisArtist));
+            }
+            while (musicCursor.moveToNext());
+        }
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopService(playIntent);
+        musicSrv=null;
+        super.onDestroy();
     }
 
     @Override
@@ -49,6 +150,9 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
+    /**
+     * For each choice, if not currently displayed, display fragment and set title.
+     */
     public void onSectionAttached(int number) {
         switch (number) {
             case 1:

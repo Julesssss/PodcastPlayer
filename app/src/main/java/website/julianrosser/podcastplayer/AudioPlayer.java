@@ -163,7 +163,7 @@ public class AudioPlayer {
                         e.printStackTrace();
                     }
 
-                    PlayerFragment.seekBar.setProgress(PlayerFragment.mPlayer.getCurrentProgress());
+                    PlayerFragment.seekBar.setProgress(AudioPlayerService.getCurrentProgress());
                 }
                 Log.i("TAG", "NOT PLAYING, SO STOP");
 
