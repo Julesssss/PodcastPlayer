@@ -2,14 +2,12 @@ package website.julianrosser.podcastplayer;
 
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 
@@ -26,7 +24,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
      * fragment.
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
-    public static AudioPlayer mPlayer;
+    private static final String TAG = "PlayerFragment";
     /**
      * Create AudioPlayer instance
      */
@@ -37,10 +35,12 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
     static Uri[] tracks;
 
+
     /**
      * Required empty public constructor
      */
-    public PlayerFragment() {    }
+    public PlayerFragment() {
+    }
 
     /**
      * Returns a new instance of this fragment for the given section
@@ -65,41 +65,47 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 Uri.parse("android.resource://website.julianrosser.podcastplayer/" + R.raw.seven),
                 Uri.parse("android.resource://website.julianrosser.podcastplayer/" + R.raw.leanon)};
 
-        mPlayer = new AudioPlayer(getActivity(), tracks[new Random().nextInt(tracks.length)]);
-
         final ImageButton playPause = (ImageButton) view.findViewById(R.id.buttonPlay);
-        // Set Image depending on play state
-        if (mPlayer.getIsPlaying()) {
-            //noinspection deprecation
-            playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-        } else {
-            //noinspection deprecation
-            playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
-        }
+        playPause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (MainActivity.musicSrv != null) {
+                    MainActivity.musicSrv.setSong(new Random().nextInt(MainActivity.songList.size()));
+                    MainActivity.musicSrv.playSong();
+                    Log.i(TAG, "PLAY SONG");
+                } else {
+                    Log.i(TAG, "SERVICE NULL");
+                }
 
-        // Create listener
+
+            }
+        });
+
+
+
+        /*  Create listener
         playPause.setOnClickListener(new View.OnClickListener() {
             @SuppressWarnings("deprecation")
             @Override
             public void onClick(View view) {
-                if (mPlayer.getIsPlaying()) {
-                    mPlayer.pause();
+                if (AudioPlayerService.mPlayer.isPlaying()) {
+                    AudioPlayerService.mPlayer.pause();
                     playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
                 } else {
-                    mPlayer.resume();
+                    AudioPlayerService.resume();
                     playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
                 }
             }
         });
 
         //noinspection deprecation
-        playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+        //playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
 
         ImageButton rewind = (ImageButton) view.findViewById(R.id.buttonRewind);
         rewind.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mPlayer.rewind();
+            AudioPlayerService.rewind();
             }
         });
 
@@ -107,7 +113,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         forward.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mPlayer.forward();
+                AudioPlayerService.forward();
             }
         });
 
@@ -117,7 +123,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean fromUser) {
                 if (fromUser) {
-                    mPlayer.seekTo(i);
+                    AudioPlayerService.seekTo(i);
                 }
             }
 
@@ -136,14 +142,16 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             public void onClick(View view) {
                 Random r = new Random();
                 int i = r.nextInt(3);
-                mPlayer.setTrack(tracks[i]);
+                Intent mAudioPlayerService = new Intent(getActivity(), AudioPlayerService.class);
+                mAudioPlayerService.setAction(AudioPlayerService.ACTION_SET_TRACK);
+                getActivity().startService(mAudioPlayerService);
             }
         });
 
-        mPlayer.play();
-
+        */
         return view;
     }
+
 
     @Override
     public void onAttach(Activity activity) {
@@ -155,13 +163,13 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        mPlayer.release();
+        //AudioPlayerService.release();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mPlayer.stop();
+        // AudioPlayerService.stop();
     }
 }
 

@@ -256,7 +256,7 @@ public class NavigationDrawerFragment extends Fragment {
             return true;
         }
 
-        if (item.getItemId() == R.id.action_example) {
+        if (item.getItemId() == R.id.action_settings) {
             int r = new Random().nextInt(3);
             Style style = null;
             switch (r) {
