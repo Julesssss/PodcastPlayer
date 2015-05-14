@@ -2,7 +2,6 @@ package website.julianrosser.podcastplayer;
 
 
 import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,10 +30,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
     static SeekBar seekBar;
 
-    static Thread checkForPrep;
-
-    static Uri[] tracks;
-
 
     /**
      * Required empty public constructor
@@ -59,11 +54,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-        tracks = new Uri[]{Uri.parse("android.resource://website.julianrosser.podcastplayer/" +
-                R.raw.i), Uri.parse("android.resource://website.julianrosser.podcastplayer/" + R.raw.nero_satisfy),
-                Uri.parse("android.resource://website.julianrosser.podcastplayer/" + R.raw.sam_smith_lay_me_down_flume),
-                Uri.parse("android.resource://website.julianrosser.podcastplayer/" + R.raw.seven),
-                Uri.parse("android.resource://website.julianrosser.podcastplayer/" + R.raw.leanon)};
 
         final ImageButton playPause = (ImageButton) view.findViewById(R.id.buttonPlay);
         playPause.setOnClickListener(new View.OnClickListener() {
