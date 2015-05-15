@@ -1,5 +1,6 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/player_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000"
@@ -9,87 +10,93 @@
     tools:context=".MainActivity$PlaceholderFragment">
 
     <TextView
-        android:id="@+id/section_label"
+        android:id="@+id/songTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:background="#ff747474"
         android:layout_centerHorizontal="true"
-        android:text="@string/example_text"
         android:gravity="center"
+        android:padding="4dp"
         android:textColor="#fff"
-        android:textSize="24sp" />
+        android:textSize="21sp" />
+
+    <TextView
+        android:id="@+id/songArtist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/songTitle"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:textColor="#ccc"
+        android:textSize="18sp" />
 
     <Button
         android:id="@+id/buttonTrack"
-        android:text="@string/button_new_file"
-        android:textColor="#fff"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/section_label"
-        android:layout_centerHorizontal="true" />
+        android:layout_below="@+id/songArtist"
+        android:layout_centerHorizontal="true"
+        android:text="@string/button_new_file"
+        android:textColor="#fff" />
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/controlLayout"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="105sp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:background="#ff4d4d4d"
+        android:background="#000"
         android:orientation="horizontal"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
-        android:paddingTop="8dp"
         android:paddingBottom="8dp"
-        >
-
-
-        <ImageButton
-            android:id="@+id/buttonRewind"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="#ff4d4d4d"
-            android:scaleType="fitCenter"
-            android:contentDescription="@string/description_rewind_button"
-            android:src="@drawable/rewind" />
+        android:paddingTop="4dp">
 
         <ImageButton
             android:id="@+id/buttonPlay"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:scaleType="centerInside"
-            android:background="#ff4d4d4d"
+            android:layout_centerHorizontal="true"
+            android:background="#000"
             android:contentDescription="@string/description_play_button"
+            android:scaleType="centerInside"
             android:src="@drawable/play" />
 
         <ImageButton
-            android:id="@+id/buttonForward"
-            android:layout_width="0dp"
+            android:id="@+id/buttonRewind"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:scaleType="center"
-            android:background="#ff4d4d4d"
+            android:background="#000"
+            android:padding="10dp"
+            android:layout_toLeftOf="@id/buttonPlay"
+            android:contentDescription="@string/description_rewind_button"
+            android:scaleType="fitEnd"
+            android:src="@drawable/rewind" />
+
+        <ImageButton
+            android:id="@+id/buttonForward"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#000"
+            android:padding="10dp"
+            android:layout_toRightOf="@id/buttonPlay"
             android:contentDescription="@string/description_forward_button"
+            android:scaleType="fitStart"
             android:src="@drawable/forward" />
-    </LinearLayout>
+    </RelativeLayout>
 
     <SeekBar
         android:id="@+id/seekBar"
-        android:background="#ff747474"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@id/controlLayout" />
+        android:layout_above="@id/controlLayout"
+        android:background="#000" />
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@id/seekBar"
         android:layout_below="@id/buttonTrack"
-        android:scaleType="fitCenter"
-        android:src="@drawable/audio_icon"
         android:contentDescription="@string/image_audio_dsc"
-        android:layout_above="@id/seekBar"/>
+        android:scaleType="fitCenter"
+        android:src="@drawable/audio_icon" />
 
 </RelativeLayout>

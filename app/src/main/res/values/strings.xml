@@ -6,6 +6,7 @@
     <string name="title_section1">Now Playing</string>
     <string name="title_section2">Bookmarks</string>
     <string name="title_section3">Library</string>
+    <string name="title_section4">Playlists</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
@@ -22,9 +23,8 @@
     <string name="description_rewind_button">Rewind button</string>
 
     <!-- To be removed -->
-    <string name="example_text">This Week In Tech - 509</string>
+
+    <!-- To be placed -->
     <string name="notification_title">Notification Bar</string>
-    <string name="notification_message">MEssagE</string>
-    <string name="ticker_text">tick tick tick tick tickerrrrrrrrrrrrrrrrrr</string>
 
 </resources>
