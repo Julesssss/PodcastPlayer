@@ -1,13 +1,12 @@
 package website.julianrosser.podcastplayer;
 
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -24,23 +23,47 @@ import java.util.ArrayList;
 /**
  * TODO
  * - Keep functions in PlayerFragment and just call static mPlayer?
+ * - Override back button
+ *
+ * todo - load vies on refresh normally Including button!
  */
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks{
 
+    public static ArrayList<Song> songList;
+    public static MusicService musicSrv;
     // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
     private NavigationDrawerFragment mNavigationDrawerFragment;
-
     // Used to store the last screen title. For use in {@link #restoreActionBar()}.
     private CharSequence mTitle;
     private String TAG = getClass().getSimpleName();
-    public static ArrayList<Song> songList;
-
-    public static MusicService musicSrv;
     private Intent playIntent;
-    private boolean musicBound=false;
+    static boolean musicBound = false;
 
+    static boolean loadOnly = true;
+
+
+    static PlayerFragment playerFragment;
+
+    //connect to the service
+    private ServiceConnection musicConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
+            //get service
+            musicSrv = binder.getService();
+            //pass list
+            musicSrv.setList(MainActivity.songList);
+            musicBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            musicBound = false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +73,8 @@ public class MainActivity extends AppCompatActivity
         songList = new ArrayList<Song>();
 
         getSongList();
+
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         // Get Navigation Drawer
         mNavigationDrawerFragment = (NavigationDrawerFragment)
@@ -70,6 +95,9 @@ public class MainActivity extends AppCompatActivity
 
         //startService(new Intent(AudioPlayerService.ACTION_FOREGROUND).setClass(this, AudioPlayerService.class));
 
+        // Set up Media Controller Widget
+        //setController();
+
         /**
          * Stop service
          *
@@ -81,31 +109,28 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onStart() {
         super.onStart();
-        if(playIntent == null){
+        if (playIntent == null) {
             playIntent = new Intent(this, MusicService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
         }
     }
 
-    //connect to the service
-    private ServiceConnection musicConnection = new ServiceConnection(){
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
-            //get service
-            musicSrv = binder.getService();
-            //pass list
-            musicSrv.setList(MainActivity.songList);
-            musicBound = true;
+        if (musicConnection != null) {
+            unbindService(musicConnection);
         }
 
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            musicBound = false;
+        if (playIntent != null) {
+            stopService(playIntent);
         }
-    };
+
+        musicSrv = null;
+    }
+
 
     public void getSongList() {
         Log.i(TAG, "getSongList");
@@ -114,7 +139,7 @@ public class MainActivity extends AppCompatActivity
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
 
-        if(musicCursor!=null && musicCursor.moveToFirst()){
+        if (musicCursor != null && musicCursor.moveToFirst()) {
             //get columns
             int titleColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.TITLE);
@@ -131,22 +156,20 @@ public class MainActivity extends AppCompatActivity
             }
             while (musicCursor.moveToNext());
         }
-
-    }
-
-    @Override
-    protected void onDestroy() {
-        stopService(playIntent);
-        musicSrv=null;
-        super.onDestroy();
+        if (musicCursor != null) {
+            musicCursor.close();
+        }
     }
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
+
+        playerFragment = PlayerFragment.newInstance(position + 1);
+
         fragmentManager.beginTransaction()
-                .replace(R.id.container, PlayerFragment.newInstance(position + 1))
+                .replace(R.id.container, playerFragment)
                 .commit();
     }
 
@@ -164,6 +187,9 @@ public class MainActivity extends AppCompatActivity
             case 3:
                 mTitle = getString(R.string.title_section3);
                 break;
+            case 4:
+                mTitle = getString(R.string.title_section4);
+                break;
         }
     }
 
@@ -176,7 +202,6 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -205,4 +230,87 @@ public class MainActivity extends AppCompatActivity
 
         return super.onOptionsItemSelected(item);
     }
+
+    //play next
+    static void playNext() {
+        musicSrv.playNext();
+    }
+
+    //play previous
+    static public void playPrev() {
+        musicSrv.playPrev();
+    }
+
+    /**
+     * MediaPlayer controller methods
+
+
+    @Override
+    public void start() {
+        musicSrv.go();
+    }
+
+    @Override
+    public void pause() {
+        musicSrv.pausePlayer();
+    }
+
+    @Override
+    public int getDuration() {
+        if (musicSrv != null && musicBound && musicSrv.isPng()) {
+            return musicSrv.getDur();
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
+    public int getCurrentPosition() {
+        if (musicSrv != null && musicBound && musicSrv.isPng()) {
+            return musicSrv.getPosn();
+        } else {
+            return 0;
+        }
+    }
+
+    @Override
+    public void seekTo(int pos) {
+        musicSrv.seek(pos);
+    }
+
+    @Override
+    public boolean isPlaying() {
+        return musicSrv != null && musicBound && musicSrv.isPng();
+    }
+
+    @Override
+    public int getBufferPercentage() {
+        return 0;
+    }
+
+    @Override
+    public boolean canPause() {
+        return true;
+    }
+
+    @Override
+    public boolean canSeekBackward() {
+        return true;
+    }
+
+    @Override
+    static boolean canSeekForward() {
+        return true;
+    }
+
+    @Override
+    static int getAudioSessionId() {
+        return 0;
+    }
+     */
+
+
+
+
 }
+

@@ -7,10 +7,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
-
-import java.util.Random;
+import android.widget.TextView;
 
 
 /**
@@ -24,12 +24,13 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
     private static final String TAG = "PlayerFragment";
-    /**
-     * Create AudioPlayer instance
-     */
+
 
     static SeekBar seekBar;
 
+
+    static TextView textSongTitle;
+    static TextView textSongArtist;
 
     /**
      * Required empty public constructor
@@ -54,37 +55,80 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-
         final ImageButton playPause = (ImageButton) view.findViewById(R.id.buttonPlay);
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (MainActivity.musicSrv != null) {
-                    MainActivity.musicSrv.setSong(new Random().nextInt(MainActivity.songList.size()));
-                    MainActivity.musicSrv.playSong();
-                    Log.i(TAG, "PLAY SONG");
+                // if already playing, pause
+                if (MainActivity.musicSrv.isPng()) {
+
+                    MainActivity.musicSrv.pausePlayer();
+                    playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
+
                 } else {
-                    Log.i(TAG, "SERVICE NULL");
+
+                    // if initialized
+                    if (MainActivity.musicSrv != null && MainActivity.musicBound) {
+
+                        playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+                        MainActivity.musicSrv.go();
+                    } else {
+                        Log.i(TAG, "SERVICE NULL / PLAYER NOT BOUND");
+                    }
                 }
+            }
+        });
 
-
+        // New Audio Track Button
+        final Button newFile = (Button) view.findViewById(R.id.buttonTrack);
+        newFile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.musicSrv.playRandom();
+                playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
             }
         });
 
 
+        if (MainActivity.musicSrv != null && MainActivity.musicSrv.isPng()) {
+            textSongTitle = (TextView) view.findViewById(R.id.songTitle);
+            textSongArtist = (TextView) view.findViewById(R.id.songArtist);
+            textSongTitle.setText(MusicService.songTitle);
+            textSongArtist.setText(MusicService.songArtist);
+        }
+
+        // todo set if playing
+
+        ImageButton rewind = (ImageButton) view.findViewById(R.id.buttonRewind);
+        rewind.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.musicSrv.playPrev();
+            }
+        });
+
+        ImageButton forward = (ImageButton) view.findViewById(R.id.buttonForward);
+        forward.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.musicSrv.playNext();
+            }
+        });
+
+        // play current song
+        //MainActivity.musicSrv.playSong();
+       //Log.i(TAG, "PLAY SONG");
+
+
+        return view;
+    }
 
         /*  Create listener
         playPause.setOnClickListener(new View.OnClickListener() {
             @SuppressWarnings("deprecation")
             @Override
             public void onClick(View view) {
-                if (AudioPlayerService.mPlayer.isPlaying()) {
-                    AudioPlayerService.mPlayer.pause();
-                    playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
-                } else {
-                    AudioPlayerService.resume();
-                    playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-                }
+
             }
         });
 
@@ -139,8 +183,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         });
 
         */
-        return view;
-    }
 
 
     @Override
