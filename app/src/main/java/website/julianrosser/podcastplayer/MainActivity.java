@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity
     static boolean musicBound = false;
 
     static boolean loadOnly = true;
+    static boolean buttonClick;
 
 
     static PlayerFragment playerFragment;
