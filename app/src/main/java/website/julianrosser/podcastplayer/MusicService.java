@@ -30,12 +30,14 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     // Binder returned to Activity
     private final IBinder musicBind = new MusicBinder();
     //media mPlayer
-    private MediaPlayer mPlayer;
+    private static MediaPlayer mPlayer;
     //song list
     private ArrayList<Song> songs;
     //current position
     private int songPosition;
     private String TAG = getClass().getSimpleName();
+
+    Thread progressTracker;
 
     public MusicService() {
     }
@@ -56,6 +58,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 
         initMusicPlayer();
+        initProgressTracker();
     }
 
     @Override
@@ -90,18 +93,18 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             Log.e("MUSIC SERVICE", "Error setting data source", e);
         }
 
+        // Prepare Asynchronously
         mPlayer.prepareAsync();
 
         // If in view & not null, set player title to song
-        if (MainActivity.playerFragment != null && MainActivity.playerFragment.isVisible()) {
-            Log.i(TAG, "Visable");
+        if (MainActivity.playerFragment != null) { // && MainActivity.playerFragment.isVisible()) {
+            //Log.i(TAG, "Visable");
 
             if (PlayerFragment.textSongTitle != null) {
-                Log.i(TAG, "TextView 1 Not null");
                 PlayerFragment.textSongTitle.setText(songTitle);
             }
+
             if (PlayerFragment.textSongArtist != null) {
-                Log.i(TAG, "TextView 2 Not null");
                 PlayerFragment.textSongArtist.setText(songArtist);
             }
         }
@@ -132,22 +135,18 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        Log.e(getClass().getSimpleName(), "Error, resetting MediaPlayer");
         mp.reset();
-        // todo extraaaaa
         return false;
     }
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
-        // todo if wanted start else just load
-        if (!MainActivity.loadOnly) {
-            mediaPlayer.start();
-            MainActivity.loadOnly = false;
-        }
 
+        // Prepared, so play
+        mediaPlayer.start();
 
-        Log.i(getClass().getSimpleName(), "onPrepared");
-
+        // Notification code
         Intent notIntent = new Intent(this, MainActivity.class);
         notIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pendInt = PendingIntent.getActivity(this, 0,
@@ -190,14 +189,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         Log.i(TAG, "AudioFocusChanged: " + result);
     }
 
-    public int getPosn() {
-        return mPlayer.getCurrentPosition();
-    }
-
-    public int getDur() {
-        return mPlayer.getDuration();
-    }
-
     public boolean isPng() {
         return mPlayer.isPlaying();
     }
@@ -207,7 +198,20 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void seek(int posn) {
-        mPlayer.seekTo(posn);
+        Log.i(getClass().getSimpleName(), "Seek to: " + posn);
+        mPlayer.seekTo((getLength() / 1000) * posn);
+    }
+
+    public int getLength() {
+        return mPlayer.getDuration();
+    }
+
+    static int getCurrentProgress() {
+        double pos = mPlayer.getCurrentPosition();
+        double dur = mPlayer.getDuration();
+        double prog = (pos / dur) * 1000;
+
+        return (int)Math.round(prog * 10) / 10;
     }
 
     public void go() {
@@ -234,44 +238,28 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         playSong();
     }
 
-    public void loadLastSong() {
-        //play a song
-        mPlayer.reset();
-        //get song
-        Song playSong = songs.get(songPosition);
-        songTitle = playSong.getTitle();
-        songArtist = playSong.getArtist();
-        //get id
-        long currSong = playSong.getID();
-        //set uri
-        Uri trackUri = ContentUris.withAppendedId(
-                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                currSong);
 
-        try {
-            mPlayer.setDataSource(getApplicationContext(), trackUri);
-        } catch (Exception e) {
-            Log.e("MUSIC SERVICE", "Error setting data source", e);
-        }
+    public void initProgressTracker() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (mPlayer != null ) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
-        mPlayer.prepareAsync();
+                    Log.i("TAG", "tick");
+                    if (mPlayer.isPlaying() && PlayerFragment.seekBar != null)
+                    PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
+                }
+                Log.i("TAG", "ENDING THREAD");
 
-        // If in view & not null, set player title to song
-        if (MainActivity.playerFragment != null && MainActivity.playerFragment.isVisible()) {
-            Log.i(TAG, "Visable");
-
-            if (PlayerFragment.textSongTitle != null) {
-                Log.i(TAG, "TextView 1 Not null");
-                PlayerFragment.textSongTitle.setText(songTitle);
             }
-            if (PlayerFragment.textSongArtist != null) {
-                Log.i(TAG, "TextView 2 Not null");
-                PlayerFragment.textSongArtist.setText(songArtist);
-            }
-        }
-
-
+        }).start();
     }
+
 
     public class MusicBinder extends Binder {
         MusicService getService() {

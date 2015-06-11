@@ -55,6 +55,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
+        // Set up play / pause button
         final ImageButton playPause = (ImageButton) view.findViewById(R.id.buttonPlay);
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,16 +90,21 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             }
         });
 
-
-        if (MainActivity.musicSrv != null && MainActivity.musicSrv.isPng()) {
+        // Set track information if service is initialised
+        if (MainActivity.musicSrv != null) {
+            // Set track info
             textSongTitle = (TextView) view.findViewById(R.id.songTitle);
             textSongArtist = (TextView) view.findViewById(R.id.songArtist);
             textSongTitle.setText(MusicService.songTitle);
             textSongArtist.setText(MusicService.songArtist);
+
+            // set button to pause
+            if (MainActivity.musicSrv.isPng()) {
+                playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+            }
         }
 
-        // todo set if playing
-
+        // Rewind button listener
         ImageButton rewind = (ImageButton) view.findViewById(R.id.buttonRewind);
         rewind.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -107,6 +113,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             }
         });
 
+        // Forward button listener
         ImageButton forward = (ImageButton) view.findViewById(R.id.buttonForward);
         forward.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -115,13 +122,50 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             }
         });
 
-        // play current song
-        //MainActivity.musicSrv.playSong();
-       //Log.i(TAG, "PLAY SONG");
+        // Seek bar listener
+        seekBar = (SeekBar) view.findViewById(R.id.seekBar);
+        seekBar.setMax(1000);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean fromUser) {
+                if (fromUser) {
+                    MainActivity.musicSrv.seek(i);
+                }
+            }
 
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
+        // if song loaded,
+        if (MainActivity.musicSrv != null && MainActivity.musicSrv.isPng()) {
+            seekBar.setProgress(MusicService.getCurrentProgress());
+        }
 
         return view;
     }
+
+
+    /**
+     * Update textviews with track details
+
+    static void updateTrackInfo() {
+        if (MainActivity.musicSrv != null) {
+            textSongTitle = (TextView) view.findViewById(R.id.songTitle);
+            textSongArtist = (TextView) view.findViewById(R.id.songArtist);
+            textSongTitle.setText(MusicService.songTitle);
+            textSongArtist.setText(MusicService.songArtist);
+        } else {
+            Log.i("PlayerFragment", "Can't set text, service is null");
+        }
+    } */
+
+
 
         /*  Create listener
         playPause.setOnClickListener(new View.OnClickListener() {

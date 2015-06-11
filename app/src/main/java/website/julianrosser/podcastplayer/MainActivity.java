@@ -17,13 +17,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
 /**
+ * LOG
+ *
+ * 11/06 - Opened project for the first time in weeks, NOT a good idea to leave bugs for a long time, took me a while to work out what the problem was then debug.
+ */
+
+/**
  * TODO
- * - Keep functions in PlayerFragment and just call static mPlayer?
  * - Override back button
+ * - touch seek bar to expand
+ * - only update seek bar when in view
  *
  * todo - load vies on refresh normally Including button!
  */
@@ -41,7 +49,6 @@ public class MainActivity extends AppCompatActivity
     private Intent playIntent;
     static boolean musicBound = false;
 
-    static boolean loadOnly = true;
     static boolean buttonClick;
 
 
@@ -58,6 +65,9 @@ public class MainActivity extends AppCompatActivity
             //pass list
             musicSrv.setList(MainActivity.songList);
             musicBound = true;
+
+            getNewPlayerFragment(0);
+
         }
 
         @Override
@@ -89,7 +99,7 @@ public class MainActivity extends AppCompatActivity
         mTitle = getTitle();
 
         // Create and start service, don't play yet
-        Log.i(TAG, "Start Service:");
+        Log.i(TAG, "Starting Service...");
         //Intent mAudioPlayerService = new Intent(this, AudioPlayerService.class);
         //mAudioPlayerService.setAction(AudioPlayerService.ACTION_INIT);
         //startService(mAudioPlayerService);
@@ -105,6 +115,8 @@ public class MainActivity extends AppCompatActivity
          * stopService(new Intent(this, AudioPlayerService.class));
          *
          */
+
+
     }
 
     @Override
@@ -115,6 +127,7 @@ public class MainActivity extends AppCompatActivity
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
         }
+
     }
 
     @Override
@@ -131,7 +144,6 @@ public class MainActivity extends AppCompatActivity
 
         musicSrv = null;
     }
-
 
     public void getSongList() {
         Log.i(TAG, "getSongList");
@@ -164,6 +176,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
+        getNewPlayerFragment(position);
+    }
+
+    public void getNewPlayerFragment(int position) {
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
 
