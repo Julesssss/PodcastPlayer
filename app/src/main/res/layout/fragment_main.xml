@@ -29,15 +29,6 @@
         android:textColor="#ccc"
         android:textSize="18sp" />
 
-    <Button
-        android:id="@+id/buttonTrack"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/songArtist"
-        android:layout_centerHorizontal="true"
-        android:text="@string/button_new_file"
-        android:textColor="#fff" />
-
     <RelativeLayout
         android:id="@+id/controlLayout"
         android:layout_width="match_parent"
@@ -90,11 +81,35 @@
         android:layout_above="@id/controlLayout"
         android:background="#000" />
 
+    <TextView
+        android:id="@+id/textSongTimeCurrent"
+        android:layout_above="@id/seekBar"
+        android:layout_marginBottom="8dp"
+        android:textSize="13sp"
+        android:textColor="#fff"
+        android:text="0:00"
+        android:layout_marginLeft="8dp"
+        android:layout_alignLeft="@id/seekBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/textSongTimeLength"
+        android:layout_above="@id/seekBar"
+        android:layout_marginBottom="8dp"
+        android:textSize="13sp"
+        android:textColor="#fff"
+        android:text="4:27"
+        android:layout_marginRight="8dp"
+        android:layout_alignRight="@id/seekBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/seekBar"
-        android:layout_below="@id/buttonTrack"
+        android:layout_below="@id/songArtist"
         android:contentDescription="@string/image_audio_dsc"
         android:scaleType="fitCenter"
         android:src="@drawable/audio_icon" />

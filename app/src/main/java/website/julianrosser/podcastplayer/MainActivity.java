@@ -10,6 +10,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -24,20 +25,23 @@ import java.util.ArrayList;
 /**
  * LOG
  *
- * 11/06 - Opened project for the first time in weeks, NOT a good idea to leave bugs for a long time, took me a while to work out what the problem was then debug.
+ * 11/06 - Opened project for the first time in weeks, NOT a good idea to leave bugs for a long time,
+ * took me a while to work out what the problem was then debug.
+ * 12/06 - Built library listview fragment, layout view, added title and activity callbacks. Duration textview and code.
  */
 
 /**
  * TODO
  * - Override back button
+ * - play button when paused and click next
  * - touch seek bar to expand
  * - only update seek bar when in view
  *
- * todo - load vies on refresh normally Including button!
+ * todo - load files on refresh normally Including button!
  */
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks{
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, LibraryFragment.OnFragmentInteractionListener {
 
     public static ArrayList<Song> songList;
     public static MusicService musicSrv;
@@ -48,9 +52,6 @@ public class MainActivity extends AppCompatActivity
     private String TAG = getClass().getSimpleName();
     private Intent playIntent;
     static boolean musicBound = false;
-
-    static boolean buttonClick;
-
 
     static PlayerFragment playerFragment;
 
@@ -160,23 +161,40 @@ public class MainActivity extends AppCompatActivity
                     (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
+            int songLength = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
+
             //add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
-                songList.add(new Song(thisId, thisTitle, thisArtist));
+                String thisDuration = musicCursor.getString(songLength);
+                songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration));
             }
             while (musicCursor.moveToNext());
         }
         if (musicCursor != null) {
             musicCursor.close();
         }
+
+        Log.i(TAG, "Song list size: " + songList.size());
+
     }
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
-        getNewPlayerFragment(position);
+        Log.i(TAG, "Position " + position);
+        if (position == 0) {
+            getNewPlayerFragment(position);
+        } else if (position == 1) {
+            getNewBookmarkFragment(position);
+        } else if (position == 2) {
+            getNewLibraryFragment(position);
+        } else if (position == 3) {
+            getNewPlaylistFragment(position);
+        } else {
+            Log.e(TAG, "Nav drawer id error");
+        }
     }
 
     public void getNewPlayerFragment(int position) {
@@ -190,10 +208,30 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
+    public void getNewLibraryFragment(int position) {
+        // update the main content by replacing fragments
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        LibraryFragment libraryFragment = LibraryFragment.newInstance(position + 1);
+
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, libraryFragment)
+                .commit();
+    }
+
+    private void getNewBookmarkFragment(int position) {
+        // do nothing yet
+    }
+
+    private void getNewPlaylistFragment(int position) {
+        // do nothing yet
+    }
+
     /**
      * For each choice, if not currently displayed, display fragment and set title.
      */
     public void onSectionAttached(int number) {
+        Log.i(TAG, "Fragment Attatched: " + number);
         switch (number) {
             case 1:
                 mTitle = getString(R.string.title_section1);
@@ -243,6 +281,9 @@ public class MainActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        } else if (id == R.id.action_random) {
+            musicSrv.playRandom();
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -256,6 +297,11 @@ public class MainActivity extends AppCompatActivity
     //play previous
     static public void playPrev() {
         musicSrv.playPrev();
+    }
+
+    @Override
+    public void onFragmentInteraction(String id) {
+        Log.i(TAG, "onFragInter: " + id);
     }
 
     /**

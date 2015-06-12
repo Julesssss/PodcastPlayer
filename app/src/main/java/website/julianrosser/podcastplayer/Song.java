@@ -5,14 +5,16 @@ package website.julianrosser.podcastplayer;
  */
 public class Song {
 
-    private long id;
+    public long id;
     private String title;
     private String artist;
+    private String duration;
 
-    public Song(long songID, String songTitle, String songArtist) {
+    public Song(long songID, String songTitle, String songArtist, String songLength) {
         id = songID;
         title = songTitle;
         artist = songArtist;
+        duration = songLength;
     }
 
     public long getID() {
@@ -25,5 +27,9 @@ public class Song {
 
     public String getArtist() {
         return artist;
+    }
+
+    public String getLength() {
+        return duration;
     }
 }

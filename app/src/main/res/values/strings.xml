@@ -15,6 +15,7 @@
 
     <!-- Settings -->
     <string name="action_settings">Settings</string>
+    <string name="action_random">Random Song</string>
 
     <!-- Content Descriptions -->
     <string name="image_audio_dsc">Default file image</string>

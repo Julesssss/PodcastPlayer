@@ -27,6 +27,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     private static final int NOTIFY_ID = 1;
     static String songArtist = "";
     static String songTitle = "";
+    static String songDuration = "";
     // Binder returned to Activity
     private final IBinder musicBind = new MusicBinder();
     //media mPlayer
@@ -36,8 +37,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     //current position
     private int songPosition;
     private String TAG = getClass().getSimpleName();
-
-    Thread progressTracker;
 
     public MusicService() {
     }
@@ -80,6 +79,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         Song playSong = songs.get(songPosition);
         songTitle = playSong.getTitle();
         songArtist = playSong.getArtist();
+        songDuration = playSong.getLength();
         //get id
         long currSong = playSong.getID();
         //set uri
@@ -106,6 +106,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
             if (PlayerFragment.textSongArtist != null) {
                 PlayerFragment.textSongArtist.setText(songArtist);
+            }
+
+            if (PlayerFragment.textSongLength != null) {
+                PlayerFragment.textSongLength.setText(songDuration);
             }
         }
 
@@ -181,7 +185,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void setSong(int songIndex) {
+        mPlayer.reset();
         songPosition = songIndex;
+        playSong();
     }
 
     @Override
@@ -250,16 +256,18 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                         e.printStackTrace();
                     }
 
-                    Log.i("TAG", "tick");
-                    if (mPlayer.isPlaying() && PlayerFragment.seekBar != null)
-                    PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
+                    // Log.i("TAG", "tick");
+                    // todo error - is mplayer playing?
+                    if (PlayerFragment.seekBar != null) {
+                        PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
+                    }
+
                 }
                 Log.i("TAG", "ENDING THREAD");
 
             }
         }).start();
     }
-
 
     public class MusicBinder extends Binder {
         MusicService getService() {

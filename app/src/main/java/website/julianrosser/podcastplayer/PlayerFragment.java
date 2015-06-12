@@ -7,7 +7,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -31,6 +30,9 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
     static TextView textSongTitle;
     static TextView textSongArtist;
+
+    static TextView textSongCurrent;
+    static TextView textSongLength;
 
     /**
      * Required empty public constructor
@@ -80,15 +82,9 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             }
         });
 
-        // New Audio Track Button
-        final Button newFile = (Button) view.findViewById(R.id.buttonTrack);
-        newFile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                MainActivity.musicSrv.playRandom();
-                playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-            }
-        });
+        // Time TextViews
+        textSongCurrent = (TextView) view.findViewById(R.id.textSongTimeCurrent);
+        textSongLength = (TextView) view.findViewById(R.id.textSongTimeLength);
 
         // Set track information if service is initialised
         if (MainActivity.musicSrv != null) {
@@ -97,6 +93,9 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             textSongArtist = (TextView) view.findViewById(R.id.songArtist);
             textSongTitle.setText(MusicService.songTitle);
             textSongArtist.setText(MusicService.songArtist);
+
+            textSongCurrent.setText("0:00");
+            textSongLength.setText(MusicService.songDuration);
 
             // set button to pause
             if (MainActivity.musicSrv.isPng()) {
@@ -121,6 +120,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 MainActivity.musicSrv.playNext();
             }
         });
+
 
         // Seek bar listener
         seekBar = (SeekBar) view.findViewById(R.id.seekBar);
