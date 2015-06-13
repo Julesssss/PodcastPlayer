@@ -8,8 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.TextView;
 
 
@@ -25,17 +23,16 @@ import android.widget.TextView;
 public class LibraryFragment extends android.support.v4.app.Fragment implements AbsListView.OnItemClickListener {
 
     private static final String ARG_SECTION_NUMBER = "section_number";
-    private OnFragmentInteractionListener mListener;
-    /**
-     * The fragment's ListView/GridView.
-     */
-    private AbsListView mListView;
-
     /**
      * The Adapter which will be used to populate the ListView/GridView with
      * Views.
      */
     public SongListAdapter songListAdapter;
+    private OnFragmentInteractionListener mListener;
+    /**
+     * The fragment's ListView/GridView.
+     */
+    private AbsListView mListView;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the

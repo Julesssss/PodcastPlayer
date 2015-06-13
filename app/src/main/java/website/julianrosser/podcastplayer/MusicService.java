@@ -111,6 +111,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             if (PlayerFragment.textSongLength != null) {
                 PlayerFragment.textSongLength.setText(songDuration);
             }
+
+            if (PlayerFragment.textSongCurrent != null) {
+                PlayerFragment.textSongCurrent.setText("0:00");
+            }
         }
 
     }
@@ -149,6 +153,14 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         // Prepared, so play
         mediaPlayer.start();
+
+        // reset timer todo
+        // Start song timer todo
+
+
+        // Change play button
+        //noinspection deprecation
+        PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
 
         // Notification code
         Intent notIntent = new Intent(this, MainActivity.class);
@@ -200,11 +212,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void pausePlayer() {
+        // pause timer todo
         mPlayer.pause();
     }
 
     public void seek(int posn) {
-        Log.i(getClass().getSimpleName(), "Seek to: " + posn);
         mPlayer.seekTo((getLength() / 1000) * posn);
     }
 
@@ -222,6 +234,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public void go() {
         mPlayer.start();
+        // resume song timer todo
     }
 
     public void playPrev() {
@@ -244,11 +257,37 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         playSong();
     }
 
+    static String getSongLength(String s) {
+        // Time conversion
+        double songLength = Double.valueOf(s) / 1000;
+        int mins = (int) songLength / 60;
+        double secs = Math.round(songLength % 60);
+        return mins + ":" + (int)secs;
+    }
+
+    static String getFormattedCurrentTime() {
+        // Time conversion
+        double songLength = (double) mPlayer.getCurrentPosition() / 1000;
+        int mins = (int) songLength / 60;
+        double secs = Math.round(songLength % 60);
+        return mins + ":" + (int)secs;
+    }
 
     public void initProgressTracker() {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                for (int i = 0; i < 10; i++) {
+                    if (mPlayer == null) {
+                        Log.i(getClass().getSimpleName(), "Progress Tracker - Music Service not initialized: " + i);
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
                 while (mPlayer != null ) {
                     try {
                         Thread.sleep(500);
@@ -256,10 +295,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                         e.printStackTrace();
                     }
 
-                    // Log.i("TAG", "tick");
-                    // todo error - is mplayer playing?
                     if (PlayerFragment.seekBar != null) {
                         PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
+                    } else {
+                        Log.i(TAG, "SeekBar null!");
                     }
 
                 }

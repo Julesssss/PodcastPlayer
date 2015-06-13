@@ -27,6 +27,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
     static SeekBar seekBar;
 
+    static ImageButton playPause;
 
     static TextView textSongTitle;
     static TextView textSongArtist;
@@ -58,7 +59,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
         // Set up play / pause button
-        final ImageButton playPause = (ImageButton) view.findViewById(R.id.buttonPlay);
+        playPause = (ImageButton) view.findViewById(R.id.buttonPlay);
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

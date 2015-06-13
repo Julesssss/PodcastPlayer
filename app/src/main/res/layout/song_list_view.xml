@@ -10,6 +10,8 @@
     <TextView
         android:id="@+id/songListTitle"
         android:padding="8dp"
+        android:text="King Kunta"
+        android:textStyle="bold"
         android:textSize="18sp"
         android:textColor="#fff"
         android:layout_width="match_parent"

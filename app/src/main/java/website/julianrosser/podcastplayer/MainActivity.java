@@ -28,6 +28,7 @@ import java.util.ArrayList;
  * 11/06 - Opened project for the first time in weeks, NOT a good idea to leave bugs for a long time,
  * took me a while to work out what the problem was then debug.
  * 12/06 - Built library listview fragment, layout view, added title and activity callbacks. Duration textview and code.
+ * 13/06 - Worked on converting time for display. Put method in service, so it's called when needed, no need to do for every song.
  */
 
 /**
@@ -36,8 +37,7 @@ import java.util.ArrayList;
  * - play button when paused and click next
  * - touch seek bar to expand
  * - only update seek bar when in view
- *
- * todo - load files on refresh normally Including button!
+ * - load files on refresh normally Including button! ????????????? done?
  */
 
 public class MainActivity extends AppCompatActivity
@@ -146,6 +146,12 @@ public class MainActivity extends AppCompatActivity
         musicSrv = null;
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+    }
+
     public void getSongList() {
         Log.i(TAG, "getSongList");
         //retrieve song info
@@ -161,20 +167,35 @@ public class MainActivity extends AppCompatActivity
                     (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
-            int songLength = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
+            int songDuration = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
 
             //add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
-                String thisDuration = musicCursor.getString(songLength);
-                songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration));
+                String thisDuration = musicCursor.getString(songDuration);
+
+                if (thisDuration != null) {
+                    songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration));
+                }
+                //if (Double.valueOf(thisDuration) < 10000) {
+                //    Log.i(TAG, "Y");
+                //} else {
+                //    Log.i(TAG, "N");
+                //}
+
+
             }
             while (musicCursor.moveToNext());
         }
         if (musicCursor != null) {
             musicCursor.close();
+        }
+
+        // If empty, don't play??
+        if (songList.size() == 0){
+            // todo do somthing
         }
 
         Log.i(TAG, "Song list size: " + songList.size());
@@ -200,6 +221,7 @@ public class MainActivity extends AppCompatActivity
     public void getNewPlayerFragment(int position) {
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
+
 
         playerFragment = PlayerFragment.newInstance(position + 1);
 
