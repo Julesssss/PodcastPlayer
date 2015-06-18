@@ -1,18 +1,21 @@
-package website.julianrosser.podcastplayer;
+package website.julianrosser.podcastplayer.library;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-public class SongListAdapter extends BaseAdapter {
+import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.R;
+import website.julianrosser.podcastplayer.classes.Song;
+
+public class LibrarySongListAdapter extends BaseAdapter {
 
     public LayoutInflater inflater;
 
-    public SongListAdapter(Context c) {
+    public LibrarySongListAdapter(Context c) {
         inflater = LayoutInflater.from(c);
     }
 
@@ -41,9 +44,10 @@ public class SongListAdapter extends BaseAdapter {
         if (null == convertView) {
             holder = new ViewHolder();
 
-            convertView = inflater.inflate(R.layout.song_list_view, null);
+            convertView = inflater.inflate(R.layout.library_song_list_view, null);
 
             holder.title = (TextView) convertView.findViewById(R.id.songListTitle);
+            holder.artist = (TextView) convertView.findViewById(R.id.songListArtist);
 
             convertView.setTag(holder);
 
@@ -53,6 +57,7 @@ public class SongListAdapter extends BaseAdapter {
         }
 
         holder.title.setText(s.getTitle());
+        holder.artist.setText(s.getArtist());
 
         return convertView;
     }
@@ -61,6 +66,7 @@ public class SongListAdapter extends BaseAdapter {
     // classes
     static class ViewHolder {
         TextView title;
+        TextView artist;
 
     }
 

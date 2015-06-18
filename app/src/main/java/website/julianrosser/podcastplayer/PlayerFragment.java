@@ -143,28 +143,83 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             }
         });
 
-        // if song loaded,
+        // if song loaded, todo test
         if (MainActivity.musicSrv != null && MainActivity.musicSrv.isPng()) {
             seekBar.setProgress(MusicService.getCurrentProgress());
         }
 
+        startTimer();
+
         return view;
+
+    }
+
+    public void startTimer() {
+        new Thread(new Runnable() {
+            @Override
+
+            public void run() {
+
+
+                // Ensure Servce is initialized
+                for (int i = 0; i < 30; i++) {
+                    if (MusicService.mPlayer == null) {
+                        Log.i(getClass().getSimpleName(), "Progress Tracker - Music Service not initialized: " + i);
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                // update textview while service is alive
+                while (MusicService.mPlayer != null) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    // Get MainActivity for UI Thread
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Local reference for millis
+                                long millis = MusicService.mPlayer.getCurrentPosition();
+
+                                // Format time to mins, secs
+                                long second = (millis / 1000) % 60;
+                                int minutes = (int) (millis / 1000) / 60;
+
+                                // Set TextView with built string
+                                PlayerFragment.textSongCurrent.setText(String.valueOf(minutes) + ":" + String.format("%02d", second));
+                            }
+                        });
+                    }
+
+
+                }
+            }
+        }).start();
     }
 
 
     /**
      * Update textviews with track details
-
-    static void updateTrackInfo() {
-        if (MainActivity.musicSrv != null) {
-            textSongTitle = (TextView) view.findViewById(R.id.songTitle);
-            textSongArtist = (TextView) view.findViewById(R.id.songArtist);
-            textSongTitle.setText(MusicService.songTitle);
-            textSongArtist.setText(MusicService.songArtist);
-        } else {
-            Log.i("PlayerFragment", "Can't set text, service is null");
-        }
-    } */
+     * <p/>
+     * static void updateTrackInfo() {
+     * if (MainActivity.musicSrv != null) {
+     * textSongTitle = (TextView) view.findViewById(R.id.songTitle);
+     * textSongArtist = (TextView) view.findViewById(R.id.songArtist);
+     * textSongTitle.setText(MusicService.songTitle);
+     * textSongArtist.setText(MusicService.songArtist);
+     * } else {
+     * Log.i("PlayerFragment", "Can't set text, service is null");
+     * }
+     * }
+     */
 
 
 
@@ -228,8 +283,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         });
 
         */
-
-
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);

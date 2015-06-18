@@ -18,9 +18,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Random;
+
+import website.julianrosser.podcastplayer.bookmarks.BookmarkFragment;
+import website.julianrosser.podcastplayer.classes.Bookmark;
+import website.julianrosser.podcastplayer.classes.Song;
+import website.julianrosser.podcastplayer.library.LibraryFragment;
 
 /**
  * LOG
@@ -29,11 +35,15 @@ import java.util.ArrayList;
  * took me a while to work out what the problem was then debug.
  * 12/06 - Built library listview fragment, layout view, added title and activity callbacks. Duration textview and code.
  * 13/06 - Worked on converting time for display. Put method in service, so it's called when needed, no need to do for every song.
+ * 18/06 - Implemented bookmarks. Took a few hours to build runOnUiThread. App works well now, need to convert to specialized app now.
  */
 
 /**
  * TODO
+ * - ovveright old bookmarks
  * - Override back button
+ * - error when clicking song, skips
+ * - back sips to 0 secs, if less than 3 secs then skip backwards a song
  * - play button when paused and click next
  * - touch seek bar to expand
  * - only update seek bar when in view
@@ -41,9 +51,14 @@ import java.util.ArrayList;
  */
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks, LibraryFragment.OnFragmentInteractionListener {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, LibraryFragment.OnFragmentInteractionListener, BookmarkFragment.OnFragmentInteractionListener{
 
+    // Array of songs
     public static ArrayList<Song> songList;
+
+    // Array of bookmarks
+    public static ArrayList<Bookmark> bookmarkList;
+
     public static MusicService musicSrv;
     // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
     private NavigationDrawerFragment mNavigationDrawerFragment;
@@ -77,12 +92,17 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
+    public MainActivity getReference() {
+        return this;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        songList = new ArrayList<Song>();
+        songList = new ArrayList<>();
+        bookmarkList = new ArrayList<>();
 
         getSongList();
 
@@ -101,6 +121,7 @@ public class MainActivity extends AppCompatActivity
 
         // Create and start service, don't play yet
         Log.i(TAG, "Starting Service...");
+
         //Intent mAudioPlayerService = new Intent(this, AudioPlayerService.class);
         //mAudioPlayerService.setAction(AudioPlayerService.ACTION_INIT);
         //startService(mAudioPlayerService);
@@ -154,6 +175,7 @@ public class MainActivity extends AppCompatActivity
 
     public void getSongList() {
         Log.i(TAG, "getSongList");
+        int pos = 0;
         //retrieve song info
         ContentResolver musicResolver = getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -176,14 +198,12 @@ public class MainActivity extends AppCompatActivity
                 String thisArtist = musicCursor.getString(artistColumn);
                 String thisDuration = musicCursor.getString(songDuration);
 
+
+
                 if (thisDuration != null) {
-                    songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration));
+                    songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration, pos));
+                    pos += 1;
                 }
-                //if (Double.valueOf(thisDuration) < 10000) {
-                //    Log.i(TAG, "Y");
-                //} else {
-                //    Log.i(TAG, "N");
-                //}
 
 
             }
@@ -230,8 +250,18 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
-    public void getNewLibraryFragment(int position) {
+    public void getNewBookmarkFragment(int position) {
         // update the main content by replacing fragments
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        BookmarkFragment bookmarkFragment = BookmarkFragment.newInstance(position + 1);
+
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, bookmarkFragment)
+                .commit();
+    }
+
+    private void getNewLibraryFragment(int position) {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
         LibraryFragment libraryFragment = LibraryFragment.newInstance(position + 1);
@@ -239,10 +269,6 @@ public class MainActivity extends AppCompatActivity
         fragmentManager.beginTransaction()
                 .replace(R.id.container, libraryFragment)
                 .commit();
-    }
-
-    private void getNewBookmarkFragment(int position) {
-        // do nothing yet
     }
 
     private void getNewPlaylistFragment(int position) {
@@ -301,19 +327,44 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_bookmark) {
+            // get song
+            songList.get(MusicService.songPosition);
+            // get current pos
+            MusicService.mPlayer.getCurrentPosition();
+            // Add bookmark to list
+            Bookmark b = new Bookmark(songList.get(MusicService.songPosition), String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+
+            bookmarkList.add(b);
+            //Log.i("MainActivity", "Bookmark Added:   ID: " + b.getID() + "  - Title: " + b.getTitle());
+
+            Toast.makeText(this, "Bookmark saved at "  + b.getCurrentPosition(), Toast.LENGTH_LONG).show();
+
             return true;
         } else if (id == R.id.action_random) {
             musicSrv.playRandom();
+            return true;
+        } else if (id == R.id.action_settings) {
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    void updateSongElapsedText() {
+
+        if (PlayerFragment.textSongCurrent != null) {
+            PlayerFragment.textSongCurrent.setText("YOUSOUSOSU");
+            // PlayerFragment.textSongCurrent.setText(String.format("%tS", TimeUnit.MILLISECONDS.toMinutes((long) mPlayer.getCurrentPosition()) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes((long) mPlayer.getCurrentPosition()))));
+        } else {
+            Log.i("MainActivity", "TextSongCurrent null!");
+        }
+    }
+
     //play next
     static void playNext() {
         musicSrv.playNext();
+
     }
 
     //play previous

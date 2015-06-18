@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer;
+package website.julianrosser.podcastplayer.bookmarks;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -10,6 +10,11 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.TextView;
 
+import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.MusicService;
+import website.julianrosser.podcastplayer.R;
+import website.julianrosser.podcastplayer.classes.Bookmark;
+
 
 /**
  * A fragment representing a list of Items.
@@ -20,14 +25,14 @@ import android.widget.TextView;
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
-public class LibraryFragment extends android.support.v4.app.Fragment implements AbsListView.OnItemClickListener {
+public class BookmarkFragment extends android.support.v4.app.Fragment implements AbsListView.OnItemClickListener {
 
-    private static final String ARG_SECTION_NUMBER = "section_number";
+    private static final String ARG_SECTION_NUMBER = "bookmark";
     /**
      * The Adapter which will be used to populate the ListView/GridView with
      * Views.
      */
-    public SongListAdapter songListAdapter;
+    public BookmarkListAdapter bookmarkListAdapter;
     private OnFragmentInteractionListener mListener;
     /**
      * The fragment's ListView/GridView.
@@ -38,11 +43,11 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public LibraryFragment() {
+    public BookmarkFragment() {
     }
 
-    public static LibraryFragment newInstance(int sectionNumber) {
-        LibraryFragment fragment = new LibraryFragment();
+    public static BookmarkFragment newInstance(int sectionNumber) {
+        BookmarkFragment fragment = new BookmarkFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
@@ -54,7 +59,7 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
         super.onCreate(savedInstanceState);
 
         // Create custom adapter
-        songListAdapter = new SongListAdapter(getActivity());
+        bookmarkListAdapter = new BookmarkListAdapter(getActivity());
 
     }
 
@@ -65,7 +70,7 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
 
         // Set the custom adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
-        mListView.setAdapter(songListAdapter);
+        mListView.setAdapter(bookmarkListAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
@@ -96,13 +101,17 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        MainActivity.musicSrv.setSong(position);
+        Bookmark b = MainActivity.bookmarkList.get(position);
 
-        Log.i(getClass().getSimpleName(), "onItemClick: " + position);
+        MainActivity.musicSrv.setSongAtPos(b.getPos());
+
+        MusicService.seekTo = b.getCurrentPositionInMillis();
+
+        Log.i(getClass().getSimpleName(), "onItemClick: " + b.getTitle());
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onFragmentInteraction(String.valueOf(MainActivity.songList.get(position).getTitle()));
+            mListener.onFragmentInteraction(String.valueOf(MainActivity.bookmarkList.get(position).getArtist()));
         }
 
     }

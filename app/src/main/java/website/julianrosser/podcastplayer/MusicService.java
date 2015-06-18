@@ -16,9 +16,12 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Random;
+
+import website.julianrosser.podcastplayer.classes.Song;
 
 
 public class MusicService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
@@ -31,12 +34,17 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     // Binder returned to Activity
     private final IBinder musicBind = new MusicBinder();
     //media mPlayer
-    private static MediaPlayer mPlayer;
+    public static MediaPlayer mPlayer;
     //song list
     private ArrayList<Song> songs;
     //current position
-    private int songPosition;
+    static int songPosition;
     private String TAG = getClass().getSimpleName();
+
+    // if true, seek to pos
+    boolean loadFromBookmark;
+    // pos to seek to
+    public static int seekTo;
 
     public MusicService() {
     }
@@ -76,44 +84,50 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         //play a song
         mPlayer.reset();
         //get song
-        Song playSong = songs.get(songPosition);
-        songTitle = playSong.getTitle();
-        songArtist = playSong.getArtist();
-        songDuration = playSong.getLength();
-        //get id
-        long currSong = playSong.getID();
-        //set uri
-        Uri trackUri = ContentUris.withAppendedId(
-                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                currSong);
 
-        try {
-            mPlayer.setDataSource(getApplicationContext(), trackUri);
-        } catch (Exception e) {
-            Log.e("MUSIC SERVICE", "Error setting data source", e);
-        }
+        if (songs.size() == 0) {
+            Toast.makeText(this, "No songs on device", Toast.LENGTH_SHORT).show();
+        } else {
 
-        // Prepare Asynchronously
-        mPlayer.prepareAsync();
+            Song playSong = songs.get(songPosition);
+            songTitle = playSong.getTitle();
+            songArtist = playSong.getArtist();
+            songDuration = playSong.getLength();
+            //get id
+            long currSong = playSong.getID();
+            //set uri
+            Uri trackUri = ContentUris.withAppendedId(
+                    android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    currSong);
 
-        // If in view & not null, set player title to song
-        if (MainActivity.playerFragment != null) { // && MainActivity.playerFragment.isVisible()) {
-            //Log.i(TAG, "Visable");
-
-            if (PlayerFragment.textSongTitle != null) {
-                PlayerFragment.textSongTitle.setText(songTitle);
+            try {
+                mPlayer.setDataSource(getApplicationContext(), trackUri);
+            } catch (Exception e) {
+                Log.e("MUSIC SERVICE", "Error setting data source", e);
             }
 
-            if (PlayerFragment.textSongArtist != null) {
-                PlayerFragment.textSongArtist.setText(songArtist);
-            }
+            // Prepare Asynchronously
+            mPlayer.prepareAsync();
 
-            if (PlayerFragment.textSongLength != null) {
-                PlayerFragment.textSongLength.setText(songDuration);
-            }
+            // If in view & not null, set player title to song
+            if (MainActivity.playerFragment != null) { // && MainActivity.playerFragment.isVisible()) {
+                //Log.i(TAG, "Visable");
 
-            if (PlayerFragment.textSongCurrent != null) {
-                PlayerFragment.textSongCurrent.setText("0:00");
+                if (PlayerFragment.textSongTitle != null) {
+                    PlayerFragment.textSongTitle.setText(songTitle);
+                }
+
+                if (PlayerFragment.textSongArtist != null) {
+                    PlayerFragment.textSongArtist.setText(songArtist);
+                }
+
+                if (PlayerFragment.textSongLength != null) {
+                    PlayerFragment.textSongLength.setText(songDuration);
+                }
+
+                if (PlayerFragment.textSongCurrent != null) {
+                    PlayerFragment.textSongCurrent.setText("0:00");
+                }
             }
         }
 
@@ -151,12 +165,13 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
 
+        if (loadFromBookmark) {
+            mPlayer.seekTo(seekTo);
+            loadFromBookmark = false;
+        }
+
         // Prepared, so play
         mediaPlayer.start();
-
-        // reset timer todo
-        // Start song timer todo
-
 
         // Change play button
         //noinspection deprecation
@@ -200,6 +215,13 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mPlayer.reset();
         songPosition = songIndex;
         playSong();
+    }
+
+    public void setSongAtPos(int songIndex) {
+        mPlayer.reset();
+        songPosition = songIndex;
+        playSong();
+        loadFromBookmark = true;
     }
 
     @Override
@@ -257,22 +279,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         playSong();
     }
 
-    static String getSongLength(String s) {
-        // Time conversion
-        double songLength = Double.valueOf(s) / 1000;
-        int mins = (int) songLength / 60;
-        double secs = Math.round(songLength % 60);
-        return mins + ":" + (int)secs;
-    }
-
-    static String getFormattedCurrentTime() {
-        // Time conversion
-        double songLength = (double) mPlayer.getCurrentPosition() / 1000;
-        int mins = (int) songLength / 60;
-        double secs = Math.round(songLength % 60);
-        return mins + ":" + (int)secs;
-    }
-
     public void initProgressTracker() {
         new Thread(new Runnable() {
             @Override
@@ -288,6 +294,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     }
                 }
 
+                // Update seekbar and time elapsed
                 while (mPlayer != null ) {
                     try {
                         Thread.sleep(500);
@@ -300,6 +307,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     } else {
                         Log.i(TAG, "SeekBar null!");
                     }
+
+                    // todo MainActivity.dodododod();
+
+
 
                 }
                 Log.i("TAG", "ENDING THREAD");

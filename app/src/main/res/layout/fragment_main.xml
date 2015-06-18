@@ -84,11 +84,10 @@
     <TextView
         android:id="@+id/textSongTimeCurrent"
         android:layout_above="@id/seekBar"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="8dp"
         android:textSize="13sp"
         android:textColor="#fff"
-        android:text="0:00"
-        android:layout_marginLeft="8dp"
+        android:layout_marginLeft="16dp"
         android:layout_alignLeft="@id/seekBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
@@ -96,11 +95,10 @@
     <TextView
         android:id="@+id/textSongTimeLength"
         android:layout_above="@id/seekBar"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:textSize="13sp"
         android:textColor="#fff"
-        android:text="4:27"
-        android:layout_marginRight="8dp"
+        android:layout_marginRight="16dp"
         android:layout_alignRight="@id/seekBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
