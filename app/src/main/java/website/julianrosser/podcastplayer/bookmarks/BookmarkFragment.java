@@ -105,7 +105,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
         MainActivity.musicSrv.setSongAtPos(b.getPos());
 
-        MusicService.seekTo = b.getCurrentPositionInMillis();
+        MusicService.millisecondToSeekTo = b.getCurrentPositionInMillis();
 
         Log.i(getClass().getSimpleName(), "onItemClick: " + b.getTitle());
         if (null != mListener) {

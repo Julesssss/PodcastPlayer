@@ -27,79 +27,89 @@ import website.julianrosser.podcastplayer.classes.Song;
 public class MusicService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
-    private static final int NOTIFY_ID = 1;
-    static String songArtist = "";
-    static String songTitle = "";
-    static String songDuration = "";
+    // For logging purposes
+    public String TAG = getClass().getSimpleName();
     // Binder returned to Activity
     private final IBinder musicBind = new MusicBinder();
-    //media mPlayer
+    // Notification id used when starting foreground Activity
+    private static final int NOTIFY_ID = 1;
+    // Song Information Strings
+    public static String songArtist = "";
+    public static String songTitle = "";
+    public static String songDuration = "";
+
+    // MediaPlayer reference
     public static MediaPlayer mPlayer;
-    //song list
+    // ArrayList of songs
     private ArrayList<Song> songs;
-    //current position
-    static int songPosition;
-    private String TAG = getClass().getSimpleName();
-
-    // if true, seek to pos
-    boolean loadFromBookmark;
-    // pos to seek to
-    public static int seekTo;
-
-    public MusicService() {
-    }
+    // The position of current song in the Song ArrayList
+    public static int songPosition = 0;
+    // De decide between loading from bookmark or playing from start
+    public boolean loadFromBookmark;
+    // Millisecond value of current bookmark
+    public static int millisecondToSeekTo;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        //initialize position
-        songPosition = 0;
-        //create mPlayer
+
+        // Create new MediaPlayer
         mPlayer = new MediaPlayer();
 
+        // Set listeners as implemented methods
         mPlayer.setOnPreparedListener(this);
         mPlayer.setOnCompletionListener(this);
         mPlayer.setOnErrorListener(this);
 
+        // Request Audio Focus to ensure app has priority when in use
         AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 
+        // Start initialization methods
         initMusicPlayer();
         initProgressTracker();
     }
 
-    @Override
-    public void onDestroy() {
-        stopForeground(true);
-    }
-
+    /**
+     * For setting up MusicPlayer settings
+     */
     public void initMusicPlayer() {
-        //set mPlayer properties
         mPlayer.setWakeMode(getApplicationContext(),
                 PowerManager.PARTIAL_WAKE_LOCK);
         mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
     }
 
+    @Override
+    public void onDestroy() {
+        // Remove Service from foreground when closed
+        stopForeground(true);
+    }
+
+    /**
+     *  Method for prepping MediaPlayer for new file and updating track information.
+     */
     public void playSong() {
-        //play a song
+
+        // Reset player
         mPlayer.reset();
-        //get song
 
+        // Ensure track list isn't empty
         if (songs.size() == 0) {
-            Toast.makeText(this, "No songs on device", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No songs showing on device. If incorrect, try closing app and restarting.", Toast.LENGTH_SHORT).show();
         } else {
-
+            // Get song Object and update information references
             Song playSong = songs.get(songPosition);
             songTitle = playSong.getTitle();
             songArtist = playSong.getArtist();
             songDuration = playSong.getLength();
-            //get id
+
+            // Get song ID, then create track URI
             long currSong = playSong.getID();
-            //set uri
             Uri trackUri = ContentUris.withAppendedId(
                     android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     currSong);
 
+            // Try to pass new Track to MediaPlayer
             try {
                 mPlayer.setDataSource(getApplicationContext(), trackUri);
             } catch (Exception e) {
@@ -109,9 +119,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             // Prepare Asynchronously
             mPlayer.prepareAsync();
 
-            // If in view & not null, set player title to song
-            if (MainActivity.playerFragment != null) { // && MainActivity.playerFragment.isVisible()) {
-                //Log.i(TAG, "Visable");
+            // If Fragment is in view & not null, update track information TextViews
+            if (MainActivity.playerFragment != null) { // TODO - Also needed --> ? && MainActivity.playerFragment.isVisible()) {
 
                 if (PlayerFragment.textSongTitle != null) {
                     PlayerFragment.textSongTitle.setText(songTitle);
@@ -127,66 +136,82 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
                 if (PlayerFragment.textSongCurrent != null) {
                     PlayerFragment.textSongCurrent.setText("0:00");
+                    // TODO - If loading from bookmark, update textview here, not from fragment.
                 }
             }
         }
 
     }
 
+    /**
+     * Method for passing device song list from MainActivity
+     */
     public void setList(ArrayList<Song> theSongs) {
         songs = theSongs;
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return musicBind;
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        mPlayer.stop();
-        mPlayer.release();
-        return false;
-    }
-
+    /**
+     * Decide what action to take when track finishes playing
+     */
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
         mPlayer.reset();
-        playNext();
+
+        if (MainActivity.shuffleMode) {
+            playRandom();
+        } else {
+            playNext();
+        }
     }
 
+    /**
+     * Method for handling individual MediaPlayer errors.
+     */
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
-        Log.e(getClass().getSimpleName(), "Error, resetting MediaPlayer");
+
+        Log.e(getPackageName(), String.format("Error(%s%s)", what, extra));
+
+        // TODO - Specific error handling
+        // if (what == MediaPlayer.MEDIA_ERROR_SERVER_DIED) {
+
+        // Reset Player
         mp.reset();
+
         return false;
     }
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
 
+        // If loading from a bookmark, seek to required position
         if (loadFromBookmark) {
-            mPlayer.seekTo(seekTo);
+            mPlayer.seekTo(millisecondToSeekTo);
             loadFromBookmark = false;
         }
 
-        // Prepared, so play
-        mediaPlayer.start();
+        // Prevent first loaded song from playing when app is started
+        if (MainActivity.firstPreparedSong) {
+            MainActivity.firstPreparedSong = false;
+        } else {
+            mediaPlayer.start();
+            //noinspection deprecation
+            PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+        }
 
-        // Change play button
-        //noinspection deprecation
-        PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-
-        // Notification code
+        // Create Intents for notification builder
         Intent notIntent = new Intent(this, MainActivity.class);
         notIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pendInt = PendingIntent.getActivity(this, 0,
                 notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        // Initialize builder
         Notification.Builder builder = new Notification.Builder(this);
-        // Gte Bitmap drawable
+
+        // Get Bitmap drawable for notification image
         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.play);
 
+        // Build notification with required settings
         builder.setContentIntent(pendInt)
                 .setSmallIcon(R.drawable.notification_play_icon)
                 .setLargeIcon(largeIcon)
@@ -195,28 +220,35 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 .setContentTitle(songTitle)
                 .setContentText(songArtist);
 
+        // Generic notification reference, needed to differentiate between old / new code below.
         Notification notification;
 
+        // If running Android version 16+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) { // api
-            // 16+
             notification = builder.build();
 
         } else {
+            // Running version 15 or below
             //noinspection deprecation
             notification = builder.getNotification();
         }
 
+        // Start ongoing notification
         startForeground(NOTIFY_ID, notification);
-
-
     }
 
+    /**
+     * For playing chosen song
+     */
     public void setSong(int songIndex) {
         mPlayer.reset();
         songPosition = songIndex;
         playSong();
     }
 
+    /**
+     * For playing song through bookmark Fragment.
+     */
     public void setSongAtPos(int songIndex) {
         mPlayer.reset();
         songPosition = songIndex;
@@ -229,17 +261,20 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         Log.i(TAG, "AudioFocusChanged: " + result);
     }
 
+    /**
+     * MediaPlayer Methods
+     */
     public boolean isPng() {
         return mPlayer.isPlaying();
     }
 
     public void pausePlayer() {
-        // pause timer todo
         mPlayer.pause();
     }
 
-    public void seek(int posn) {
-        mPlayer.seekTo((getLength() / 1000) * posn);
+    public void seek(int position) {
+        // todo - change 1000 to refernce
+        mPlayer.seekTo((getLength() / 1000) * position);
     }
 
     public int getLength() {
@@ -254,9 +289,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         return (int)Math.round(prog * 10) / 10;
     }
 
-    public void go() {
+    public void resume() {
         mPlayer.start();
-        // resume song timer todo
     }
 
     public void playPrev() {
@@ -279,13 +313,19 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         playSong();
     }
 
+    /**
+     * Thread for tracking song position and updating SeekBar
+     */
     public void initProgressTracker() {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                // Ensure MusicService is initialized before starting tracker
                 for (int i = 0; i < 10; i++) {
                     if (mPlayer == null) {
                         Log.i(getClass().getSimpleName(), "Progress Tracker - Music Service not initialized: " + i);
+
+                        // Player is null, wait 200ms then try again
                         try {
                             Thread.sleep(200);
                         } catch (InterruptedException e) {
@@ -294,34 +334,45 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     }
                 }
 
-                // Update seekbar and time elapsed
+                // mPlayer is initialized. Keep updating Seekbar while alive.
                 while (mPlayer != null ) {
+
+                    // Delay in ms between updates
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
 
-                    if (PlayerFragment.seekBar != null) {
+                    // Only attempt to get progress and update if SeekBar isn't null, and mPlayer is playing.
+                    if (PlayerFragment.seekBar != null && mPlayer.isPlaying()) {
                         PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
-                    } else {
-                        Log.i(TAG, "SeekBar null!");
                     }
-
-                    // todo MainActivity.dodododod();
-
-
-
                 }
-                Log.i("TAG", "ENDING THREAD");
 
+                Log.i("TAG", "Tracker Thread Ending");
             }
         }).start();
     }
 
+    /**
+     * Required Bind Methods
+     */
     public class MusicBinder extends Binder {
         MusicService getService() {
             return MusicService.this;
         }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return musicBind;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        mPlayer.stop();
+        mPlayer.release();
+        return false;
     }
 }
