@@ -10,6 +10,7 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -17,35 +18,42 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
-/**
- * TODO
- * - Keep functions in PlayerFragment and just call static mPlayer?
- * - Override back button
- *
- * todo - load vies on refresh normally Including button!
- */
+import website.julianrosser.podcastplayer.bookmarks.BookmarkFragment;
+import website.julianrosser.podcastplayer.classes.Bookmark;
+import website.julianrosser.podcastplayer.classes.Song;
+import website.julianrosser.podcastplayer.library.LibraryFragment;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks{
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, LibraryFragment.OnFragmentInteractionListener, BookmarkFragment.OnFragmentInteractionListener{
+
+    // Array of songs
 
     public static ArrayList<Song> songList;
+    // Array of bookmarks
+    public static ArrayList<Bookmark> bookmarkList;
+    // To check if MusicService is bound to Activity
+    public static boolean musicBound = false;
+    // To prevent song starting on first play
+    public static boolean firstPreparedSong = true;
+    // Shuffle mode boolean
+    public static boolean shuffleMode = true;
+    // Reference to music service
     public static MusicService musicSrv;
-    // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-    private NavigationDrawerFragment mNavigationDrawerFragment;
+    // Reference to PlayerFragment
+    public static PlayerFragment playerFragment;
+
     // Used to store the last screen title. For use in {@link #restoreActionBar()}.
     private CharSequence mTitle;
-    private String TAG = getClass().getSimpleName();
+    // Intent used for binding service to Activity
     private Intent playIntent;
-    static boolean musicBound = false;
-
-    static boolean loadOnly = true;
-    static boolean buttonClick;
-
-
-    static PlayerFragment playerFragment;
+    // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
+    private NavigationDrawerFragment mNavigationDrawerFragment;
+    // For logging purposes
+    private String TAG = getClass().getSimpleName();
 
     //connect to the service
     private ServiceConnection musicConnection = new ServiceConnection() {
@@ -53,11 +61,19 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
-            //get service
+            // Get service
             musicSrv = binder.getService();
-            //pass list
+            // Pass song list to - Should I check for empty list here?
             musicSrv.setList(MainActivity.songList);
+            // update boolean to show service is bound
             musicBound = true;
+            /**
+             * TODO
+             * This below is the second Fragment and shouldn't be needed. But when removed
+             * textviews aren't updated. Why does this happen?
+             */
+            getNewPlayerFragment(0);
+
         }
 
         @Override
@@ -71,42 +87,32 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        songList = new ArrayList<Song>();
+        // Initialize song and bookmark lists
+        songList = new ArrayList<>();
+        bookmarkList = new ArrayList<>();
 
+        // Search for songs and update list
         getSongList();
 
+        // Ensure volume buttons work correctly
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-        // Get Navigation Drawer
+        // Get Navigation Drawer reference
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
 
-        // Set up the drawer.
+        // Set up the navigation drawer.
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
+        // Get current Fragment title - todo - is this needed?
         mTitle = getTitle();
-
-        // Create and start service, don't play yet
-        Log.i(TAG, "Start Service:");
-        //Intent mAudioPlayerService = new Intent(this, AudioPlayerService.class);
-        //mAudioPlayerService.setAction(AudioPlayerService.ACTION_INIT);
-        //startService(mAudioPlayerService);
-
-        //startService(new Intent(AudioPlayerService.ACTION_FOREGROUND).setClass(this, AudioPlayerService.class));
-
-        // Set up Media Controller Widget
-        //setController();
-
-        /**
-         * Stop service
-         *
-         * stopService(new Intent(this, AudioPlayerService.class));
-         *
-         */
     }
 
+    /**
+     * Create player intent if currently null, bind to service  and start.
+     */
     @Override
     public void onStart() {
         super.onStart();
@@ -115,8 +121,12 @@ public class MainActivity extends AppCompatActivity
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
         }
+
     }
 
+    /**
+     * Unbind MusicService if app is closed, then stop and nullify MusicService
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -132,38 +142,85 @@ public class MainActivity extends AppCompatActivity
         musicSrv = null;
     }
 
+    /**
+     * TODO
+     * Ensure that back button has same function as home, and doesn't throw error.
+     */
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
 
+    }
+
+    /**
+     * Search phone for music tracks and add to the newly created song array list
+     */
     public void getSongList() {
-        Log.i(TAG, "getSongList");
-        //retrieve song info
+        int pos = 0;
+        // Retrieve song info
         ContentResolver musicResolver = getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
 
         if (musicCursor != null && musicCursor.moveToFirst()) {
-            //get columns
+            // Get columns
             int titleColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.TITLE);
             int idColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
-            //add songs to list
+            int songDuration = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
+
+            // Add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
-                songList.add(new Song(thisId, thisTitle, thisArtist));
+                String thisDuration = musicCursor.getString(songDuration);
+
+                // Workaround for filtering invalid tracks
+                if (thisDuration != null) {
+                    songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration, pos));
+                    pos += 1;
+                }
             }
             while (musicCursor.moveToNext());
         }
+
         if (musicCursor != null) {
             musicCursor.close();
         }
+
+        /** TODO - Do something to prevent empty playlist crash
+        if (songList.size() == 0){
+        }
+         */
+
+        Log.i(TAG, "Song array created with " + songList.size() + " songs.");
     }
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
+        Log.i(TAG, "Position " + position);
+        if (position == 0) {
+            getNewPlayerFragment(position);
+        } else if (position == 1) {
+            getNewBookmarkFragment(position);
+        } else if (position == 2) {
+            getNewLibraryFragment(position);
+        } else //noinspection StatementWithEmptyBody
+            if (position == 3) {
+            // TODO - create getNewPlaylistFragment(position);
+        } else {
+            Log.e(TAG, "Nav drawer id error");
+        }
+    }
+
+    /**
+     * Create a new PlayerFragment and start with the FragmentManager
+     */
+    public void getNewPlayerFragment(int position) {
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -175,9 +232,37 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * For each choice, if not currently displayed, display fragment and set title.
+     * Create a new BookmarkFragment and start with the FragmentManager
+     */
+    public void getNewBookmarkFragment(int position) {
+        // update the main content by replacing fragments
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        BookmarkFragment bookmarkFragment = BookmarkFragment.newInstance(position + 1);
+
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, bookmarkFragment)
+                .commit();
+    }
+
+    /**
+     * Create a new LibraryFragment and start with the FragmentManager
+     */
+    private void getNewLibraryFragment(int position) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        LibraryFragment libraryFragment = LibraryFragment.newInstance(position + 1);
+
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, libraryFragment)
+                .commit();
+    }
+
+    /**
+     * Update ActionBar title when a Fragment is attatched.
      */
     public void onSectionAttached(int number) {
+        Log.i(TAG, "Fragment Attatched: " + number);
         switch (number) {
             case 1:
                 mTitle = getString(R.string.title_section1);
@@ -194,14 +279,15 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * TODO - Is this needed? Why?
+     */
     public void restoreActionBar() {
-
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayShowTitleEnabled(true);
             actionBar.setTitle(mTitle);
         }
-
     }
 
     @Override
@@ -225,93 +311,43 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_bookmark) {
+
+            // Create new bookmark object for current song
+            Bookmark b = new Bookmark(songList.get(MusicService.songPosition), String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+
+            // Add bookmark to list
+            bookmarkList.add(b);
+
+            Toast.makeText(this, "Bookmark saved at "  + b.getCurrentPosition(), Toast.LENGTH_LONG).show();
+
+            return true;
+
+        } else if (id == R.id.action_random) {
+
+            if (MainActivity.shuffleMode) {
+                Toast.makeText(this, "Shuffle Mode OFF" , Toast.LENGTH_LONG).show();
+                MainActivity.shuffleMode = false;
+
+            } else {
+                Toast.makeText(this, "Shuffle Mode ON" , Toast.LENGTH_LONG).show();
+                MainActivity.shuffleMode = true;
+            }
+
+            return true;
+
+        } else if (id == R.id.action_settings) {
+
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    //play next
-    static void playNext() {
-        musicSrv.playNext();
-    }
-
-    //play previous
-    static public void playPrev() {
-        musicSrv.playPrev();
-    }
-
-    /**
-     * MediaPlayer controller methods
-
-
     @Override
-    public void start() {
-        musicSrv.go();
+    public void onFragmentInteraction(String id) {
+        // todo - why is this needed?
+        Log.i(TAG, "onFragInteraction: " + id);
     }
-
-    @Override
-    public void pause() {
-        musicSrv.pausePlayer();
-    }
-
-    @Override
-    public int getDuration() {
-        if (musicSrv != null && musicBound && musicSrv.isPng()) {
-            return musicSrv.getDur();
-        } else {
-            return 0;
-        }
-    }
-
-    @Override
-    public int getCurrentPosition() {
-        if (musicSrv != null && musicBound && musicSrv.isPng()) {
-            return musicSrv.getPosn();
-        } else {
-            return 0;
-        }
-    }
-
-    @Override
-    public void seekTo(int pos) {
-        musicSrv.seek(pos);
-    }
-
-    @Override
-    public boolean isPlaying() {
-        return musicSrv != null && musicBound && musicSrv.isPng();
-    }
-
-    @Override
-    public int getBufferPercentage() {
-        return 0;
-    }
-
-    @Override
-    public boolean canPause() {
-        return true;
-    }
-
-    @Override
-    public boolean canSeekBackward() {
-        return true;
-    }
-
-    @Override
-    static boolean canSeekForward() {
-        return true;
-    }
-
-    @Override
-    static int getAudioSessionId() {
-        return 0;
-    }
-     */
-
-
-
-
 }
 

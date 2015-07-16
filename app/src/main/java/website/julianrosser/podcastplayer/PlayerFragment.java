@@ -7,30 +7,29 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 
 /**
- * A fragment containing a the playerview
+ * A fragment containing a the player / controlls
  */
 public class PlayerFragment extends android.support.v4.app.Fragment {
 
-    /**
-     * The fragment argument representing the section number for this
-     * fragment.
-     */
+
+    // The fragment argument representing the section number for this fragment.
     private static final String ARG_SECTION_NUMBER = "section_number";
+    // For logging purposes
     private static final String TAG = "PlayerFragment";
 
-
+    // View references
     static SeekBar seekBar;
-
-
+    static ImageButton playPause;
     static TextView textSongTitle;
     static TextView textSongArtist;
+    static TextView textSongCurrent;
+    static TextView textSongLength;
 
     /**
      * Required empty public constructor
@@ -53,111 +52,89 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate view
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-        final ImageButton playPause = (ImageButton) view.findViewById(R.id.buttonPlay);
-        playPause.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // if already playing, pause
-                if (MainActivity.musicSrv.isPng()) {
-
-                    MainActivity.musicSrv.pausePlayer();
-                    playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
-
-                } else {
-
-                    // if initialized
-                    if (MainActivity.musicSrv != null && MainActivity.musicBound) {
-
-                        playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-                        MainActivity.musicSrv.go();
-                    } else {
-                        Log.i(TAG, "SERVICE NULL / PLAYER NOT BOUND");
-                    }
-                }
-            }
-        });
-
-        // New Audio Track Button
-        final Button newFile = (Button) view.findViewById(R.id.buttonTrack);
-        newFile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                MainActivity.musicSrv.playRandom();
-                playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-            }
-        });
-
-
-        if (MainActivity.musicSrv != null && MainActivity.musicSrv.isPng()) {
-            textSongTitle = (TextView) view.findViewById(R.id.songTitle);
-            textSongArtist = (TextView) view.findViewById(R.id.songArtist);
-            textSongTitle.setText(MusicService.songTitle);
-            textSongArtist.setText(MusicService.songArtist);
-        }
-
-        // todo set if playing
-
-        ImageButton rewind = (ImageButton) view.findViewById(R.id.buttonRewind);
-        rewind.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                MainActivity.musicSrv.playPrev();
-            }
-        });
-
-        ImageButton forward = (ImageButton) view.findViewById(R.id.buttonForward);
-        forward.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                MainActivity.musicSrv.playNext();
-            }
-        });
-
-        // play current song
-        //MainActivity.musicSrv.playSong();
-       //Log.i(TAG, "PLAY SONG");
-
-
-        return view;
-    }
-
-        /*  Create listener
+        // Set up play / pause button
+        playPause = (ImageButton) view.findViewById(R.id.buttonPlay);
         playPause.setOnClickListener(new View.OnClickListener() {
             @SuppressWarnings("deprecation")
             @Override
             public void onClick(View view) {
 
+                // if already playing, pause
+                if (MainActivity.musicSrv.isPng()) {
+                    MainActivity.musicSrv.pausePlayer();
+                    playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
+
+                } else {
+
+                    // if mPlayer available, resume
+                    if (MainActivity.musicSrv != null && MainActivity.musicBound) {
+
+                        playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+                        MainActivity.musicSrv.resume();
+
+                    } else {
+                        Log.e(TAG, "SERVICE NULL / PLAYER NOT BOUND");
+                    }
+                }
             }
         });
 
-        //noinspection deprecation
-        //playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+        // Initialize TextViews
+        textSongCurrent = (TextView) view.findViewById(R.id.textSongTimeCurrent);
+        textSongLength = (TextView) view.findViewById(R.id.textSongTimeLength);
+        textSongTitle = (TextView) view.findViewById(R.id.songTitle);
+        textSongArtist = (TextView) view.findViewById(R.id.songArtist);
 
+        // Set track information if service is initialised
+        if (MainActivity.musicSrv != null) {
+
+            textSongTitle.setText(MusicService.songTitle);
+            textSongArtist.setText(MusicService.songArtist);
+            textSongCurrent.setText("0:00"); // TODO - use actual, not string
+            textSongLength.setText(MusicService.songDuration);
+
+            // set button to play
+            if (MainActivity.musicSrv.isPng()) {
+                //noinspection deprecation
+                playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
+            }
+        }
+
+        // Rewind button listener
         ImageButton rewind = (ImageButton) view.findViewById(R.id.buttonRewind);
         rewind.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            AudioPlayerService.rewind();
+                // TODO - Logic for playing previous songs
+                MainActivity.musicSrv.playPrev();
             }
         });
 
+        // Forward button listener
         ImageButton forward = (ImageButton) view.findViewById(R.id.buttonForward);
         forward.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AudioPlayerService.forward();
+                if (MainActivity.shuffleMode) {
+                    MainActivity.musicSrv.playRandom();
+                } else {
+                    MainActivity.musicSrv.playNext();
+                }
+
             }
         });
 
+        // Seek bar listener
         seekBar = (SeekBar) view.findViewById(R.id.seekBar);
-        seekBar.setMax(1000);
+        seekBar.setMax(1000); // todo - change to reference in MainActivity
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean fromUser) {
                 if (fromUser) {
-                    AudioPlayerService.seekTo(i);
+                    MainActivity.musicSrv.seek(i);
                 }
             }
 
@@ -170,21 +147,75 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             }
         });
 
-        Button buttonTrack = (Button) view.findViewById(R.id.buttonTrack);
-        buttonTrack.setOnClickListener(new View.OnClickListener() {
+        // if song loaded, update progress. todo needed? does this do anything?
+        if (MainActivity.musicSrv != null && MainActivity.musicSrv.isPng()) {
+            seekBar.setProgress(MusicService.getCurrentProgress());
+        }
+
+        startTimer();
+
+        return view;
+
+    }
+
+    /**
+     * TODO URGENT!!!! - WHY SEPERATE TRACKERS????
+     */
+    public void startTimer() {
+        new Thread(new Runnable() {
             @Override
-            public void onClick(View view) {
-                Random r = new Random();
-                int i = r.nextInt(3);
-                Intent mAudioPlayerService = new Intent(getActivity(), AudioPlayerService.class);
-                mAudioPlayerService.setAction(AudioPlayerService.ACTION_SET_TRACK);
-                getActivity().startService(mAudioPlayerService);
+
+            public void run() {
+
+
+                // Ensure Servce is initialized
+                for (int i = 0; i < 30; i++) {
+                    if (MusicService.mPlayer == null) {
+                        Log.i(getClass().getSimpleName(), "Progress Tracker - Music Service not initialized: " + i);
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                // update textview while service is alive
+                while (MusicService.mPlayer != null) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    // TODO - PUT THIS IN OTHER TRACKER???
+                    // Get MainActivity for UI Thread
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Local reference for millis
+                                long millis = MusicService.mPlayer.getCurrentPosition();
+
+                                // Format time to mins, secs
+                                long second = (millis / 1000) % 60;
+                                int minutes = (int) (millis / 1000) / 60;
+
+                                // Set TextView with built string
+                                PlayerFragment.textSongCurrent.setText(String.valueOf(minutes) + ":" + String.format("%02d", second));
+                            }
+                        });
+                    }
+
+
+                }
             }
-        });
+        }).start();
+    }
 
-        */
-
-
+    /**
+     * Required lifecycle methods
+     */
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -204,5 +235,3 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         // AudioPlayerService.stop();
     }
 }
-
-
