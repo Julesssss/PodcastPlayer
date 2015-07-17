@@ -2,10 +2,12 @@ package website.julianrosser.podcastplayer;
 
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,6 +20,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -25,6 +28,7 @@ import java.util.ArrayList;
 import website.julianrosser.podcastplayer.bookmarks.BookmarkFragment;
 import website.julianrosser.podcastplayer.classes.Bookmark;
 import website.julianrosser.podcastplayer.classes.Song;
+import website.julianrosser.podcastplayer.library.DatabaseOpenHelper;
 import website.julianrosser.podcastplayer.library.LibraryFragment;
 
 public class MainActivity extends AppCompatActivity
@@ -55,7 +59,11 @@ public class MainActivity extends AppCompatActivity
     // For logging purposes
     private String TAG = getClass().getSimpleName();
 
-    //connect to the service
+    // SQL
+    public static SQLiteDatabase mDB = null;
+    public static DatabaseOpenHelper mDbHelper;
+
+    //connect to the service // todo - if not already???
     private ServiceConnection musicConnection = new ServiceConnection() {
 
         @Override
@@ -108,6 +116,13 @@ public class MainActivity extends AppCompatActivity
 
         // Get current Fragment title - todo - is this needed?
         mTitle = getTitle();
+
+        // SQL
+        // Create a new DatabaseHelper
+        mDbHelper = new DatabaseOpenHelper(this);
+
+        // Get the underlying database for writing
+        mDB = mDbHelper.getWritableDatabase();
     }
 
     /**
@@ -125,7 +140,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Unbind MusicService if app is closed, then stop and nullify MusicService
+     * Unbind MusicService if app is closed, then stop and nullify MusicService. Also close bookmark Database
      */
     @Override
     protected void onDestroy() {
@@ -140,15 +155,25 @@ public class MainActivity extends AppCompatActivity
         }
 
         musicSrv = null;
+
+        mDB.close();
     }
 
     /**
      * TODO
-     * Ensure that back button has same function as home, and doesn't throw error.
+     * Ensure that back button has same function as home, and doesn't crash.
      */
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        // close drawer if open, open player fragment if not current, then exit
+
+
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
 
     }
 
@@ -171,17 +196,19 @@ public class MainActivity extends AppCompatActivity
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
             int songDuration = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
-
+            // todo using id currently, change to filepath
+            int pathColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
             // Add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
                 String thisDuration = musicCursor.getString(songDuration);
+                String thisPath = musicCursor.getString(pathColumn);
 
                 // Workaround for filtering invalid tracks
                 if (thisDuration != null) {
-                    songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration, pos));
+                    songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration, pos, thisPath));
                     pos += 1;
                 }
             }
@@ -198,6 +225,13 @@ public class MainActivity extends AppCompatActivity
          */
 
         Log.i(TAG, "Song array created with " + songList.size() + " songs.");
+    }
+
+    // Delete all records
+    private void clearAll() {
+
+        mDB.delete(DatabaseOpenHelper.TABLE_NAME, null, null);
+
     }
 
     @Override
@@ -313,13 +347,34 @@ public class MainActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_bookmark) {
 
-            // Create new bookmark object for current song
-            Bookmark b = new Bookmark(songList.get(MusicService.songPosition), String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+            // SQL DB
+            ContentValues values = new ContentValues();
 
-            // Add bookmark to list
-            bookmarkList.add(b);
+            // todo - Should there just be the DB and no array list? Yes, probably
 
-            Toast.makeText(this, "Bookmark saved at "  + b.getCurrentPosition(), Toast.LENGTH_LONG).show();
+            // Get song
+            Song s = songList.get(MusicService.songPosition); // todo - might crash if song list changes or song changes, test
+
+            // Get String values of names, other info
+            values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
+            values.put(DatabaseOpenHelper.TRACK_NAME, s.getTitle());
+            values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
+
+
+            double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+            values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int)songCurrentPos));
+            Log.i("SQL", "songCurrentPos: " + (int)songCurrentPos);
+
+            songCurrentPos = songCurrentPos  / 1000;
+            String formattedPosition = (int) songCurrentPos / 60 + ":" + String.format(  "%02d", (int) songCurrentPos % 60);
+            values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
+            Log.i("SQL", "formattedPosition: " + formattedPosition);
+
+            // Add values to new database row
+            mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
+
+            // Notify user that the bookmark was saved
+            Toast.makeText(this, "Bookmark saved at "  + formattedPosition, Toast.LENGTH_LONG).show();
 
             return true;
 

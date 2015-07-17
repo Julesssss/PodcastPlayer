@@ -9,16 +9,40 @@
     android:padding="8dp">
 
 
-    <!-- Track -->
-    <TextView
-        android:id="@+id/songListTitle"
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:text="SONG"
-        android:textColor="#fff"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:layout_height="wrap_content">
+
+        <!-- Artist -->
+        <TextView
+            android:id="@+id/songListArtist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textColor="#fff"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:text="-"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#fff"
+            android:textSize="17sp"/>
+
+        <!-- Track -->
+        <TextView
+            android:id="@+id/songListTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textColor="#fff"
+            android:textSize="17sp"/>
+
+    </LinearLayout>
 
     <!-- Artist -->
     <TextView
@@ -26,7 +50,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:singleLine="true"
-        android:text="POSITION"
         android:textColor="#fff"
         android:textSize="16sp" />
 

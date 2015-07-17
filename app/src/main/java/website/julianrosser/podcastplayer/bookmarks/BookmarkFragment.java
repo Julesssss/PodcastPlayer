@@ -1,19 +1,30 @@
 package website.julianrosser.podcastplayer.bookmarks;
 
 import android.app.Activity;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
+import website.julianrosser.podcastplayer.NavigationDrawerFragment;
+import website.julianrosser.podcastplayer.PlayerFragment;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.classes.Bookmark;
+import website.julianrosser.podcastplayer.classes.Song;
+import website.julianrosser.podcastplayer.library.DatabaseOpenHelper;
 
 
 /**
@@ -39,6 +50,9 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
      */
     private AbsListView mListView;
 
+    // SQL
+    private SimpleCursorAdapter mAdapter;
+
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -61,21 +75,38 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         // Create custom adapter
         bookmarkListAdapter = new BookmarkListAdapter(getActivity());
 
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate view - todo but why this audiofile???
         View view = inflater.inflate(R.layout.fragment_audiofile, container, false);
+
+        // Create a cursor for updating bookmark list
+        Cursor c = bookmarks(); // todo - cursor should
+        mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.bookmark_list_view, c,
+                DatabaseOpenHelper.columnsForCursorAdaptor, new int[] {R.id.songListArtist, R.id.songListTitle, R.id.songListPosition },
+                0);
 
         // Set the custom adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
-        mListView.setAdapter(bookmarkListAdapter);
+        mListView.setAdapter(mAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
 
+
+
         return view;
+    }
+
+    // Returns all bookmark records in the database
+    private Cursor bookmarks() {
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+                DatabaseOpenHelper.columns, null, new String[] {}, null, null,
+                null);
     }
 
     @Override
@@ -101,18 +132,66 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        Bookmark b = MainActivity.bookmarkList.get(position);
+        // todo - Detect if null or empty
 
-        MainActivity.musicSrv.setSongAtPos(b.getPos());
+        // Find bookmark information in database
+        String[] returnedData = MainActivity.mDbHelper.getData(position);
 
-        MusicService.millisecondToSeekTo = b.getCurrentPositionInMillis();
+        // find song from list // todo quicker waY? make quick find algorythm
+        boolean matched = false;
+        int songTrackPos = 0;
+        for (Song s : MainActivity.songList) {
 
-        Log.i(getClass().getSimpleName(), "onItemClick: " + b.getTitle());
-        if (null != mListener) {
+            if (s.getIDString().contentEquals(returnedData[0])) {
+                matched = true;
+                break;
+            }
+            songTrackPos ++;
+        }
+
+        if (matched) {
+            // Load song and start
+            MainActivity.musicSrv.setSongAtPos(songTrackPos);
+
+            // Seek to  // todo - need to be SURE that this will work
+            MusicService.millisecondToSeekTo = Integer.valueOf(returnedData[1]);
+
+            Log.i("BookmarkFragment", "Song found, now playing");
+
+            NavigationDrawerFragment.mDrawerListView.setItemChecked(0, true);
+
+            // Launch player fragment
+            // update the main content by replacing fragments
+            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, PlayerFragment.newInstance(position + 1))
+                    .commit();
+
+        } else {
+            Toast.makeText(getActivity(), "Song not found, file may have been moved or renamed", Toast.LENGTH_SHORT).show();
+            Log.i("BookmarkFragment", "Song not found, user informed");
+        }
+
+
+        if (returnedData != null && returnedData.length != 0) {
+            // todo - Log.i("SQL RETURN", "SIZE: " + returnedData.length);
+            //for (int i  = returnedData.length; i > 0; i--) {
+            //    Log.i("SQL RETURN", "DATA: " + MainActivity.mDbHelper.getData()[i-1]);
+            //}
+        } else {
+            Log.i("SQL RETURN", "SIZE:0 /OR/ null");
+        }
+
+        //MainActivity.musicSrv.setSongAtPos(b.getPos());
+
+        //MusicService.millisecondToSeekTo = b.getCurrentPositionInMillis();
+
+        //Log.i(getClass().getSimpleName(), "onItemClick: " + b.getTitle());
+        //if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onFragmentInteraction(String.valueOf(MainActivity.bookmarkList.get(position).getArtist()));
-        }
+        //    mListener.onFragmentInteraction(String.valueOf(MainActivity.bookmarkList.get(position).getArtist()));
+        //}
 
     }
 
