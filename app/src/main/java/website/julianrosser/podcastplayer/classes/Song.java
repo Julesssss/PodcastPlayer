@@ -15,17 +15,23 @@ public class Song {
     private String artist;
     private String duration;
     private int posInSongList;
+    private String filePath;
 
-    public Song(long songID, String songTitle, String songArtist, String songLength, int pos) {
+    public Song(long songID, String songTitle, String songArtist, String songLength, int pos, String path) {
         id = songID;
         title = songTitle;
         artist = songArtist;
         duration = songLength;
         posInSongList = pos;
+        filePath = path;
     }
 
     public long getID() {
         return id;
+    }
+
+    public String getIDString () {
+        return String.valueOf(id);
     }
 
     public int getPos() {return posInSongList;}

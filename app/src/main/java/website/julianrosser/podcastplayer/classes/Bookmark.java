@@ -17,6 +17,8 @@ public class Bookmark {
     private long durationInMillis;
     private int posInSongList;
 
+    // todo - just hold song reference???????
+
     public Bookmark(Song song, String songPosition) {
         id = song.getID();
         title = song.getTitle();
@@ -60,14 +62,7 @@ public class Bookmark {
 
 
 
-
-
-
-
-
-
-
-    // Method for converting track duration to minutes & seconds
+    // Method for converting track duration to minutes & seconds // todo needed HERE???
     private String convertTime(String miliseconds) {
         // Time conversion
         double songLength = Double.valueOf(miliseconds) / 1000;
