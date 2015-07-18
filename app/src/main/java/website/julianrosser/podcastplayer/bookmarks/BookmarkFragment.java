@@ -7,6 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,7 +75,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         super.onCreate(savedInstanceState);
 
         // Create custom adapter
-        bookmarkListAdapter = new BookmarkListAdapter(getActivity());
+        bookmarkListAdapter = new BookmarkListAdapter(getActivity()); // todo - delete this??/
 
 
     }
@@ -167,6 +169,9 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
                     .replace(R.id.container, PlayerFragment.newInstance(position + 1))
                     .commit();
 
+            // Update ActionBar title
+            getActionBar().setTitle(getString(R.string.title_section1));
+
         } else {
             Toast.makeText(getActivity(), "Song not found, file may have been moved or renamed", Toast.LENGTH_SHORT).show();
             Log.i("BookmarkFragment", "Song not found, user informed");
@@ -194,6 +199,10 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         //}
 
     }
+    private ActionBar getActionBar() {
+        return ((AppCompatActivity) getActivity()).getSupportActionBar();
+    }
+
 
     /**
      * The default content for this Fragment has a TextView that is shown when

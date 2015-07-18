@@ -14,8 +14,10 @@ TODO
 - 'load files on refresh normally Including button!' - What did this mean?
 - Record play history, open last played when opened.
 - Don't repeat song when playing random.
+- Add pic files to Git/+hub
 
 Log
+- 19/07 - Created basic buttons to replace menu options. Update title when opening bookmark.
 - 18/07 - Build SQL Database, Database helper class, linked to CursorAdapter and made add/find functions. Fixed back button crash & incorrect play/pause image.
 - 17/07 - Implemented shuffle mode. Completely cleaned, documented and revised MainActivity, MusicService & PlayerFragment. Moved TODO, Log & notes to README file.
 - 16/07 - Resumed work on this project. Prevented auto play when first opened. Spent a few hours going over code.

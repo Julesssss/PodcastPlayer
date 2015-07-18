@@ -346,9 +346,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
                     // Only attempt to get progress and update if SeekBar isn't null, and mPlayer is playing.
                     // test
-                    Log.i("DEBUG", "mPlayer null?: " + (mPlayer == null));
-                    Log.i("DEBUG", "mPlayer toString: " + mPlayer.toString());
-
                     if (PlayerFragment.seekBar != null && mPlayer.isPlaying()) {
                         PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
                     }

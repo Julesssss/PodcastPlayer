@@ -2,6 +2,8 @@ package website.julianrosser.podcastplayer;
 
 
 import android.app.Activity;
+import android.content.ContentValues;
+import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,6 +12,10 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import website.julianrosser.podcastplayer.classes.Song;
+import website.julianrosser.podcastplayer.library.DatabaseOpenHelper;
 
 
 /**
@@ -123,6 +129,61 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 } else {
                     MainActivity.musicSrv.playNext();
                 }
+            }
+        });
+
+        // Shuffle Button
+        ImageButton buttonShuffle = (ImageButton) view.findViewById(R.id.buttonShuffle);
+        buttonShuffle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (MainActivity.shuffleMode) {
+                    Toast.makeText(getActivity(), "Shuffle Mode OFF" , Toast.LENGTH_SHORT).show();
+                    MainActivity.shuffleMode = false;
+
+                } else {
+                    Toast.makeText(getActivity(), "Shuffle Mode ON" , Toast.LENGTH_SHORT).show();
+                    MainActivity.shuffleMode = true;
+                }
+
+            }
+        });
+
+        // Bookmark listener
+        ImageButton buttonBookmark = (ImageButton) view.findViewById(R.id.buttonBookmark);
+        buttonBookmark.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                // SQL DB
+                ContentValues values = new ContentValues();
+
+                // todo - Should there just be the DB and no array list? Yes, probably
+
+                // Get song
+                Song s = MainActivity.songList.get(MusicService.songPosition); // todo - might crash if song list changes or song changes, test
+
+                // Get String values of names, other info
+                values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
+                values.put(DatabaseOpenHelper.TRACK_NAME, s.getTitle());
+                values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
+
+
+                double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+                values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int)songCurrentPos));
+                Log.i("SQL", "songCurrentPos: " + (int)songCurrentPos);
+
+                songCurrentPos = songCurrentPos  / 1000;
+                String formattedPosition = (int) songCurrentPos / 60 + ":" + String.format(  "%02d", (int) songCurrentPos % 60);
+                values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
+                Log.i("SQL", "formattedPosition: " + formattedPosition);
+
+                // Add values to new database row
+                MainActivity.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
+
+                // Notify user that the bookmark was saved
+                Toast.makeText(getActivity(), "Bookmark saved at "  + formattedPosition, Toast.LENGTH_LONG).show();
 
             }
         });
