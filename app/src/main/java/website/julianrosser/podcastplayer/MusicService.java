@@ -67,7 +67,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         // Start initialization methods
         initMusicPlayer();
-        initProgressTracker();
+        //initProgressTracker();
     }
 
     /**
@@ -90,6 +90,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
      */
     public void playSong() {
 
+        Log.i(TAG, "Play Song");
+
         // Reset player
         mPlayer.reset();
 
@@ -97,11 +99,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (songs.size() == 0) {
             Toast.makeText(this, "No songs showing on device. If incorrect, try closing app and restarting.", Toast.LENGTH_SHORT).show();
         } else {
-            // Get song Object and update information references
+
             Song playSong = songs.get(songPosition);
-            songTitle = playSong.getTitle();
-            songArtist = playSong.getArtist();
-            songDuration = playSong.getLength();
+
+
 
             // Get song ID, then create track URI
             long currSong = playSong.getID();
@@ -118,6 +119,14 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
             // Prepare Asynchronously
             mPlayer.prepareAsync();
+
+            // todo, right place for this?s
+            MainActivity.firstPreparedSong = false;
+
+            //Get song Object and update information references
+            songTitle = playSong.getTitle();
+            songArtist = playSong.getArtist();
+            songDuration = playSong.getLength();
 
             // If Fragment is in view & not null, update track information TextViews
             if (MainActivity.playerFragment != null) { // TODO - Also needed --> ? && MainActivity.playerFragment.isVisible()) {
@@ -155,6 +164,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
      */
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
+        Log.i(TAG, "onCompletion()");
         mPlayer.reset();
 
         if (MainActivity.shuffleMode) {
@@ -170,7 +180,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
 
-        Log.e(getPackageName(), String.format("Error(%s%s)", what, extra));
+        Log.e(getClass().getSimpleName(), String.format("onError() - Error(%s%s)", what, extra));
 
         // TODO - Specific error handling
         // if (what == MediaPlayer.MEDIA_ERROR_SERVER_DIED) {
@@ -183,21 +193,32 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
-
+        Log.i(TAG, "onPrepared");
         // If loading from a bookmark, seek to required position
         if (loadFromBookmark) {
             mPlayer.seekTo(millisecondToSeekTo);
             loadFromBookmark = false;
         }
 
-        // Prevent first loaded song from playing when app is started
+        /* Prevent first loaded song from playing when app is started
         if (MainActivity.firstPreparedSong) {
             MainActivity.firstPreparedSong = false;
-        } else {
+        } else { */
             mediaPlayer.start();
+
+
+
             //noinspection deprecation
             PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+        //}
+
+        if (MainActivity.firstPreparedSong) {
+            Log.i(TAG, "MSSSS first");
+
+        } else {
+            Log.i(TAG, "MSSSS not first");
         }
+
 
         // Create Intents for notification builder
         Intent notIntent = new Intent(this, MainActivity.class);
@@ -241,6 +262,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
      * For playing chosen song
      */
     public void setSong(int songIndex) {
+        Log.i(TAG, "setSong");
         mPlayer.reset();
         songPosition = songIndex;
         playSong();
@@ -300,6 +322,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     //skip to next
+    public void playCurrent() {
+        if (songPosition == songs.size()) songPosition = 0;
+        playSong();
+    }
+
+    //skip to next
     public void playNext() {
         songPosition++;
         if (songPosition == songs.size()) songPosition = 0;
@@ -323,7 +351,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 // Ensure MusicService is initialized before starting tracker
                 for (int i = 0; i < 10; i++) {
                     if (mPlayer == null) {
-                        Log.i(getClass().getSimpleName(), "Progress Tracker - Music Service not initialized: " + i);
+                        Log.i(getClass().getSimpleName(), "Service Progress Tracker - Music Service not initialized: " + i);
 
                         // Player is null, wait 200ms then try again
                         try {
@@ -346,12 +374,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
                     // Only attempt to get progress and update if SeekBar isn't null, and mPlayer is playing.
                     // test
-                    Log.i("DEBUG", "mPlayer null?: " + (mPlayer == null));
-                    Log.i("DEBUG", "mPlayer toString: " + mPlayer.toString());
 
-                    if (PlayerFragment.seekBar != null && mPlayer.isPlaying()) {
-                        PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
-                    }
                 }
 
                 Log.i("TAG", "Tracker Thread Ending");

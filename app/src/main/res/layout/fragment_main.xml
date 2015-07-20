@@ -43,35 +43,62 @@
 
         <ImageButton
             android:id="@+id/buttonPlay"
-            android:layout_width="wrap_content"
+            android:layout_width="90sp"
             android:layout_height="match_parent"
             android:layout_centerHorizontal="true"
             android:background="#000"
             android:contentDescription="@string/description_play_button"
-            android:scaleType="centerInside"
+            android:scaleType="fitCenter"
             android:src="@drawable/play" />
 
         <ImageButton
             android:id="@+id/buttonRewind"
-            android:layout_width="wrap_content"
+            android:layout_width="80sp"
             android:layout_height="match_parent"
             android:background="#000"
-            android:padding="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingRight="5dp"
             android:layout_toLeftOf="@id/buttonPlay"
             android:contentDescription="@string/description_rewind_button"
             android:scaleType="fitEnd"
             android:src="@drawable/rewind" />
 
         <ImageButton
-            android:id="@+id/buttonForward"
+            android:id="@+id/buttonBookmark"
             android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="#000"
+            android:padding="5sp"
+            android:layout_toLeftOf="@id/buttonRewind"
+            android:contentDescription="@string/description_rewind_button"
+            android:scaleType="fitCenter"
+            android:src="@drawable/bookmark" />
+
+        <ImageButton
+            android:id="@+id/buttonForward"
+            android:layout_width="80sp"
             android:layout_height="wrap_content"
             android:background="#000"
-            android:padding="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingLeft="5dp"
             android:layout_toRightOf="@id/buttonPlay"
             android:contentDescription="@string/description_forward_button"
             android:scaleType="fitStart"
             android:src="@drawable/forward" />
+
+        <ImageButton
+            android:id="@+id/buttonShuffle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="#000"
+            android:padding="5dp"
+            android:layout_toRightOf="@id/buttonForward"
+            android:contentDescription="@string/description_rewind_button"
+            android:scaleType="fitCenter"
+            android:src="@drawable/shuffle" />
+
     </RelativeLayout>
 
     <SeekBar

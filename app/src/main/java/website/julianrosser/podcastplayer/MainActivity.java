@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity
     public static PlayerFragment playerFragment;
 
     // Used to store the last screen title. For use in {@link #restoreActionBar()}.
-    private CharSequence mTitle;
+    public static CharSequence mTitle;
     // Intent used for binding service to Activity
     private Intent playIntent;
     // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity
     public static SQLiteDatabase mDB = null;
     public static DatabaseOpenHelper mDbHelper;
 
-    //connect to the service // todo - if not already???
+    // connect to the service // todo - if not already???
     private ServiceConnection musicConnection = new ServiceConnection() {
 
         @Override
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity
              * This below is the second Fragment and shouldn't be needed. But when removed
              * textviews aren't updated. Why does this happen?
              */
-            getNewPlayerFragment(0);
+            //getNewPlayerFragment(0);
 
         }
 
@@ -167,14 +167,11 @@ public class MainActivity extends AppCompatActivity
     public void onBackPressed() {
         super.onBackPressed();
         // close drawer if open, open player fragment if not current, then exit
-
-
     }
 
     @Override
     public void finish() {
         super.finish();
-
     }
 
     /**
@@ -344,54 +341,7 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_bookmark) {
-
-            // SQL DB
-            ContentValues values = new ContentValues();
-
-            // todo - Should there just be the DB and no array list? Yes, probably
-
-            // Get song
-            Song s = songList.get(MusicService.songPosition); // todo - might crash if song list changes or song changes, test
-
-            // Get String values of names, other info
-            values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
-            values.put(DatabaseOpenHelper.TRACK_NAME, s.getTitle());
-            values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
-
-
-            double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
-            values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int)songCurrentPos));
-            Log.i("SQL", "songCurrentPos: " + (int)songCurrentPos);
-
-            songCurrentPos = songCurrentPos  / 1000;
-            String formattedPosition = (int) songCurrentPos / 60 + ":" + String.format(  "%02d", (int) songCurrentPos % 60);
-            values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
-            Log.i("SQL", "formattedPosition: " + formattedPosition);
-
-            // Add values to new database row
-            mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
-
-            // Notify user that the bookmark was saved
-            Toast.makeText(this, "Bookmark saved at "  + formattedPosition, Toast.LENGTH_LONG).show();
-
-            return true;
-
-        } else if (id == R.id.action_random) {
-
-            if (MainActivity.shuffleMode) {
-                Toast.makeText(this, "Shuffle Mode OFF" , Toast.LENGTH_LONG).show();
-                MainActivity.shuffleMode = false;
-
-            } else {
-                Toast.makeText(this, "Shuffle Mode ON" , Toast.LENGTH_LONG).show();
-                MainActivity.shuffleMode = true;
-            }
-
-            return true;
-
-        } else if (id == R.id.action_settings) {
+        if (id == R.id.action_settings) {
 
             return true;
         }
