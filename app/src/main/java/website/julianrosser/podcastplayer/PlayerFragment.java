@@ -3,7 +3,6 @@ package website.julianrosser.podcastplayer;
 
 import android.app.Activity;
 import android.content.ContentValues;
-import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -68,24 +67,34 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-                // if already playing, pause
-                if (MainActivity.musicSrv.isPng()) {
-                    MainActivity.musicSrv.pausePlayer();
-                    playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
+                if (MainActivity.musicSrv != null && MainActivity.musicBound) {
 
-                } else {
+                    Log.i(TAG, "playPausebuttonClickeed");
 
-                    // if mPlayer available, resume
-                    if (MainActivity.musicSrv != null && MainActivity.musicBound) {
-
-                        playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-                        MainActivity.musicSrv.resume();
+                    // if already playing, pause
+                    if (MainActivity.musicSrv.isPng()) {
+                        Log.i(TAG, "Already Playing");
+                        MainActivity.musicSrv.pausePlayer();
+                        playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
 
                     } else {
-                        Log.e(TAG, "SERVICE NULL / PLAYER NOT BOUND");
+                        Log.i(TAG, "Not currently playing");
+
+                        // if first song then start, else resume
+                        if (MainActivity.firstPreparedSong) {
+                            MainActivity.musicSrv.playCurrent();
+                        } else {
+                            MainActivity.musicSrv.resume();
+                        }
+                        playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+
                     }
+
+                } else {
+                    Log.e(TAG, "SERVICE NULL / PLAYER NOT BOUND");
                 }
             }
+
         });
 
         // Initialize TextViews
@@ -115,7 +124,11 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
                 // TODO - Logic for playing previous songs
-                MainActivity.musicSrv.playPrev();
+                if (MusicService.mPlayer.getCurrentPosition() < 3000) {
+                    MainActivity.musicSrv.playPrev();
+                } else {
+                    MainActivity.musicSrv.playCurrent();
+                }
             }
         });
 
@@ -139,11 +152,11 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             public void onClick(View view) {
 
                 if (MainActivity.shuffleMode) {
-                    Toast.makeText(getActivity(), "Shuffle Mode OFF" , Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Shuffle Mode OFF", Toast.LENGTH_SHORT).show();
                     MainActivity.shuffleMode = false;
 
                 } else {
-                    Toast.makeText(getActivity(), "Shuffle Mode ON" , Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Shuffle Mode ON", Toast.LENGTH_SHORT).show();
                     MainActivity.shuffleMode = true;
                 }
 
@@ -171,11 +184,11 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
 
                 double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
-                values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int)songCurrentPos));
-                Log.i("SQL", "songCurrentPos: " + (int)songCurrentPos);
+                values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
+                Log.i("SQL", "songCurrentPos: " + (int) songCurrentPos);
 
-                songCurrentPos = songCurrentPos  / 1000;
-                String formattedPosition = (int) songCurrentPos / 60 + ":" + String.format(  "%02d", (int) songCurrentPos % 60);
+                songCurrentPos = songCurrentPos / 1000;
+                String formattedPosition = (int) songCurrentPos / 60 + ":" + String.format("%02d", (int) songCurrentPos % 60);
                 values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
                 Log.i("SQL", "formattedPosition: " + formattedPosition);
 
@@ -183,7 +196,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 MainActivity.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
 
                 // Notify user that the bookmark was saved
-                Toast.makeText(getActivity(), "Bookmark saved at "  + formattedPosition, Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), "Bookmark saved at " + formattedPosition, Toast.LENGTH_LONG).show();
 
             }
         });
@@ -211,6 +224,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         // if song loaded, update progress. todo needed? does this do anything?
         if (MainActivity.musicSrv != null && MainActivity.musicSrv.isPng()) {
             seekBar.setProgress(MusicService.getCurrentProgress());
+            playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
         }
 
         startTimer();
@@ -232,7 +246,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 // Ensure Servce is initialized
                 for (int i = 0; i < 30; i++) {
                     if (MusicService.mPlayer == null) {
-                        Log.i(getClass().getSimpleName(), "Progress Tracker - Music Service not initialized: " + i);
+                        Log.i(getClass().getSimpleName(), "Player Progress Tracker - Music Service not initialized: " + i);
                         try {
                             Thread.sleep(200);
                         } catch (InterruptedException e) {
@@ -240,36 +254,53 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                         }
                     }
                 }
-
+                Log.i(TAG, "Thread started");
                 // update textview while service is alive
-                while (MusicService.mPlayer != null) {
+                while (MusicService.mPlayer != null && PlayerFragment.seekBar != null) {
+
+
                     try {
-                        Thread.sleep(100);
+                        Thread.sleep(200);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
 
-                    // TODO - PUT THIS IN OTHER TRACKER???
                     // Get MainActivity for UI Thread
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 // Local reference for millis
-                                long millis = MusicService.mPlayer.getCurrentPosition();
+                                if (PlayerFragment.seekBar != null && MusicService.mPlayer.isPlaying()) { // todo if in view, not playing
+                                    long millis = 0;
+                                    if (MainActivity.firstPreparedSong) {
+                                        ///Log.i(TAG, "First Load");
+                                        millis = 0;//MusicService.mPlayer.getCurrentPosition();
+                                    } else {
+                                        /// Log.i(TAG, "Not first load");
+                                        millis = MusicService.mPlayer.getCurrentPosition();
+                                    }
 
-                                // Format time to mins, secs
-                                long second = (millis / 1000) % 60;
-                                int minutes = (int) (millis / 1000) / 60;
 
-                                // Set TextView with built string
-                                PlayerFragment.textSongCurrent.setText(String.valueOf(minutes) + ":" + String.format("%02d", second));
+                                    // Format time to mins, secs
+                                    long second = (millis / 1000) % 60;
+                                    int minutes = (int) (millis / 1000) / 60;
+
+                                    // Set TextView with built string
+                                    PlayerFragment.textSongCurrent.setText(String.valueOf(minutes) + ":" + String.format("%02d", second));
+
+
+                                    PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
+
+                                    Log.i(TAG, "Thread running");
+                                }
                             }
                         });
                     }
 
 
                 }
+                Log.i(TAG, "Thread finished");
             }
         }).start();
     }

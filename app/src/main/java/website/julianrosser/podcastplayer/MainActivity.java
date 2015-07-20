@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity
              * This below is the second Fragment and shouldn't be needed. But when removed
              * textviews aren't updated. Why does this happen?
              */
-            getNewPlayerFragment(0);
+            //getNewPlayerFragment(0);
 
         }
 
