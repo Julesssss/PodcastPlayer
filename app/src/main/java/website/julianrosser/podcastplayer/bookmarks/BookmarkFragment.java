@@ -139,7 +139,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         // Find bookmark information in database
         String[] returnedData = MainActivity.mDbHelper.getData(position);
 
-        // find song from list // todo quicker waY? make quick find algorythm
+        // find song from list // todo quicker waY? make quick find algorithm
         boolean matched = false;
         int songTrackPos = 0;
         for (Song s : MainActivity.songList) {
@@ -152,6 +152,10 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         }
 
         if (matched) {
+
+            MainActivity.firstSongPlayed = true;
+            MusicService.loadFromBookmark = false;
+
             // Load song and start
             MainActivity.musicSrv.setSongAtPos(songTrackPos);
 
@@ -168,6 +172,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
             fragmentManager.beginTransaction()
                     .replace(R.id.container, PlayerFragment.newInstance(position + 1))
                     .commit();
+
 
             // Update ActionBar title
             getActionBar().setTitle(getString(R.string.title_section1));
@@ -186,17 +191,6 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         } else {
             Log.i("SQL RETURN", "SIZE:0 /OR/ null");
         }
-
-        //MainActivity.musicSrv.setSongAtPos(b.getPos());
-
-        //MusicService.millisecondToSeekTo = b.getCurrentPositionInMillis();
-
-        //Log.i(getClass().getSimpleName(), "onItemClick: " + b.getTitle());
-        //if (null != mListener) {
-            // Notify the active callbacks interface (the activity, if the
-            // fragment is attached to one) that an item has been selected.
-        //    mListener.onFragmentInteraction(String.valueOf(MainActivity.bookmarkList.get(position).getArtist()));
-        //}
 
     }
     private ActionBar getActionBar() {

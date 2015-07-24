@@ -81,10 +81,19 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                         Log.i(TAG, "Not currently playing");
 
                         // if first song then start, else resume
-                        if (MainActivity.firstPreparedSong) {
-                            MainActivity.musicSrv.playCurrent();
+                        if (!MainActivity.firstSongPlayed) { // // TODO track - playcurrent from position
+
+                            MainActivity.musicSrv.playCurrentFromPosition();
+                            Log.i(TAG, "from pos");
+                            if (!MainActivity.firstSongPlayed) {
+                                startTimer();
+                            }
+                            // Update boolean so Thread runs properly
+                            MainActivity.firstSongPlayed = true;
+
                         } else {
                             MainActivity.musicSrv.resume();
+                            Log.i(TAG, " not from pos");
                         }
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
 
@@ -124,11 +133,19 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
                 // TODO - Logic for playing previous songs
+                MusicService.loadFromBookmark = false;
+
                 if (MusicService.mPlayer.getCurrentPosition() < 3000) {
                     MainActivity.musicSrv.playPrev();
                 } else {
                     MainActivity.musicSrv.playCurrent();
                 }
+
+
+                if (!MainActivity.firstSongPlayed) {
+                    startTimer();
+                }
+
             }
         });
 
@@ -137,10 +154,15 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         forward.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                MusicService.loadFromBookmark = false;
                 if (MainActivity.shuffleMode) {
                     MainActivity.musicSrv.playRandom();
                 } else {
                     MainActivity.musicSrv.playNext();
+                }
+
+                if (!MainActivity.firstSongPlayed) {
+                    startTimer();
                 }
             }
         });
@@ -227,7 +249,10 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
         }
 
-        startTimer();
+        // TODO track - if not first play..
+        if (MainActivity.firstSongPlayed) {
+            startTimer();
+        }
 
         return view;
 
@@ -255,6 +280,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                     }
                 }
                 Log.i(TAG, "Thread started");
+
                 // update textview while service is alive
                 while (MusicService.mPlayer != null && PlayerFragment.seekBar != null) {
 
@@ -275,7 +301,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                                     long millis = 0;
                                     if (MainActivity.firstPreparedSong) {
                                         ///Log.i(TAG, "First Load");
-                                        millis = 0;//MusicService.mPlayer.getCurrentPosition();
+                                        millis = 0;//MusicService.mPlayer.getCurrentPosition(); todo - never used????
                                     } else {
                                         /// Log.i(TAG, "Not first load");
                                         millis = MusicService.mPlayer.getCurrentPosition();
@@ -292,7 +318,8 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
                                     PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
 
-                                    Log.i(TAG, "Thread running");
+                                } else {
+
                                 }
                             }
                         });

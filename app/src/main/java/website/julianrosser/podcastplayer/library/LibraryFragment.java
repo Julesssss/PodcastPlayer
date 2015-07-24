@@ -11,6 +11,7 @@ import android.widget.AdapterView;
 import android.widget.TextView;
 
 import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
 
 
@@ -98,6 +99,9 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+        MainActivity.firstSongPlayed = true;
+        MusicService.loadFromBookmark = false;
 
         MainActivity.musicSrv.setSong(position);
 

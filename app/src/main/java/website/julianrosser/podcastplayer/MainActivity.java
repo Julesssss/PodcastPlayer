@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks, LibraryFragment.OnFragmentInteractionListener, BookmarkFragment.OnFragmentInteractionListener{
 
     // Array of songs
-
     public static ArrayList<Song> songList;
     // Array of bookmarks
     public static ArrayList<Bookmark> bookmarkList;
@@ -43,13 +42,20 @@ public class MainActivity extends AppCompatActivity
     public static boolean musicBound = false;
     // To prevent song starting on first play
     public static boolean firstPreparedSong = true;
+    // todo
+    public static boolean firstSongPlayed = false;
+    // The position in the song list of the last saved bookmark
+    int posOfLastBookmark;
+    // milli pos of first bookmark
+    static public String millisOfLastBookmark;
     // Shuffle mode boolean
     public static boolean shuffleMode = true;
     // Reference to music service
     public static MusicService musicSrv;
     // Reference to PlayerFragment
     public static PlayerFragment playerFragment;
-
+    // Last saved bookmark in DB, used in fragment to display info on open
+    public static String[] lastBookmark;
     // Used to store the last screen title. For use in {@link #restoreActionBar()}.
     public static CharSequence mTitle;
     // Intent used for binding service to Activity
@@ -58,6 +64,7 @@ public class MainActivity extends AppCompatActivity
     private NavigationDrawerFragment mNavigationDrawerFragment;
     // For logging purposes
     private String TAG = getClass().getSimpleName();
+
 
     // SQL
     public static SQLiteDatabase mDB = null;
@@ -75,13 +82,15 @@ public class MainActivity extends AppCompatActivity
             musicSrv.setList(MainActivity.songList);
             // update boolean to show service is bound
             musicBound = true;
-            /**
-             * TODO
-             * This below is the second Fragment and shouldn't be needed. But when removed
-             * textviews aren't updated. Why does this happen?
-             */
-            //getNewPlayerFragment(0);
+            // Also pass song position in millis
+            MusicService.millisecondToSeekTo = Integer.valueOf(lastBookmark[1]);
+            Log.i(TAG, "seekTOOOOOO:::: " + Integer.valueOf(lastBookmark[1]));
+            // When service is connected, pass the last saved bookmark
+            MainActivity.musicSrv.setSongButDontPlay(posOfLastBookmark);
 
+            if (MainActivity.musicSrv != null && PlayerFragment.seekBar != null) {
+                    PlayerFragment.seekBar.setProgress((int)MusicService.songBookmarkSeekPosition);
+            }
         }
 
         @Override
@@ -123,6 +132,29 @@ public class MainActivity extends AppCompatActivity
 
         // Get the underlying database for writing
         mDB = mDbHelper.getWritableDatabase();
+
+        // Load last saved bookmark from DB and pass info to MusicService for Fragment to use todo - are these necessary?
+        lastBookmark = mDbHelper.getLast();
+
+        MusicService.songArtist = lastBookmark[2];
+        MusicService.songTitle = lastBookmark[3];
+        //MusicService.songDuration = lastBookmark[1]; // todo add duration?
+
+        //MusicService
+        millisOfLastBookmark = lastBookmark[1];
+
+        // todo--v dupe code from bkfm
+
+        // find song from list // todo quicker waY? make quick find algorythm
+        posOfLastBookmark = 0; // todo - will this cause problems if no match is found and 0 is passed?
+        for (Song s : MainActivity.songList) {
+
+            if (s.getIDString().contentEquals(lastBookmark[0])) {
+                break;
+            }
+            posOfLastBookmark ++;
+        }
+
     }
 
     /**
