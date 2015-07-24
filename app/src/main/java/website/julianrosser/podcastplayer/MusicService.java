@@ -37,6 +37,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public static String songArtist = "";
     public static String songTitle = "";
     public static String songDuration = "";
+    public static String songCurrentPosition = "";
+    public static double songBookmarkSeekPosition = 0;
 
     // MediaPlayer reference
     public static MediaPlayer mPlayer;
@@ -45,7 +47,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     // The position of current song in the Song ArrayList
     public static int songPosition = 0;
     // De decide between loading from bookmark or playing from start
-    public boolean loadFromBookmark;
+    public static boolean loadFromBookmark;
     // Millisecond value of current bookmark
     public static int millisecondToSeekTo;
 
@@ -120,13 +122,38 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             // Prepare Asynchronously
             mPlayer.prepareAsync();
 
-            // todo, right place for this?s
-            MainActivity.firstPreparedSong = false;
+
 
             //Get song Object and update information references
             songTitle = playSong.getTitle();
             songArtist = playSong.getArtist();
             songDuration = playSong.getLength();
+
+
+            double d1 = millisecondToSeekTo;
+            double d2 = playSong.getLengthMillis();
+            double d3 = d1 / d2;
+            double d4 = d3 * 1000;
+            Log.i(TAG, "d3: " + d3);
+            Log.i(TAG, "d4: " + d4);
+
+
+            songBookmarkSeekPosition = (d1 / d2) * 1000;
+
+            // Format time to mins, secs
+            long second = (millisecondToSeekTo / 1000) % 60;
+            int minutes = (int) (millisecondToSeekTo / 1000) / 60;
+
+            songCurrentPosition = String.valueOf(minutes) + ":" + String.format("%02d", second);
+            Log.i(TAG, "d5: " + second);
+            Log.i(TAG, "d6: " + minutes);
+            Log.i(TAG, "d7: " + songCurrentPosition);
+
+
+            //Log.i(TAG, "SONG POSITION: " + songCurrentPosition);
+            //Log.i(TAG, "MILLIS TO SEEK TO: " + millisecondToSeekTo);
+            //Log.i(TAG, "SONGDURATION: " + songDuration);
+            // Log.i(TAG, "SEEEK POOOOOOS: " + songBookmarkSeekPosition); // todo - whyyyyyyyyyyyyy??????
 
             // If Fragment is in view & not null, update track information TextViews
             if (MainActivity.playerFragment != null) { // TODO - Also needed --> ? && MainActivity.playerFragment.isVisible()) {
@@ -144,7 +171,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                 }
 
                 if (PlayerFragment.textSongCurrent != null) {
-                    PlayerFragment.textSongCurrent.setText("0:00");
+                    PlayerFragment.textSongCurrent.setText(songCurrentPosition);
                     // TODO - If loading from bookmark, update textview here, not from fragment.
                 }
             }
@@ -195,30 +222,23 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.i(TAG, "onPrepared");
         // If loading from a bookmark, seek to required position
+        Log.i(TAG, "onPREPARED: lfb?:" + loadFromBookmark);
         if (loadFromBookmark) {
             mPlayer.seekTo(millisecondToSeekTo);
-            loadFromBookmark = false;
         }
 
-        /* Prevent first loaded song from playing when app is started
+
         if (MainActivity.firstPreparedSong) {
+            Log.i(TAG, "Don't play first loaded");
             MainActivity.firstPreparedSong = false;
-        } else { */
-            mediaPlayer.start();
-
-
-
-            //noinspection deprecation
-            PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-        //}
-
-        if (MainActivity.firstPreparedSong) {
-            Log.i(TAG, "MSSSS first");
 
         } else {
-            Log.i(TAG, "MSSSS not first");
+            // Start playback
+            mediaPlayer.start();
+            //noinspection deprecation
+            PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+            loadFromBookmark = false;
         }
-
 
         // Create Intents for notification builder
         Intent notIntent = new Intent(this, MainActivity.class);
@@ -278,6 +298,16 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         loadFromBookmark = true;
     }
 
+    /**
+     * For playing song through bookmark Fragment.
+     */
+    public void setSongButDontPlay(int songIndex) {
+        mPlayer.reset();
+        songPosition = songIndex;
+        playSong();
+        loadFromBookmark = true;
+    }
+
     @Override
     public void onAudioFocusChange(int result) {
         Log.i(TAG, "AudioFocusChanged: " + result);
@@ -321,9 +351,16 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         playSong();
     }
 
-    //skip to next
+    // play current song again
     public void playCurrent() {
         if (songPosition == songs.size()) songPosition = 0;
+        playSong();
+    }
+
+    //skip to next
+    public void playCurrentFromPosition() {
+        if (songPosition == songs.size()) songPosition = 0;
+        mPlayer.reset();
         playSong();
     }
 

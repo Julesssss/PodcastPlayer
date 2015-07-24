@@ -63,7 +63,32 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 				data[i] = cursor.getString(i);
 			}
 		}
+
+		cursor.close();
+
 		return data;
+	}
+
+	public String[] getLast() {
+
+		String selectQuery = "SELECT " + UNIQUE_ID + ", " + BOOKMARK_MILLIS + ", " + ARTIST_NAME + ", " + TRACK_NAME
+				+ " FROM " + TABLE_NAME + " ORDER BY " + _ID +  " DESC LIMIT 1";
+
+		SQLiteDatabase db = this.getReadableDatabase();
+		Cursor cursor = db.rawQuery(selectQuery, null);
+		String[] data = new String[4]; // todo - change 2 to sting ref
+
+		while (cursor.moveToNext()) {
+			for (int i = 0; i < 4; i++) {
+				data[i] = cursor.getString(i);
+			}
+		}
+
+		cursor.close();
+
+		Log.i("DBH", "DATA: " + data[1] + " / " + data[2] + " / " + data[3]);
+		return  data;
+
 	}
 
 	void deleteDatabase() {

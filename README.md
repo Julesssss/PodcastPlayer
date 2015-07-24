@@ -1,17 +1,20 @@
 # PodcastPlayer 0.2
 Android application for bookmarking Audiobooks & podcasts. Easily keep of progress for multiple books and shows.
 
-![](http://julianrosser.website/images/app_screenshots/PodcastPlayer0-1.png)
+![](http://julianrosser.website/images/app_screenshots/pp_3.png)
 
 TODO
-- Load last saved bookmark in onCreate and pass so fragment can load data from service
 - Clean code & write up all TODOs
 - Build function for deleting bookmarks from SQL DB - context menu?
-- Record shuffle history, open last played when opened.(When in shuffle  mide, create order from track list, save Array and Position, can load save easy)
+- Record shuffle history, open last played when opened.(When in shuffle mode, create order from track list, save Array and Position, can load save easy)
 - Don't repeat song when playing random. Make function
 - Sometimes, wrong track is played from bookmark???
+- Add images to github
+- Don't allow multiple bookmark hits
+- Change 70m to 1h10m
 
 Log
+- 24/07 - Load last bookmarked song from Bookmark DB. Tracker Thread now starts when music starts. Updated screenshot.
 - 20/07 - Combined trackers to one Thread, Thread lifecycle now matches PlayerFragment. Fixed MediaPlayer -380 bugs, player wasn't initialized properly.
 - 19/07 - Skip to beginning of the track if < 3secs. Fixed SeekBar update bug.
 - 18/07 - Created basic buttons to replace menu options. Update title when opening bookmark.
