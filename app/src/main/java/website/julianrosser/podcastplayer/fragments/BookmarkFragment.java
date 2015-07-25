@@ -1,32 +1,29 @@
-package website.julianrosser.podcastplayer.bookmarks;
+package website.julianrosser.podcastplayer.fragments;
 
 import android.app.Activity;
-import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
-import website.julianrosser.podcastplayer.NavigationDrawerFragment;
-import website.julianrosser.podcastplayer.PlayerFragment;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.classes.Bookmark;
-import website.julianrosser.podcastplayer.classes.Song;
-import website.julianrosser.podcastplayer.library.DatabaseOpenHelper;
+import website.julianrosser.podcastplayer.objects.Song;
+import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
 
 
 /**
@@ -41,11 +38,6 @@ import website.julianrosser.podcastplayer.library.DatabaseOpenHelper;
 public class BookmarkFragment extends android.support.v4.app.Fragment implements AbsListView.OnItemClickListener {
 
     private static final String ARG_SECTION_NUMBER = "bookmark";
-    /**
-     * The Adapter which will be used to populate the ListView/GridView with
-     * Views.
-     */
-    public BookmarkListAdapter bookmarkListAdapter;
     private OnFragmentInteractionListener mListener;
     /**
      * The fragment's ListView/GridView.
@@ -74,15 +66,14 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Create custom adapter
-        bookmarkListAdapter = new BookmarkListAdapter(getActivity()); // todo - delete this??/
-
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+
+
         // Inflate view - todo but why this audiofile???
         View view = inflater.inflate(R.layout.fragment_audiofile, container, false);
 
@@ -99,7 +90,9 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
 
+        //mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
 
+        registerForContextMenu(mListView);
 
         return view;
     }
@@ -226,4 +219,25 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         public void onFragmentInteraction(String id);
     }
 
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        getActivity().getMenuInflater().inflate(R.menu.bookmark_context, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+        int position = info.position;
+
+        switch (item.getItemId()) {
+            case R.id.action_context_delete:
+                MainActivity.mDbHelper.deleteEntry(position);
+                mAdapter.swapCursor(bookmarks());
+               //  mAdapter.notify(); todo - update...could just load new fragment
+                return true;
+        }
+        return super.onContextItemSelected(item);
+    }
 }

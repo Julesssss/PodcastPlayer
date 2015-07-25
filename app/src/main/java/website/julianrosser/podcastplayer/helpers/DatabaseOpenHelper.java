@@ -1,0 +1,144 @@
+package website.julianrosser.podcastplayer.helpers;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+/**
+ * Class for helping with DataBase operations and requests
+ */
+public class DatabaseOpenHelper extends SQLiteOpenHelper {
+
+    // Names for SQL table & columns
+    final public static String TABLE_NAME = "bookmarks";
+    final public static String ARTIST_NAME = "artist_name";
+    final public static String TRACK_NAME = "track_name";
+    final public static String UNIQUE_ID = "unique_id";
+    final public static String BOOKMARK_FORMATTED = "bookmark_formatted";
+    final public static String BOOKMARK_MILLIS = "bookmark_millis";
+    final public static String _ID = "_id";
+    final public static String[] columns = {_ID, UNIQUE_ID, ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED, BOOKMARK_MILLIS};
+
+    // Only the columns that are to be passed to ListView for display
+    final public static String[] columnsForCursorAdaptor = {ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED};
+
+    // Command for initializing database
+    final private static String CREATE_CMD =
+            "CREATE TABLE bookmarks (" + _ID
+                    + " INTEGER PRIMARY KEY AUTOINCREMENT, " + UNIQUE_ID + " TEXT NOT NULL, "
+                    + ARTIST_NAME + " TEXT NOT NULL, " + TRACK_NAME + " TEXT NOT NULL, " + BOOKMARK_FORMATTED
+                    + " TEXT NOT NULL," + BOOKMARK_MILLIS + " TEXT NOT NULL)";
+
+    final private static String NAME = "bookmark_db";
+    final private static Integer VERSION = 1;
+
+    public DatabaseOpenHelper(Context context) {
+        super(context, NAME, null, VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+
+        db.execSQL(CREATE_CMD);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Required, but unused
+    }
+
+    public int countEntries() {
+        Cursor mCount = this.getReadableDatabase().rawQuery("select count(*) from " + TABLE_NAME, null);
+        mCount.moveToFirst();
+        int count = mCount.getInt(0);
+        mCount.close();
+        return count;
+    }
+
+    /**
+     * Return the requested track's info
+     */
+    public String[] getData(int position) {
+
+        int STRING_ARGS = 2;
+
+        String selectQuery = "SELECT " + UNIQUE_ID + ", " + BOOKMARK_MILLIS
+                + " FROM " + TABLE_NAME + " LIMIT 1 OFFSET " + position;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        String[] data = new String[STRING_ARGS];
+
+        while (cursor.moveToNext()) {
+            for (int i = 0; i < STRING_ARGS; i++) {
+                data[i] = cursor.getString(i);
+            }
+        }
+        cursor.close();
+
+        return data;
+    }
+
+    /**
+     * Return the requested track's id
+     */
+    public String[] getID(int position) {
+
+        int STRING_ARGS = 1;
+
+        String selectQuery = "SELECT " + _ID + " FROM " + TABLE_NAME + " LIMIT 1 OFFSET " + position;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        String[] data = new String[STRING_ARGS];
+
+        while (cursor.moveToNext()) {
+            for (int i = 0; i < STRING_ARGS; i++) {
+                data[i] = cursor.getString(i);
+            }
+        }
+        cursor.close();
+
+        return data;
+    }
+
+    public String[] getLast() {
+
+        int STRING_ARGS = 4;
+
+        String selectQuery = "SELECT " + UNIQUE_ID + ", " + BOOKMARK_MILLIS + ", " + ARTIST_NAME + ", " + TRACK_NAME
+                + " FROM " + TABLE_NAME + " ORDER BY " + _ID + " DESC LIMIT 1";
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        String[] data = new String[STRING_ARGS];
+
+        while (cursor.moveToNext()) {
+            for (int i = 0; i < STRING_ARGS; i++) {
+                data[i] = cursor.getString(i);
+            }
+        }
+        cursor.close();
+
+        return data;
+    }
+
+    /**
+     * Delete Bookmark entry from Database
+     */
+    public void deleteEntry(int position) {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // get row and _ID
+        String[] infoToDelete = getID(position);
+        String id = infoToDelete[0];
+
+        // delete using _ID
+        db.delete(DatabaseOpenHelper.TABLE_NAME,
+                DatabaseOpenHelper._ID + "=?",
+                new String[]{id});
+    }
+
+}

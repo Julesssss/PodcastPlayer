@@ -16,21 +16,17 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Random;
 
-import website.julianrosser.podcastplayer.classes.Song;
+import website.julianrosser.podcastplayer.fragments.PlayerFragment;
+import website.julianrosser.podcastplayer.objects.Song;
 
 
 public class MusicService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
-    // For logging purposes
-    public String TAG = getClass().getSimpleName();
-    // Binder returned to Activity
-    private final IBinder musicBind = new MusicBinder();
     // Notification id used when starting foreground Activity
     private static final int NOTIFY_ID = 1;
     // Song Information Strings
@@ -39,17 +35,67 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public static String songDuration = "";
     public static String songCurrentPosition = "";
     public static double songBookmarkSeekPosition = 0;
-
     // MediaPlayer reference
     public static MediaPlayer mPlayer;
-    // ArrayList of songs
-    private ArrayList<Song> songs;
     // The position of current song in the Song ArrayList
     public static int songPosition = 0;
     // De decide between loading from bookmark or playing from start
     public static boolean loadFromBookmark;
     // Millisecond value of current bookmark
     public static int millisecondToSeekTo;
+    // ArrayList of songs
+    private static ArrayList<Song> songs;
+    // Binder returned to Activity
+    private final IBinder musicBind = new MusicBinder();
+    // For logging purposes
+    public String TAG = getClass().getSimpleName();
+
+    public static void updateTextViews() {
+
+        // Song reference
+        Song playSong = songs.get(songPosition);
+
+        //Get song Object and update information references
+        songTitle = playSong.getTitle();
+        songArtist = playSong.getArtist();
+        songDuration = playSong.getLength();
+
+        songBookmarkSeekPosition = ((double) millisecondToSeekTo / (double) playSong.getLengthMillis()) * 1000;
+
+        // Format time to minutes, secs
+        long second = (millisecondToSeekTo / 1000) % 60;
+        int minutes = (millisecondToSeekTo / 1000) / 60;
+
+        songCurrentPosition = String.valueOf(minutes) + ":" + String.format("%02d", second);
+
+        // If Fragment is in view & not null, update track information TextViews
+        if (MainActivity.playerFragment != null) {
+
+            if (PlayerFragment.textSongTitle != null) {
+                PlayerFragment.textSongTitle.setText(songTitle);
+            }
+
+            if (PlayerFragment.textSongArtist != null) {
+                PlayerFragment.textSongArtist.setText(songArtist);
+            }
+
+            if (PlayerFragment.textSongLength != null) {
+                PlayerFragment.textSongLength.setText(songDuration);
+            }
+
+            if (PlayerFragment.textSongCurrent != null) {
+                PlayerFragment.textSongCurrent.setText(songCurrentPosition);
+            }
+        }
+    }
+
+    public static int getCurrentProgress() {
+        double pos = mPlayer.getCurrentPosition();
+        double dur = mPlayer.getDuration();
+        double prog = (pos / dur) * MainActivity.SEEKBAR_RATIO;
+
+        return (int) Math.round(prog * 10) / 10;
+    }
 
     @Override
     public void onCreate() {
@@ -69,7 +115,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         // Start initialization methods
         initMusicPlayer();
-        //initProgressTracker();
     }
 
     /**
@@ -88,7 +133,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     /**
-     *  Method for prepping MediaPlayer for new file and updating track information.
+     * Method for prepping MediaPlayer for new file and updating track information.
      */
     public void playSong() {
 
@@ -98,13 +143,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mPlayer.reset();
 
         // Ensure track list isn't empty
-        if (songs.size() == 0) {
-            Toast.makeText(this, "No songs showing on device. If incorrect, try closing app and restarting.", Toast.LENGTH_SHORT).show();
-        } else {
+        if (songs.size() >= 0) {
 
+            // Get reference to current song
             Song playSong = songs.get(songPosition);
-
-
 
             // Get song ID, then create track URI
             long currSong = playSong.getID();
@@ -122,59 +164,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             // Prepare Asynchronously
             mPlayer.prepareAsync();
 
-
-
-            //Get song Object and update information references
-            songTitle = playSong.getTitle();
-            songArtist = playSong.getArtist();
-            songDuration = playSong.getLength();
-
-
-            double d1 = millisecondToSeekTo;
-            double d2 = playSong.getLengthMillis();
-            double d3 = d1 / d2;
-            double d4 = d3 * 1000;
-            Log.i(TAG, "d3: " + d3);
-            Log.i(TAG, "d4: " + d4);
-
-
-            songBookmarkSeekPosition = (d1 / d2) * 1000;
-
-            // Format time to mins, secs
-            long second = (millisecondToSeekTo / 1000) % 60;
-            int minutes = (int) (millisecondToSeekTo / 1000) / 60;
-
-            songCurrentPosition = String.valueOf(minutes) + ":" + String.format("%02d", second);
-            Log.i(TAG, "d5: " + second);
-            Log.i(TAG, "d6: " + minutes);
-            Log.i(TAG, "d7: " + songCurrentPosition);
-
-
-            //Log.i(TAG, "SONG POSITION: " + songCurrentPosition);
-            //Log.i(TAG, "MILLIS TO SEEK TO: " + millisecondToSeekTo);
-            //Log.i(TAG, "SONGDURATION: " + songDuration);
-            // Log.i(TAG, "SEEEK POOOOOOS: " + songBookmarkSeekPosition); // todo - whyyyyyyyyyyyyy??????
-
-            // If Fragment is in view & not null, update track information TextViews
-            if (MainActivity.playerFragment != null) { // TODO - Also needed --> ? && MainActivity.playerFragment.isVisible()) {
-
-                if (PlayerFragment.textSongTitle != null) {
-                    PlayerFragment.textSongTitle.setText(songTitle);
-                }
-
-                if (PlayerFragment.textSongArtist != null) {
-                    PlayerFragment.textSongArtist.setText(songArtist);
-                }
-
-                if (PlayerFragment.textSongLength != null) {
-                    PlayerFragment.textSongLength.setText(songDuration);
-                }
-
-                if (PlayerFragment.textSongCurrent != null) {
-                    PlayerFragment.textSongCurrent.setText(songCurrentPosition);
-                    // TODO - If loading from bookmark, update textview here, not from fragment.
-                }
-            }
+            // Update TextViews
+            updateTextViews();
         }
 
     }
@@ -222,16 +213,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.i(TAG, "onPrepared");
         // If loading from a bookmark, seek to required position
-        Log.i(TAG, "onPREPARED: lfb?:" + loadFromBookmark);
         if (loadFromBookmark) {
             mPlayer.seekTo(millisecondToSeekTo);
         }
 
-
         if (MainActivity.firstPreparedSong) {
-            Log.i(TAG, "Don't play first loaded");
             MainActivity.firstPreparedSong = false;
-
         } else {
             // Start playback
             mediaPlayer.start();
@@ -282,7 +269,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
      * For playing chosen song
      */
     public void setSong(int songIndex) {
-        Log.i(TAG, "setSong");
         mPlayer.reset();
         songPosition = songIndex;
         playSong();
@@ -325,20 +311,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void seek(int position) {
-        // todo - change 1000 to refernce
-        mPlayer.seekTo((getLength() / 1000) * position);
+        mPlayer.seekTo((getLength() / MainActivity.SEEKBAR_RATIO) * position);
     }
 
     public int getLength() {
         return mPlayer.getDuration();
-    }
-
-    static int getCurrentProgress() {
-        double pos = mPlayer.getCurrentPosition();
-        double dur = mPlayer.getDuration();
-        double prog = (pos / dur) * 1000;
-
-        return (int)Math.round(prog * 10) / 10;
     }
 
     public void resume() {
@@ -371,61 +348,26 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         playSong();
     }
 
-    //skip to next
+    // Find random song
     public void playRandom() {
+
+        int oldPos = songPosition;
+
         songPosition = new Random().nextInt(songs.size() + 1);
-        if (songPosition == songs.size()) songPosition = 0;
-        playSong();
-    }
 
-    /**
-     * Thread for tracking song position and updating SeekBar
-     */
-    public void initProgressTracker() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // Ensure MusicService is initialized before starting tracker
-                for (int i = 0; i < 10; i++) {
-                    if (mPlayer == null) {
-                        Log.i(getClass().getSimpleName(), "Service Progress Tracker - Music Service not initialized: " + i);
-
-                        // Player is null, wait 200ms then try again
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
-                // mPlayer is initialized. Keep updating Seekbar while alive.
-                while (mPlayer != null ) {
-
-                    // Delay in ms between updates
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    // Only attempt to get progress and update if SeekBar isn't null, and mPlayer is playing.
-                    // test
-
-                }
-
-                Log.i("TAG", "Tracker Thread Ending");
+        for (int j = 0; j < 5; j++) {
+            if (oldPos == songPosition) {
+                songPosition = new Random().nextInt(songs.size() + 1);
+            } else {
+                break;
             }
-        }).start();
-    }
-
-    /**
-     * Required Bind Methods
-     */
-    public class MusicBinder extends Binder {
-        MusicService getService() {
-            return MusicService.this;
         }
+
+        if (songPosition == songs.size()) {
+            songPosition = 0;
+        }
+
+        playSong();
     }
 
     @Override
@@ -438,5 +380,14 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mPlayer.stop();
         mPlayer.release();
         return false;
+    }
+
+    /**
+     * Required Bind Methods
+     */
+    public class MusicBinder extends Binder {
+        MusicService getService() {
+            return MusicService.this;
+        }
     }
 }

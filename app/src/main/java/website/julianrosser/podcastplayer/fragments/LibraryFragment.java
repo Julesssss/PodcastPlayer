@@ -1,7 +1,10 @@
-package website.julianrosser.podcastplayer.library;
+package website.julianrosser.podcastplayer.fragments;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +16,7 @@ import android.widget.TextView;
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
+import website.julianrosser.podcastplayer.helpers.LibrarySongListAdapter;
 
 
 /**
@@ -112,6 +116,19 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
             mListener.onFragmentInteraction(String.valueOf(MainActivity.songList.get(position).getTitle()));
         }
 
+        NavigationDrawerFragment.mDrawerListView.setItemChecked(0, true);
+
+        // Launch player fragment
+        // update the main content by replacing fragments
+        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, PlayerFragment.newInstance(position + 1))
+                .commit();
+
+
+        // Update ActionBar title
+        getActionBar().setTitle(getString(R.string.title_section1));
+
     }
 
     /**
@@ -138,8 +155,11 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         public void onFragmentInteraction(String id);
+    }
+
+    private ActionBar getActionBar() {
+        return ((AppCompatActivity) getActivity()).getSupportActionBar();
     }
 
 }

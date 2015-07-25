@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer;
+package website.julianrosser.podcastplayer.fragments;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
@@ -25,6 +25,7 @@ import java.util.Random;
 
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
+import website.julianrosser.podcastplayer.R;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.

@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer;
+package website.julianrosser.podcastplayer.fragments;
 
 
 import android.app.Activity;
@@ -13,8 +13,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import website.julianrosser.podcastplayer.classes.Song;
-import website.julianrosser.podcastplayer.library.DatabaseOpenHelper;
+import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.MusicService;
+import website.julianrosser.podcastplayer.R;
+import website.julianrosser.podcastplayer.objects.Song;
+import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
 
 
 /**
@@ -29,12 +32,12 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     private static final String TAG = "PlayerFragment";
 
     // View references
-    static SeekBar seekBar;
-    static ImageButton playPause;
-    static TextView textSongTitle;
-    static TextView textSongArtist;
-    static TextView textSongCurrent;
-    static TextView textSongLength;
+    public static SeekBar seekBar;
+    public static ImageButton playPause;
+    public static TextView textSongTitle;
+    public static TextView textSongArtist;
+    public static TextView textSongCurrent;
+    public static TextView textSongLength;
 
     /**
      * Required empty public constructor
@@ -69,22 +72,17 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
                 if (MainActivity.musicSrv != null && MainActivity.musicBound) {
 
-                    Log.i(TAG, "playPausebuttonClickeed");
-
                     // if already playing, pause
                     if (MainActivity.musicSrv.isPng()) {
-                        Log.i(TAG, "Already Playing");
                         MainActivity.musicSrv.pausePlayer();
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
 
                     } else {
-                        Log.i(TAG, "Not currently playing");
 
                         // if first song then start, else resume
-                        if (!MainActivity.firstSongPlayed) { // // TODO track - playcurrent from position
+                        if (!MainActivity.firstSongPlayed) {
 
                             MainActivity.musicSrv.playCurrentFromPosition();
-                            Log.i(TAG, "from pos");
                             if (!MainActivity.firstSongPlayed) {
                                 startTimer();
                             }
@@ -93,7 +91,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
                         } else {
                             MainActivity.musicSrv.resume();
-                            Log.i(TAG, " not from pos");
                         }
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
 
@@ -194,12 +191,11 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 // SQL DB
                 ContentValues values = new ContentValues();
 
-                // todo - Should there just be the DB and no array list? Yes, probably
-
                 // Get song
                 Song s = MainActivity.songList.get(MusicService.songPosition); // todo - might crash if song list changes or song changes, test
 
                 // Get String values of names, other info
+                values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
                 values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
                 values.put(DatabaseOpenHelper.TRACK_NAME, s.getTitle());
                 values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
@@ -225,7 +221,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
         // Seek bar listener
         seekBar = (SeekBar) view.findViewById(R.id.seekBar);
-        seekBar.setMax(1000); // todo - change to reference in MainActivity
+        seekBar.setMax(MainActivity.SEEKBAR_RATIO);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean fromUser) {
@@ -243,13 +239,8 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             }
         });
 
-        // if song loaded, update progress. todo needed? does this do anything?
-        if (MainActivity.musicSrv != null && MainActivity.musicSrv.isPng()) {
-            seekBar.setProgress(MusicService.getCurrentProgress());
-            playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-        }
 
-        // TODO track - if not first play..
+        // Start timer if not the first time fragment is opened
         if (MainActivity.firstSongPlayed) {
             startTimer();
         }
