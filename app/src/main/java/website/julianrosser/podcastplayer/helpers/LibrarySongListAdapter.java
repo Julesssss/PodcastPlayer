@@ -56,8 +56,10 @@ public class LibrarySongListAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
+
+
         holder.title.setText(s.getTitle());
-        holder.artist.setText(s.getArtist());
+        holder.artist.setText(s.getArtist() + " (" + s.getLength() + ")");
 
         return convertView;
     }

@@ -40,6 +40,8 @@ public class MainActivity extends AppCompatActivity
     // To prevent song starting on first play
     public static boolean firstPreparedSong = true;
     // to check if first song has played yet
+    public static int seekbarPosition;
+    public static String textCurrentPos;
     public static boolean firstSongPlayed = false;
     // milli pos of first bookmark
     static public String millisOfLastBookmark;
@@ -374,7 +376,6 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
     public void onFragmentInteraction(String id) {
         Log.i(TAG, "onFragInteraction: " + id);
     }

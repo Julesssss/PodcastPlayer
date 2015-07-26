@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.TextView;
 
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
@@ -20,11 +19,9 @@ import website.julianrosser.podcastplayer.helpers.LibrarySongListAdapter;
 
 
 /**
- * A fragment representing a list of Items.
- * <p/>
+ * A fragment representing a list of Songs
  * Large screen devices (such as tablets) are supported by replacing the ListView
  * with a GridView.
- * <p/>
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
@@ -37,10 +34,6 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
      */
     public LibrarySongListAdapter librarySongListAdapter;
     private OnFragmentInteractionListener mListener;
-    /**
-     * The fragment's ListView/GridView.
-     */
-    private AbsListView mListView;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -72,7 +65,10 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
         View view = inflater.inflate(R.layout.fragment_audiofile, container, false);
 
         // Set the custom adapter
-        mListView = (AbsListView) view.findViewById(android.R.id.list);
+        /*
+      The fragment's ListView/GridView.
+     */
+        AbsListView mListView = (AbsListView) view.findViewById(android.R.id.list);
         mListView.setAdapter(librarySongListAdapter);
 
         // Set OnItemClickListener so we can be notified on item clicks
@@ -131,17 +127,8 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
 
     }
 
-    /**
-     * The default content for this Fragment has a TextView that is shown when
-     * the list is empty. If you would like to change the text, call this method
-     * to supply the text it should use.
-     */
-    public void setEmptyText(CharSequence emptyText) {
-        View emptyView = mListView.getEmptyView();
-
-        if (emptyView instanceof TextView) {
-            ((TextView) emptyView).setText(emptyText);
-        }
+    private ActionBar getActionBar() {
+        return ((AppCompatActivity) getActivity()).getSupportActionBar();
     }
 
     /**
@@ -155,11 +142,7 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        public void onFragmentInteraction(String id);
-    }
-
-    private ActionBar getActionBar() {
-        return ((AppCompatActivity) getActivity()).getSupportActionBar();
+        void onFragmentInteraction(String id);
     }
 
 }

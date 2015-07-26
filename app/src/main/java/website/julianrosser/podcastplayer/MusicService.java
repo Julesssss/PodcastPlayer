@@ -200,7 +200,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         Log.e(getClass().getSimpleName(), String.format("onError() - Error(%s%s)", what, extra));
 
-        // TODO - Specific error handling
+        // Specific error handling
         // if (what == MediaPlayer.MEDIA_ERROR_SERVER_DIED) {
 
         // Reset Player
