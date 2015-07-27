@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer;
+package website.julianrosser.podcastplayer.fragments;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
@@ -25,6 +25,7 @@ import java.util.Random;
 
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
+import website.julianrosser.podcastplayer.R;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -101,7 +102,7 @@ public class NavigationDrawerFragment extends Fragment {
                 selectItem(position);
             }
         });
-        mDrawerListView.setAdapter(new ArrayAdapter<String>(
+        mDrawerListView.setAdapter(new ArrayAdapter<>(
                 getActionBar().getThemedContext(),
                 android.R.layout.simple_list_item_activated_1,
                 android.R.id.text1,
@@ -261,7 +262,7 @@ public class NavigationDrawerFragment extends Fragment {
 
         if (item.getItemId() == R.id.action_settings) {
             int r = new Random().nextInt(3);
-            Style style = null;
+            Style style = Style.INFO;
             switch (r) {
                 case 0:
                     style = Style.ALERT;
@@ -301,7 +302,7 @@ public class NavigationDrawerFragment extends Fragment {
     /**
      * Callbacks interface that all activities using this fragment must implement.
      */
-    public static interface NavigationDrawerCallbacks {
+    public interface NavigationDrawerCallbacks {
         /**
          * Called when an item in the navigation drawer is selected.
          */

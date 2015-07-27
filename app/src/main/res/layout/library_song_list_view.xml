@@ -15,19 +15,25 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:singleLine="true"
-        android:text="SONG"
         android:textColor="#fff"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:textSize="19sp" />
 
-    <!-- Artist -->
-    <TextView
-        android:id="@+id/songListArtist"
+    <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:text="ARTIST"
-        android:textColor="#fff"
-        android:textSize="16sp" />
+        android:layout_height="wrap_content">
+
+        <!-- Artist -->
+        <TextView
+            android:id="@+id/songListArtist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textColor="#fff"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+
+
+    </LinearLayout>
 
 </LinearLayout>

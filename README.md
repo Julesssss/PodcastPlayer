@@ -1,21 +1,22 @@
 # PodcastPlayer 0.2
-Android application for bookmarking Audiobooks & podcasts. Easily keep of progress for multiple books and shows.
+Android application for bookmarking Audiobooks & podcasts. Easily track progress of multiple audiobooks and shows.
 
 ![](http://julianrosser.website/images/app_screenshots/pp_3.png)
 
 TODO
-- Clean code & write up all TODOs
-- Build function for deleting bookmarks from SQL DB - context menu?
-- Record shuffle history, open last played when opened.(When in shuffle mode, create order from track list, save Array and Position, can load save easy)
-- Don't repeat song when playing random. Make function
-- Sometimes, wrong track is played from bookmark???
-- Add images to github
-- Don't allow multiple bookmark hits
-- Change 70m to 1h10m
+- Let Activity be destroyed, make Service work without it
+- Make Bookmark Dialog with option for note
+- Work out how to find ONLY AudioBooks, Podcasts. Check MusicCursor info.
+- The order of songlist might change, wrong 'LastSong' will be loaded.
+- Test formatted to hour current playtime
+- Check Noti Builder for lollipop with added media controls
 
 Log
+- 27/07 - App opens to last played song, at last played position. Play time formatted correctly. Various SeekBar bugs. Added Scrollbar to ListView.
+- 26/07 - UI updates to Library and Bookmark Lists. Fixed display bugs where SeekBar reset to 0. Cleaned rest of project.
+- 25/07 - Delete Bookmarks with context menu. Logic to prevent no tracks on device crash. Fixed back button bug. String format for tracks over an hour. Tidied MA, MS, DOH & Song.
 - 24/07 - Load last bookmarked song from Bookmark DB. Tracker Thread now starts when music starts. Updated screenshot.
-- 20/07 - Combined trackers to one Thread, Thread lifecycle now matches PlayerFragment. Fixed MediaPlayer -380 bugs, player wasn't initialized properly.
+- 20/07 - Combined trackers to one Thread, Thread lifecycle now matches PlayerFragment. Finally fixed MediaPlayer -380 bugs, player wasn't initialized properly.
 - 19/07 - Skip to beginning of the track if < 3secs. Fixed SeekBar update bug.
 - 18/07 - Created basic buttons to replace menu options. Update title when opening bookmark.
 - 17/07 - Build SQL Database, Database helper class, linked to CursorAdapter and made add/find functions. Fixed back button crash & incorrect play/pause image.
@@ -26,17 +27,20 @@ Log
 - 12/06 - Built library ListView fragment, layout view, added title and activity callbacks. Duration textview and code.
 - 11/06 - Started log. Opened project for the first time in weeks, NOT a good idea to leave unfixed bugs, took me a while to debug.
 
-Notes
-- Destroy tracker when out of view, or when fragment closes????
-- Memory slowly fills, play stutters, then space is freed up. Why?
+Notes & things to do later
+- Is shuffle even needed?
+- Does GitHub project load properly?
+- might crash if song list changes or song changes, test
+- What if Fragment dies and is restarted
+- Memory slowly fills, play stutters, then space is freed up. Is this normal?
 - ListView - have artist/title on seperate lines to use up space, show percentage/time at right side?
 - Should database be opened and closed on data change? would this affect the cursor?
 - Should the db be in main activity? Should there just be the DB and no array list? Yes probably
 - Should adding a bookmark overwrite old or create new??
 - Expand SeekBar on touch for easy seeking?
-- Should only update seek bar when in view?
-- Use listener to check for play/pause status and update ImageButton?
-- Make ShuffleMode a preference, not simple boolean?
-- Name - 'PodCats - Audiobook & Podcast bookmarker'     ??
+- Name - 'PodCats - AudioBook & Podcast bookmarker'     ??
 - Should I make intent & fragment references private/hidden?
+- Shuffle music app???s
+- Find better Unique ID? media_id changes if files move or get renamed, how does other apps handle this?
+- FIRST ONCREATE, moveing seekbar dows nothing before clicking play.
 

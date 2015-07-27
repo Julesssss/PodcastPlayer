@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer;
+package website.julianrosser.podcastplayer.fragments;
 
 
 import android.app.Activity;
@@ -13,8 +13,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import website.julianrosser.podcastplayer.classes.Song;
-import website.julianrosser.podcastplayer.library.DatabaseOpenHelper;
+import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.MusicService;
+import website.julianrosser.podcastplayer.R;
+import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
+import website.julianrosser.podcastplayer.objects.Song;
 
 
 /**
@@ -29,12 +32,12 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     private static final String TAG = "PlayerFragment";
 
     // View references
-    static SeekBar seekBar;
-    static ImageButton playPause;
-    static TextView textSongTitle;
-    static TextView textSongArtist;
-    static TextView textSongCurrent;
-    static TextView textSongLength;
+    public static SeekBar seekBar;
+    public static ImageButton playPause;
+    public static TextView textSongTitle;
+    public static TextView textSongArtist;
+    public static TextView textSongCurrent;
+    public static TextView textSongLength;
 
     /**
      * Required empty public constructor
@@ -68,35 +71,17 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             public void onClick(View view) {
 
                 if (MainActivity.musicSrv != null && MainActivity.musicBound) {
-
-                    Log.i(TAG, "playPausebuttonClickeed");
-
                     // if already playing, pause
                     if (MainActivity.musicSrv.isPng()) {
-                        Log.i(TAG, "Already Playing");
                         MainActivity.musicSrv.pausePlayer();
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
-
                     } else {
-                        Log.i(TAG, "Not currently playing");
 
-                        // if first song then start, else resume
-                        if (!MainActivity.firstSongPlayed) { // // TODO track - playcurrent from position
+                        MainActivity.musicSrv.resume();
+                        startTimer();
+                        MainActivity.firstSongPlayed = true;
 
-                            MainActivity.musicSrv.playCurrentFromPosition();
-                            Log.i(TAG, "from pos");
-                            if (!MainActivity.firstSongPlayed) {
-                                startTimer();
-                            }
-                            // Update boolean so Thread runs properly
-                            MainActivity.firstSongPlayed = true;
-
-                        } else {
-                            MainActivity.musicSrv.resume();
-                            Log.i(TAG, " not from pos");
-                        }
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-
                     }
 
                 } else {
@@ -117,7 +102,8 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
             textSongTitle.setText(MusicService.songTitle);
             textSongArtist.setText(MusicService.songArtist);
-            textSongCurrent.setText("0:00"); // TODO - use actual, not string
+            Log.i("SEEK", "SEEK2 : " + MusicService.songCurrentPosition);
+            textSongCurrent.setText(MusicService.songCurrentPosition);
             textSongLength.setText(MusicService.songDuration);
 
             // set button to play
@@ -132,7 +118,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         rewind.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO - Logic for playing previous songs
                 MusicService.loadFromBookmark = false;
 
                 if (MusicService.mPlayer.getCurrentPosition() < 3000) {
@@ -140,7 +125,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 } else {
                     MainActivity.musicSrv.playCurrent();
                 }
-
 
                 if (!MainActivity.firstSongPlayed) {
                     startTimer();
@@ -191,47 +175,24 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-                // SQL DB
-                ContentValues values = new ContentValues();
-
-                // todo - Should there just be the DB and no array list? Yes, probably
-
-                // Get song
-                Song s = MainActivity.songList.get(MusicService.songPosition); // todo - might crash if song list changes or song changes, test
-
-                // Get String values of names, other info
-                values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
-                values.put(DatabaseOpenHelper.TRACK_NAME, s.getTitle());
-                values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
-
-
-                double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
-                values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
-                Log.i("SQL", "songCurrentPos: " + (int) songCurrentPos);
-
-                songCurrentPos = songCurrentPos / 1000;
-                String formattedPosition = (int) songCurrentPos / 60 + ":" + String.format("%02d", (int) songCurrentPos % 60);
-                values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
-                Log.i("SQL", "formattedPosition: " + formattedPosition);
-
-                // Add values to new database row
-                MainActivity.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
-
-                // Notify user that the bookmark was saved
-                Toast.makeText(getActivity(), "Bookmark saved at " + formattedPosition, Toast.LENGTH_LONG).show();
+                addNewBookmark();
 
             }
         });
 
         // Seek bar listener
         seekBar = (SeekBar) view.findViewById(R.id.seekBar);
-        seekBar.setMax(1000); // todo - change to reference in MainActivity
+        seekBar.setMax(MainActivity.SEEKBAR_RATIO);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean fromUser) {
                 if (fromUser) {
                     MainActivity.musicSrv.seek(i);
+
+                    String formatted = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+                    PlayerFragment.textSongCurrent.setText(formatted);
                 }
+
             }
 
             @Override
@@ -243,23 +204,55 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             }
         });
 
-        // if song loaded, update progress. todo needed? does this do anything?
-        if (MainActivity.musicSrv != null && MainActivity.musicSrv.isPng()) {
-            seekBar.setProgress(MusicService.getCurrentProgress());
-            playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-        }
 
-        // TODO track - if not first play..
+        // Start timer if not the first time fragment is opened
         if (MainActivity.firstSongPlayed) {
             startTimer();
+
+            // If playing, show pause button.
+            if (MusicService.mPlayer != null && MusicService.mPlayer.isPlaying()) {
+                //noinspection deprecation
+                playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+            }
         }
 
         return view;
 
     }
 
+    public void addNewBookmark() {
+        // Values reference
+        ContentValues values = new ContentValues();
+
+        // Get song
+        Song s = MainActivity.songList.get(MusicService.songPosition);
+
+        // Get String values of names, other info
+        values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
+        values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
+        values.put(DatabaseOpenHelper.TRACK_NAME, s.getTitle());
+        values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
+
+        double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+        values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
+
+        // Change from millis to seconds
+        songCurrentPos = songCurrentPos / 1000;
+
+        // Format position for DB Fragment display
+        String formattedPosition = " -  (" + (int) songCurrentPos / 60 + ":" + String.format("%02d", (int) songCurrentPos % 60)
+                + " / " + s.getLength() + ")";
+        values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
+
+        // Add values to new database row
+        MainActivity.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
+
+        // Notify user that the bookmark was saved
+        Toast.makeText(getActivity(), "Bookmark saved " + formattedPosition, Toast.LENGTH_LONG).show();
+    }
+
     /**
-     * TODO URGENT!!!! - WHY SEPERATE TRACKERS????
+     * Thread which updates seekbar and position textviews. First ensure Sevice has started
      */
     public void startTimer() {
         new Thread(new Runnable() {
@@ -267,8 +260,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
             public void run() {
 
-
-                // Ensure Servce is initialized
+                // Ensure ServIce is initialized
                 for (int i = 0; i < 30; i++) {
                     if (MusicService.mPlayer == null) {
                         Log.i(getClass().getSimpleName(), "Player Progress Tracker - Music Service not initialized: " + i);
@@ -284,7 +276,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 // update textview while service is alive
                 while (MusicService.mPlayer != null && PlayerFragment.seekBar != null) {
 
-
                     try {
                         Thread.sleep(200);
                     } catch (InterruptedException e) {
@@ -297,39 +288,37 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                             @Override
                             public void run() {
                                 // Local reference for millis
-                                if (PlayerFragment.seekBar != null && MusicService.mPlayer.isPlaying()) { // todo if in view, not playing
-                                    long millis = 0;
-                                    if (MainActivity.firstPreparedSong) {
-                                        ///Log.i(TAG, "First Load");
-                                        millis = 0;//MusicService.mPlayer.getCurrentPosition(); todo - never used????
-                                    } else {
-                                        /// Log.i(TAG, "Not first load");
-                                        millis = MusicService.mPlayer.getCurrentPosition();
-                                    }
-
-
-                                    // Format time to mins, secs
-                                    long second = (millis / 1000) % 60;
-                                    int minutes = (int) (millis / 1000) / 60;
-
-                                    // Set TextView with built string
-                                    PlayerFragment.textSongCurrent.setText(String.valueOf(minutes) + ":" + String.format("%02d", second));
-
+                                if (PlayerFragment.seekBar != null) {
 
                                     PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
 
-                                } else {
+                                    String formatted = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+                                    PlayerFragment.textSongCurrent.setText(formatted);
 
                                 }
                             }
                         });
                     }
-
-
                 }
                 Log.i(TAG, "Thread finished");
             }
         }).start();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.i("SEEK", "SEEK3BBB : " + MainActivity.seekbarPosition);
+        seekBar.setProgress(MainActivity.seekbarPosition);
+        Log.i("SEEK", "SEEK3 : " + MusicService.songCurrentPosition);
+        textSongCurrent.setText(MainActivity.textCurrentPos);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        MainActivity.seekbarPosition = seekBar.getProgress();
+        MainActivity.textCurrentPos = textSongCurrent.getText().toString();
     }
 
     /**

@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer.library;
+package website.julianrosser.podcastplayer.helpers;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.classes.Song;
+import website.julianrosser.podcastplayer.objects.Song;
 
 public class LibrarySongListAdapter extends BaseAdapter {
 
@@ -56,8 +56,10 @@ public class LibrarySongListAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
+
+
         holder.title.setText(s.getTitle());
-        holder.artist.setText(s.getArtist());
+        holder.artist.setText(s.getArtist() + " (" + s.getLength() + ")");
 
         return convertView;
     }
