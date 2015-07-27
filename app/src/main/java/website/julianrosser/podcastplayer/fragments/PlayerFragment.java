@@ -16,8 +16,8 @@ import android.widget.Toast;
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.objects.Song;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
+import website.julianrosser.podcastplayer.objects.Song;
 
 
 /**
@@ -76,18 +76,11 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                         MainActivity.musicSrv.pausePlayer();
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
                     } else {
-                        // if first song then start, else resume
-                        if (!MainActivity.firstSongPlayed) {
-                            MainActivity.musicSrv.playCurrentFromPosition();
-                            if (!MainActivity.firstSongPlayed) {
-                                startTimer();
-                            }
-                            // Update boolean so Thread runs properly
-                            MainActivity.firstSongPlayed = true;
 
-                        } else {
-                            MainActivity.musicSrv.resume();
-                        }
+                        MainActivity.musicSrv.resume();
+                        startTimer();
+                        MainActivity.firstSongPlayed = true;
+
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
                     }
 
@@ -109,6 +102,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
             textSongTitle.setText(MusicService.songTitle);
             textSongArtist.setText(MusicService.songArtist);
+            Log.i("SEEK", "SEEK2 : " + MusicService.songCurrentPosition);
             textSongCurrent.setText(MusicService.songCurrentPosition);
             textSongLength.setText(MusicService.songDuration);
 
@@ -124,7 +118,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         rewind.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO - Logic for playing previous songs
                 MusicService.loadFromBookmark = false;
 
                 if (MusicService.mPlayer.getCurrentPosition() < 3000) {
@@ -132,7 +125,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 } else {
                     MainActivity.musicSrv.playCurrent();
                 }
-
 
                 if (!MainActivity.firstSongPlayed) {
                     startTimer();
@@ -183,34 +175,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-                // SQL DB
-                ContentValues values = new ContentValues();
-
-                // Get song
-                Song s = MainActivity.songList.get(MusicService.songPosition);
-
-                // Get String values of names, other info
-                values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
-                values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
-                values.put(DatabaseOpenHelper.TRACK_NAME, s.getTitle());
-                values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
-
-                // todo - put in formatting function
-                double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
-                values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
-                Log.i("SQL", "songCurrentPos: " + (int) songCurrentPos);
-
-                songCurrentPos = songCurrentPos / 1000;
-                String formattedPosition = " -  (" + (int) songCurrentPos / 60 + ":" + String.format("%02d", (int) songCurrentPos % 60)
-                        + " / " + s.getLength() + ")";
-                values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
-                Log.i("SQL", "formattedPosition: " + formattedPosition);
-
-                // Add values to new database row
-                MainActivity.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
-
-                // Notify user that the bookmark was saved
-                Toast.makeText(getActivity(), "Bookmark saved " + formattedPosition, Toast.LENGTH_LONG).show();
+                addNewBookmark();
 
             }
         });
@@ -223,7 +188,11 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             public void onProgressChanged(SeekBar seekBar, int i, boolean fromUser) {
                 if (fromUser) {
                     MainActivity.musicSrv.seek(i);
+
+                    String formatted = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+                    PlayerFragment.textSongCurrent.setText(formatted);
                 }
+
             }
 
             @Override
@@ -239,10 +208,47 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         // Start timer if not the first time fragment is opened
         if (MainActivity.firstSongPlayed) {
             startTimer();
+
+            // If playing, show pause button.
+            if (MusicService.mPlayer != null && MusicService.mPlayer.isPlaying()) {
+                //noinspection deprecation
+                playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+            }
         }
 
         return view;
 
+    }
+
+    public void addNewBookmark() {
+        // Values reference
+        ContentValues values = new ContentValues();
+
+        // Get song
+        Song s = MainActivity.songList.get(MusicService.songPosition);
+
+        // Get String values of names, other info
+        values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
+        values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
+        values.put(DatabaseOpenHelper.TRACK_NAME, s.getTitle());
+        values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
+
+        double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+        values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
+
+        // Change from millis to seconds
+        songCurrentPos = songCurrentPos / 1000;
+
+        // Format position for DB Fragment display
+        String formattedPosition = " -  (" + (int) songCurrentPos / 60 + ":" + String.format("%02d", (int) songCurrentPos % 60)
+                + " / " + s.getLength() + ")";
+        values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
+
+        // Add values to new database row
+        MainActivity.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
+
+        // Notify user that the bookmark was saved
+        Toast.makeText(getActivity(), "Bookmark saved " + formattedPosition, Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -254,7 +260,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
             public void run() {
 
-                // Ensure Servce is initialized
+                // Ensure ServIce is initialized
                 for (int i = 0; i < 30; i++) {
                     if (MusicService.mPlayer == null) {
                         Log.i(getClass().getSimpleName(), "Player Progress Tracker - Music Service not initialized: " + i);
@@ -282,18 +288,12 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                             @Override
                             public void run() {
                                 // Local reference for millis
-                                if (PlayerFragment.seekBar != null ){
-
-                                    long millis = MusicService.mPlayer.getCurrentPosition();
-
-                                    // Format time to mins, secs
-                                    long second = (millis / 1000) % 60;
-                                    int minutes = (int) (millis / 1000) / 60;
-
-                                    // Set TextView with built string
-                                    PlayerFragment.textSongCurrent.setText(String.valueOf(minutes) + ":" + String.format("%02d", second));
+                                if (PlayerFragment.seekBar != null) {
 
                                     PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
+
+                                    String formatted = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+                                    PlayerFragment.textSongCurrent.setText(formatted);
 
                                 }
                             }
@@ -308,7 +308,9 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        Log.i("SEEK", "SEEK3BBB : " + MainActivity.seekbarPosition);
         seekBar.setProgress(MainActivity.seekbarPosition);
+        Log.i("SEEK", "SEEK3 : " + MusicService.songCurrentPosition);
         textSongCurrent.setText(MainActivity.textCurrentPos);
     }
 

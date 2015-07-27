@@ -82,6 +82,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         // Set the custom adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
         mListView.setAdapter(mAdapter);
+        mListView.setScrollbarFadingEnabled(false);
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);

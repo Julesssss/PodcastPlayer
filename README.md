@@ -4,14 +4,15 @@ Android application for bookmarking Audiobooks & podcasts. Easily track progress
 ![](http://julianrosser.website/images/app_screenshots/pp_3.png)
 
 TODO
-- Record shuffle history, open last played when opened.(When in shuffle mode, create order from track list, save Array and Position, can load save easy)
-- Don't allow multiple bookmark hits
-- Keep track of all active Fragments
-- When no data, buttons do nothing
-- format song string to handle hours
-- If no bookmarks, load random song
+- Let Activity be destroyed, make Service work without it
+- Make Bookmark Dialog with option for note
+- Work out how to find ONLY AudioBooks, Podcasts. Check MusicCursor info.
+- The order of songlist might change, wrong 'LastSong' will be loaded.
+- Test formatted to hour current playtime
+- Check Noti Builder for lollipop with added media controls
 
 Log
+- 27/07 - App opens to last played song, at last played position. Play time formatted correctly. Various SeekBar bugs. Added Scrollbar to ListView.
 - 26/07 - UI updates to Library and Bookmark Lists. Fixed display bugs where SeekBar reset to 0. Cleaned rest of project.
 - 25/07 - Delete Bookmarks with context menu. Logic to prevent no tracks on device crash. Fixed back button bug. String format for tracks over an hour. Tidied MA, MS, DOH & Song.
 - 24/07 - Load last bookmarked song from Bookmark DB. Tracker Thread now starts when music starts. Updated screenshot.
@@ -41,5 +42,5 @@ Notes & things to do later
 - Should I make intent & fragment references private/hidden?
 - Shuffle music app???s
 - Find better Unique ID? media_id changes if files move or get renamed, how does other apps handle this?
-
+- FIRST ONCREATE, moveing seekbar dows nothing before clicking play.
 

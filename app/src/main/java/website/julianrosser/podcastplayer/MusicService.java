@@ -50,6 +50,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     // For logging purposes
     public String TAG = getClass().getSimpleName();
 
+    public static final String ACTION_PREVIOUS = "action_previous";
+
     public static void updateTextViews() {
 
         // Song reference
@@ -84,6 +86,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             }
 
             if (PlayerFragment.textSongCurrent != null) {
+                Log.i("SEEK", "SEEK1 : " + songCurrentPosition);
                 PlayerFragment.textSongCurrent.setText(songCurrentPosition);
             }
         }
@@ -210,6 +213,26 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        handleIntent(intent);
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void handleIntent( Intent intent ) {
+        if( intent == null || intent.getAction() == null )
+            return;
+
+        String action = intent.getAction();
+
+        if( action.equalsIgnoreCase( ACTION_PREVIOUS ) ) {
+            Log.i(TAG, "");
+            // mController.getTransportControls().skipToPrevious();
+        }
+    }
+
+    @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.i(TAG, "onPrepared");
         // If loading from a bookmark, seek to required position
@@ -219,6 +242,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         if (MainActivity.firstPreparedSong) {
             MainActivity.firstPreparedSong = false;
+            mediaPlayer.start();
+            mediaPlayer.pause();
+
         } else {
             // Start playback
             mediaPlayer.start();
@@ -251,8 +277,15 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         // Generic notification reference, needed to differentiate between old / new code below.
         Notification notification;
 
-        // If running Android version 16+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) { // api
+        // If running 5+, set as media controller // todo -- investigate and check this
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder.setStyle(new Notification.MediaStyle());
+            // todo builder.addAction(generateAction(android.R.drawable.ic_media_previous, "Previous", ACTION_PREVIOUS) );
+
+            notification = builder.build();
+
+            // If running Android version 16+
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             notification = builder.build();
 
         } else {
@@ -264,6 +297,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         // Start ongoing notification
         startForeground(NOTIFY_ID, notification);
     }
+
 
     /**
      * For playing chosen song
@@ -287,7 +321,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     /**
      * For playing song through bookmark Fragment.
      */
-    public void setSongButDontPlay(int songIndex) {
+    public void setSongAtPosButDontPlay(int songIndex) {
         mPlayer.reset();
         songPosition = songIndex;
         playSong();
@@ -331,13 +365,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     // play current song again
     public void playCurrent() {
         if (songPosition == songs.size()) songPosition = 0;
-        playSong();
-    }
-
-    //skip to next
-    public void playCurrentFromPosition() {
-        if (songPosition == songs.size()) songPosition = 0;
-        mPlayer.reset();
         playSong();
     }
 
