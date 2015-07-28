@@ -2,6 +2,7 @@ package website.julianrosser.podcastplayer.fragments;
 
 import android.app.Activity;
 import android.database.Cursor;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
@@ -67,22 +68,41 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(final LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
 
         // Inflate view
         View view = inflater.inflate(R.layout.fragment_audiofile, container, false);
 
+        final Typeface fontRobotoRegular = Typeface.createFromAsset(
+                getActivity().getAssets(),
+                "Roboto-Regular.ttf");
+
         // Create a cursor for updating bookmark list
         Cursor c = bookmarks();
-        mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.bookmark_list_view, c,
+        mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.listview_bookmark, c,
                 DatabaseOpenHelper.columnsForCursorAdaptor, new int[]{R.id.songListArtist, R.id.songListTitle, R.id.songListPosition},
                 0);
+
+        mAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+
+            @Override
+            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+
+                TextView textView = (TextView) view;
+                textView.setText(cursor.getString(columnIndex));
+                textView.setTypeface(fontRobotoRegular);
+
+                return true;
+            }
+        });
 
         // Set the custom adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
         mListView.setAdapter(mAdapter);
         mListView.setScrollbarFadingEnabled(false);
+
+
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);
@@ -151,7 +171,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
             NavigationDrawerFragment.mDrawerListView.setItemChecked(0, true);
 
-            // Launch player fragment
+            // Launch player fragment todo - necessary??
             // update the main content by replacing fragments
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
             fragmentManager.beginTransaction()
@@ -160,6 +180,9 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
             // Update ActionBar title
             getActionBar().setTitle(getString(R.string.title_section1));
+
+            // update textviews
+            MusicService.updateTextViews();
 
         } else {
             Toast.makeText(getActivity(), "Song not found, file may have been moved or renamed", Toast.LENGTH_SHORT).show();

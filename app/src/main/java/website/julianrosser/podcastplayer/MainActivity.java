@@ -35,6 +35,7 @@ import website.julianrosser.podcastplayer.objects.Song;
 public class MainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks, LibraryFragment.OnFragmentInteractionListener, BookmarkFragment.OnFragmentInteractionListener {
 
+
     // Array of songs
     public static ArrayList<Song> songList;
     // To check if MusicService is bound to Activity
@@ -45,16 +46,12 @@ public class MainActivity extends AppCompatActivity
     public static int seekbarPosition;
     public static String textCurrentPos;
     public static boolean firstSongPlayed = false;
-    // milli pos of first bookmark
-    static public String millisOfLastBookmark;
     // Shuffle mode boolean
     public static boolean shuffleMode = false;
     // Reference to music service
     public static MusicService musicSrv;
     // Reference to PlayerFragment
     public static PlayerFragment playerFragment;
-    // Last saved bookmark in DB, used in fragment to display info on open
-    public static String[] lastBookmark;
     // Used to store the last screen title. For use in {@link #restoreActionBar()}.
     public static CharSequence mTitle;
     // SQL Database reference
@@ -63,12 +60,11 @@ public class MainActivity extends AppCompatActivity
     public static DatabaseOpenHelper mDbHelper;
     // Seekbar ratio reference
     public static int SEEKBAR_RATIO = 1000;
+    // Bundle
     public int lastPlayedListPosition;
     public int lastPlayedCurrentPosition;
     public String SPREF_INT_LIST_POSITION = "songListPosition";
     public String SPREF_INT_CURRENT_POSITION = "songCurrentPosition";
-    // The position in the song list of the last saved bookmark
-    int posOfLastBookmark;
     // For loading last played in correct position
     private String SPREF_KEY = "your_prefs";
     // For logging purposes
@@ -84,6 +80,7 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.i(TAG, "onServiceConnected");
             MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
             // Get service
             musicSrv = binder.getService();
@@ -92,30 +89,31 @@ public class MainActivity extends AppCompatActivity
             // update boolean to show service is bound
             musicBound = true;
 
+
             // Check that songs exist on device
-            if (songList.size() > 0) {
+            if (songList.size() > 0 && MusicService.mPlayer != null) {
 
                 // Check if this is first open (Or error with last played song)
                 if (lastPlayedListPosition == -1 || lastPlayedCurrentPosition == -1) {
+                    // First time
                     MainActivity.musicSrv.setSongAtPosButDontPlay(0);
                 } else {
-                    MusicService.millisecondToSeekTo = lastPlayedCurrentPosition;
-                    MainActivity.musicSrv.setSongAtPosButDontPlay(lastPlayedListPosition);
+                    if (!MusicService.mPlayer.isPlaying()) {
 
-                    if (MainActivity.musicSrv != null && PlayerFragment.seekBar != null) {
-                        PlayerFragment.seekBar.setProgress((int) MusicService.songBookmarkSeekPosition);
+                        MainActivity.firstPreparedSong = true;
+
+                        MusicService.millisecondToSeekTo = lastPlayedCurrentPosition;
+                        MainActivity.musicSrv.setSongAtPosButDontPlay(lastPlayedListPosition);
+
+                        if (MainActivity.musicSrv != null && PlayerFragment.seekBar != null) {
+                            PlayerFragment.seekBar.setProgress((int) MusicService.songBookmarkSeekPosition);
+                        }
+                    } else {
+                        // Already playing, so just set TextViews
+                        MusicService.updateTextViews();
                     }
+
                 }
-
-
-                // Also pass song position in millis
-                //MusicService.millisecondToSeekTo = Integer.valueOf(lastBookmark[1]);
-                // When service is connected, pass the last saved bookmark
-                // MainActivity.musicSrv.setSongAtPosButDontPlay(posOfLastBookmark);
-                // Update seekbar with progress
-                //if (MainActivity.musicSrv != null && PlayerFragment.seekBar != null) {
-                //    PlayerFragment.seekBar.setProgress((int) MusicService.songBookmarkSeekPosition);
-                //}
             }
         }
 
@@ -129,58 +127,42 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.i(TAG, "onCreate()");
 
-        // If Restarting
-        if(savedInstanceState!=null) {
-            // App has been closed by the OS before and is now being restored
+        // Initialize song list
+        songList = new ArrayList<>();
 
-            // read your data here from the bundle
-            //String cookieData =  savedInstanceState.getString("CookieData");
-            //if(!TextUtils.isEmpty(cookieData)) {
-            ///    cookieString = cookieData;
-            //}
+        // Search for songs and update list, if songs are available
+        getSongList();
 
+        // Ensure volume buttons work correctly
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-        } else {
+        // Get Navigation Drawer reference
+        mNavigationDrawerFragment = (NavigationDrawerFragment)
+                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
 
-            // Initialize song list
-            songList = new ArrayList<>();
+        // Set up the navigation drawer.
+        mNavigationDrawerFragment.setUp(
+                R.id.navigation_drawer,
+                (DrawerLayout) findViewById(R.id.drawer_layout));
 
-            // Search for songs and update list, if songs are available
-            getSongList();
+        // Get current Fragment title
+        //mTitle = getTitle();
 
-            // Ensure volume buttons work correctly
-            setVolumeControlStream(AudioManager.STREAM_MUSIC);
+        // Create a new DatabaseHelper
+        mDbHelper = new DatabaseOpenHelper(this);
 
-            // Get Navigation Drawer reference
-            mNavigationDrawerFragment = (NavigationDrawerFragment)
-                    getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+        // Get the underlying database for writing
+        mDB = mDbHelper.getWritableDatabase();
 
-            // Set up the navigation drawer.
-            mNavigationDrawerFragment.setUp(
-                    R.id.navigation_drawer,
-                    (DrawerLayout) findViewById(R.id.drawer_layout));
+        // Load position and id of last played
+        SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
+        lastPlayedListPosition = sp.getInt(SPREF_INT_LIST_POSITION, -1);
+        lastPlayedCurrentPosition = sp.getInt(SPREF_INT_CURRENT_POSITION, -1);
+        // todo - Songlist may have changed, this would make list position incorrect. Maybe should use different ID?
 
-            // Get current Fragment title
-            //mTitle = getTitle();
-
-            // Create a new DatabaseHelper
-            mDbHelper = new DatabaseOpenHelper(this);
-
-            // Get the underlying database for writing
-            mDB = mDbHelper.getWritableDatabase();
-
-            // If bookmark is available, load last
-            if (mDbHelper.countEntries() > 0) {
-                loadLastBookmark();
-            }
-
-            // Load position and id of last played
-            SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
-            lastPlayedListPosition = sp.getInt(SPREF_INT_LIST_POSITION, -1);
-            lastPlayedCurrentPosition = sp.getInt(SPREF_INT_CURRENT_POSITION, -1);
-            // todo - Songlist may have changed, this would make list position incorrect. Maybe should use different ID?
-        }
+        MusicService.exiting = false;
 
     }
 
@@ -190,24 +172,31 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onStart() {
         super.onStart();
+        Log.i(TAG, "onStart()");
+
+        // if already alive, just bind
+
         if (playIntent == null) {
             playIntent = new Intent(this, MusicService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
+        } else {
+            Log.i(TAG, "playIntent != null");
         }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        Log.i(TAG, "onStop()");
 
-        SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putInt(SPREF_INT_CURRENT_POSITION, MusicService.mPlayer.getCurrentPosition());
-        editor.putInt(SPREF_INT_LIST_POSITION, MusicService.songPosition);
-        editor.apply();
-
-        Log.i(TAG, "SAVING LAST DATA!!");
+        if (!MusicService.exiting) {
+            SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sp.edit();
+            editor.putInt(SPREF_INT_CURRENT_POSITION, MusicService.mPlayer.getCurrentPosition());
+            editor.putInt(SPREF_INT_LIST_POSITION, MusicService.songPosition);
+            editor.apply();
+        }
 
     }
 
@@ -217,18 +206,14 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.i(TAG, "onDestroy()");
 
         if (musicConnection != null && musicBound) {
             unbindService(musicConnection);
         }
 
-        if (playIntent != null) {
-            stopService(playIntent);
-        }
-
-        musicSrv = null;
-
         mDB.close();
+
     }
 
     /**
@@ -241,28 +226,6 @@ public class MainActivity extends AppCompatActivity
         startMain.addCategory(Intent.CATEGORY_HOME);
         startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(startMain);
-    }
-
-    /**
-     * Helper function for locating bookmark
-     */
-    public void loadLastBookmark() {
-        // Load last saved bookmark from DB and pass info to MusicService for Fragment to use
-        lastBookmark = mDbHelper.getLast();
-
-        // Pass bookmark position to MusicService
-        millisOfLastBookmark = lastBookmark[1];
-
-        // find song position in SongList
-        posOfLastBookmark = 0;
-
-        for (Song s : MainActivity.songList) {
-
-            if (s.getIDString().contentEquals(lastBookmark[0])) {
-                break;
-            }
-            posOfLastBookmark++;
-        }
     }
 
     /**
@@ -284,7 +247,7 @@ public class MainActivity extends AppCompatActivity
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
             int songDuration = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
-            int songPosdcast = musicCursor.getColumnIndex(MediaStore.Audio.Media.IS_PODCAST);
+            int songPodcast = musicCursor.getColumnIndex(MediaStore.Audio.Media.IS_PODCAST);
             int songMusic = musicCursor.getColumnIndex(MediaStore.Audio.Media.IS_MUSIC);
             // Add songs to list
             do {
@@ -293,12 +256,8 @@ public class MainActivity extends AppCompatActivity
                 String thisArtist = musicCursor.getString(artistColumn);
                 String thisDuration = musicCursor.getString(songDuration);
 
-                // TODO - check for sorting
-                // Log.i(TAG, "AC INFO POD: " + musicCursor.getString(songPosdcast));
-                // Log.i(TAG, "AC INFO MUSIC: " + musicCursor.getString(songMusic));
-
-                // Workaround for filtering invalid tracks
-                if (thisDuration != null) {
+                // Workaround for filtering invalid tracks and podcasts todo - invert to get podcasts
+                if (thisDuration != null && musicCursor.getString(songPodcast) != null) {
                     songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration, pos));
                     pos += 1;
                 }
@@ -429,6 +388,21 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.action_settings) {
             Log.i(TAG, "Settings button");
+            return true;
+        } else if (id == R.id.action_exit) {
+
+            if (musicConnection != null && musicBound) {
+                musicSrv.onDestroy();
+                unbindService(musicConnection);
+                musicBound = false;
+            }
+
+            if (playIntent != null) {
+                stopService(playIntent);
+            }
+
+            finish();
+
             return true;
         }
 

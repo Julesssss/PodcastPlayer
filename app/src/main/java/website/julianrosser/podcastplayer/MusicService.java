@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -27,6 +28,7 @@ import website.julianrosser.podcastplayer.objects.Song;
 public class MusicService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
+    public static final String ACTION_PREVIOUS = "action_previous";
     // Notification id used when starting foreground Activity
     private static final int NOTIFY_ID = 1;
     // Song Information Strings
@@ -41,6 +43,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public static int songPosition = 0;
     // De decide between loading from bookmark or playing from start
     public static boolean loadFromBookmark;
+    public static boolean exiting;
+
+    // Ensure MediaPlayer isn;t preparing
+    public static boolean isPreparing = false;
+
     // Millisecond value of current bookmark
     public static int millisecondToSeekTo;
     // ArrayList of songs
@@ -49,8 +56,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     private final IBinder musicBind = new MusicBinder();
     // For logging purposes
     public String TAG = getClass().getSimpleName();
-
-    public static final String ACTION_PREVIOUS = "action_previous";
 
     public static void updateTextViews() {
 
@@ -63,11 +68,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         songDuration = playSong.getLength();
 
         songBookmarkSeekPosition = ((double) millisecondToSeekTo / (double) playSong.getLengthMillis()) * 1000;
+        // TODO - What if this is called while prepping?? -  if (!MusicService.isPreparing);
 
         // Format time to minutes, secs
         long second = (millisecondToSeekTo / 1000) % 60;
         int minutes = (millisecondToSeekTo / 1000) / 60;
-
         songCurrentPosition = String.valueOf(minutes) + ":" + String.format("%02d", second);
 
         // If Fragment is in view & not null, update track information TextViews
@@ -86,7 +91,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             }
 
             if (PlayerFragment.textSongCurrent != null) {
-                Log.i("SEEK", "SEEK1 : " + songCurrentPosition);
                 PlayerFragment.textSongCurrent.setText(songCurrentPosition);
             }
         }
@@ -103,6 +107,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.i(TAG, "onCreate");
 
         // Create new MediaPlayer
         mPlayer = new MediaPlayer();
@@ -131,9 +136,13 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     @Override
     public void onDestroy() {
+        Log.i(TAG, "onDestroy");
+        exiting = true;
+        mPlayer.release();
         // Remove Service from foreground when closed
         stopForeground(true);
     }
+
 
     /**
      * Method for prepping MediaPlayer for new file and updating track information.
@@ -163,6 +172,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             } catch (Exception e) {
                 Log.e("MUSIC SERVICE", "Error setting data source", e);
             }
+
+
+
+
+            isPreparing = true;
 
             // Prepare Asynchronously
             mPlayer.prepareAsync();
@@ -214,20 +228,24 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
+        super.onStartCommand(intent, flags, startId);
+        Log.i(TAG, "onStartCommand");
         handleIntent(intent);
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
-    private void handleIntent( Intent intent ) {
-        if( intent == null || intent.getAction() == null )
+    private void handleIntent(Intent intent) {
+
+        if (intent == null || intent.getAction() == null){
             return;
+        }
 
         String action = intent.getAction();
+        Log.i(TAG, "INTENT: " + action);
 
-        if( action.equalsIgnoreCase( ACTION_PREVIOUS ) ) {
-            Log.i(TAG, "");
+        if (action.equalsIgnoreCase(ACTION_PREVIOUS)) {
+            Log.i(TAG, "ACTION PREVIOUS!!!!!!!!!!!!");
             // mController.getTransportControls().skipToPrevious();
         }
     }
@@ -235,9 +253,13 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.i(TAG, "onPrepared");
+
+        isPreparing = false;
+
         // If loading from a bookmark, seek to required position
         if (loadFromBookmark) {
             mPlayer.seekTo(millisecondToSeekTo);
+            millisecondToSeekTo = 0;
         }
 
         if (MainActivity.firstPreparedSong) {
@@ -250,8 +272,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             mediaPlayer.start();
             //noinspection deprecation
             PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-            loadFromBookmark = false;
         }
+
+        loadFromBookmark = false;
 
         // Create Intents for notification builder
         Intent notIntent = new Intent(this, MainActivity.class);
@@ -277,10 +300,16 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         // Generic notification reference, needed to differentiate between old / new code below.
         Notification notification;
 
-        // If running 5+, set as media controller // todo -- investigate and check this
+
+        Intent intent = new Intent(MusicService.ACTION_PREVIOUS);
+        PendingIntent pendingIntent = PendingIntent.getService(this,
+                0 /* no requestCode */, intent, 0 /* no flags */);
+
+
+        // If running 5+, set as media controller
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setStyle(new Notification.MediaStyle());
-            // todo builder.addAction(generateAction(android.R.drawable.ic_media_previous, "Previous", ACTION_PREVIOUS) );
+            builder.addAction(new Notification.Action(android.R.drawable.ic_media_previous, "Previous", pendingIntent));
 
             notification = builder.build();
 
@@ -337,6 +366,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
      * MediaPlayer Methods
      */
     public boolean isPng() {
+
         return mPlayer.isPlaying();
     }
 
@@ -399,13 +429,15 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     @Override
     public IBinder onBind(Intent intent) {
+        Log.i(TAG, "onBind");
         return musicBind;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        mPlayer.stop();
-        mPlayer.release();
+        Log.i(TAG, "onUnbind");
+        //mPlayer.stop();
+        //mPlayer.reset();
         return false;
     }
 

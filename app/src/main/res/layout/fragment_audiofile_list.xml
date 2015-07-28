@@ -8,12 +8,13 @@
     <ListView
         android:id="@android:id/list"
         android:fadeScrollbars="false"
+        android:dividerHeight="1dp"
+        android:divider="#ff1f1f1f"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
     <TextView
         android:id="@android:id/empty"
-        android:text="WHAAAAAA"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center" />

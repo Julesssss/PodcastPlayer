@@ -125,6 +125,9 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
         // Update ActionBar title
         getActionBar().setTitle(getString(R.string.title_section1));
 
+        // update textviews
+        MusicService.updateTextViews();
+
     }
 
     private ActionBar getActionBar() {
