@@ -15,6 +15,7 @@
 
     <!-- Settings -->
     <string name="action_settings">Settings</string>
+    <string name="action_exit">Exit</string>
     <string name="action_random">Shuffle Mode</string>
     <string name="action_bookmark">Bookmark Here</string>
     <string name="action_context_delete">Delete</string>
@@ -29,5 +30,8 @@
 
     <!-- To be placed -->
     <string name="notification_title">Notification Bar</string>
+
+    <!-- Colours -->
+    <color name="material_deep">#673AB7</color>
 
 </resources>

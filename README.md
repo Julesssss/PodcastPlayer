@@ -4,14 +4,13 @@ Android application for bookmarking Audiobooks & podcasts. Easily track progress
 ![](http://julianrosser.website/images/app_screenshots/pp_3.png)
 
 TODO
-- Let Activity be destroyed, make Service work without it
+- Get widget to fire Pending Intent that is recognised by Service
 - Make Bookmark Dialog with option for note
-- Work out how to find ONLY AudioBooks, Podcasts. Check MusicCursor info.
-- The order of songlist might change, wrong 'LastSong' will be loaded.
-- Test formatted to hour current playtime
-- Check Noti Builder for lollipop with added media controls
+- If music is paused, allow notification to be swiped away.
+- Change order of bookmarks
 
 Log
+- 28/07 - Activity destroyed & Re-Created without effecting playback. Material design for ListViews. Exit button. Fixed getDuration while prepping bug.
 - 27/07 - App opens to last played song, at last played position. Play time formatted correctly. Various SeekBar bugs. Added Scrollbar to ListView.
 - 26/07 - UI updates to Library and Bookmark Lists. Fixed display bugs where SeekBar reset to 0. Cleaned rest of project.
 - 25/07 - Delete Bookmarks with context menu. Logic to prevent no tracks on device crash. Fixed back button bug. String format for tracks over an hour. Tidied MA, MS, DOH & Song.
@@ -30,6 +29,8 @@ Log
 Notes & things to do later
 - Is shuffle even needed?
 - Does GitHub project load properly?
+- The order of song-list might change, wrong 'LastSong' will be loaded. Does this matter?
+- When loading big file, seekBar / timer aren't set until song is ready, problem??.
 - might crash if song list changes or song changes, test
 - What if Fragment dies and is restarted
 - Memory slowly fills, play stutters, then space is freed up. Is this normal?
@@ -43,4 +44,5 @@ Notes & things to do later
 - Shuffle music app???s
 - Find better Unique ID? media_id changes if files move or get renamed, how does other apps handle this?
 - FIRST ONCREATE, moveing seekbar dows nothing before clicking play.
+- If paused and activiy destroyed, will play on resume
 

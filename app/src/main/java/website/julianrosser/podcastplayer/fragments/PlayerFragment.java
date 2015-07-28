@@ -3,6 +3,7 @@ package website.julianrosser.podcastplayer.fragments;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -61,7 +62,11 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate view
-        View view = inflater.inflate(R.layout.fragment_main, container, false);
+        View view = inflater.inflate(R.layout.fragment_player, container, false);
+
+        final Typeface fontRobotoRegular = Typeface.createFromAsset(
+                getActivity().getAssets(),
+                "Roboto-Regular.ttf");
 
         // Set up play / pause button
         playPause = (ImageButton) view.findViewById(R.id.buttonPlay);
@@ -85,7 +90,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                     }
 
                 } else {
-                    Log.e(TAG, "SERVICE NULL / PLAYER NOT BOUND");
+                    Log.e(TAG, "SERVICE NULL / PLAYER NOT BOUND " + MainActivity.musicSrv + MainActivity.musicBound);
                 }
             }
 
@@ -97,12 +102,17 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         textSongTitle = (TextView) view.findViewById(R.id.songTitle);
         textSongArtist = (TextView) view.findViewById(R.id.songArtist);
 
+        // Set font
+        textSongCurrent.setTypeface(fontRobotoRegular);
+        textSongLength.setTypeface(fontRobotoRegular);
+        textSongTitle.setTypeface(fontRobotoRegular);
+        textSongArtist.setTypeface(fontRobotoRegular);
+
         // Set track information if service is initialised
-        if (MainActivity.musicSrv != null) {
+        if (MainActivity.musicBound && MainActivity.musicSrv != null) { // or still loading
 
             textSongTitle.setText(MusicService.songTitle);
             textSongArtist.setText(MusicService.songArtist);
-            Log.i("SEEK", "SEEK2 : " + MusicService.songCurrentPosition);
             textSongCurrent.setText(MusicService.songCurrentPosition);
             textSongLength.setText(MusicService.songDuration);
 
@@ -186,7 +196,8 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean fromUser) {
-                if (fromUser) {
+                if (fromUser && MainActivity.musicSrv != null) {
+
                     MainActivity.musicSrv.seek(i);
 
                     String formatted = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
@@ -208,12 +219,12 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         // Start timer if not the first time fragment is opened
         if (MainActivity.firstSongPlayed) {
             startTimer();
+        }
 
-            // If playing, show pause button.
-            if (MusicService.mPlayer != null && MusicService.mPlayer.isPlaying()) {
-                //noinspection deprecation
-                playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-            }
+        // If playing, show pause button.
+        if (MainActivity.musicBound && MusicService.mPlayer != null && MusicService.mPlayer.isPlaying()) {
+            //noinspection deprecation
+            playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
         }
 
         return view;
@@ -274,7 +285,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 Log.i(TAG, "Thread started");
 
                 // update textview while service is alive
-                while (MusicService.mPlayer != null && PlayerFragment.seekBar != null) {
+                while (MusicService.mPlayer != null && PlayerFragment.seekBar != null && !MusicService.exiting) {
 
                     try {
                         Thread.sleep(200);
@@ -288,10 +299,9 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                             @Override
                             public void run() {
                                 // Local reference for millis
-                                if (PlayerFragment.seekBar != null) {
 
+                                if (PlayerFragment.seekBar != null && !MusicService.isPreparing && !MusicService.exiting) {
                                     PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
-
                                     String formatted = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
                                     PlayerFragment.textSongCurrent.setText(formatted);
 
@@ -308,9 +318,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.i("SEEK", "SEEK3BBB : " + MainActivity.seekbarPosition);
         seekBar.setProgress(MainActivity.seekbarPosition);
-        Log.i("SEEK", "SEEK3 : " + MusicService.songCurrentPosition);
         textSongCurrent.setText(MainActivity.textCurrentPos);
     }
 

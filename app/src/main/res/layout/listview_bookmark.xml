@@ -6,13 +6,9 @@
     android:background="#000"
     android:baselineAligned="false"
     android:orientation="vertical"
-    android:padding="8dp">
-
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:paddingLeft="16dp">
 
         <!-- Track -->
         <TextView
@@ -20,10 +16,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:textColor="#fff"
-            android:textSize="19sp" />
-
-    </LinearLayout>
+            android:textColor="#fff5f5f5"
+            android:textSize="16sp" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -36,9 +30,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:textColor="#fff"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textColor="#ff9c9c9c"
+            android:textSize="14sp"/>
 
         <TextView
             android:id="@+id/songListPosition"
@@ -46,8 +39,8 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="4dp"
             android:singleLine="true"
-            android:textColor="#fff"
-            android:textSize="15sp"
+            android:textColor="#ff9c9c9c"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
     </LinearLayout>
