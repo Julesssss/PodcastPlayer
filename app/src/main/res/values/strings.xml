@@ -26,6 +26,13 @@
     <string name="description_forward_button">Forward button</string>
     <string name="description_rewind_button">Rewind button</string>
 
+    <!-- Dialog -->
+    <string name="dialog_bookmark_title">Bookmark</string>
+    <string name="dialog_bookmark_message">Replace old bookmarks??</string>
+    <string name="dialog_bookmark_hint">Add note&#8230;</string>
+    <string name="dialog_bookmark_positive">Save</string>
+    <string name="dialog_bookmark_negative">Cancel</string>
+
     <!-- To be removed -->
 
     <!-- To be placed -->
@@ -33,5 +40,16 @@
 
     <!-- Colours -->
     <color name="material_deep">#673AB7</color>
+    <color name="white_light">#fff5f5f5</color>
+    <color name="grey_light">#ff9c9c9c</color>
+    <color name="grey_mid">#ff6e6e6e</color>
+
+
+    <color name="mat_black">#000</color>
+    <color name="mat_grey_dark">#212121</color>
+    <color name="mat_grey_mid">#303030</color>
+    <color name="mat_grey_light">#424242</color>
+
+
 
 </resources>

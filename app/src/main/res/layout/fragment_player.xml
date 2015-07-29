@@ -3,7 +3,7 @@
     android:id="@+id/player_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000"
+    android:background="@color/mat_grey_mid"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
@@ -25,7 +25,7 @@
         android:layout_below="@id/songTitle"
         android:layout_centerHorizontal="true"
         android:gravity="center"
-        android:textColor="#ffc6c6c6"
+        android:textColor="#ffd7d7d7"
         android:textSize="18sp" />
 
     <RelativeLayout
@@ -35,7 +35,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:background="#000"
+        android:background="@color/mat_grey_mid"
         android:orientation="horizontal"
         android:paddingBottom="8dp"
         android:paddingTop="4dp">
@@ -45,7 +45,7 @@
             android:layout_width="90sp"
             android:layout_height="match_parent"
             android:layout_centerHorizontal="true"
-            android:background="#000"
+            android:background="@color/mat_grey_mid"
             android:contentDescription="@string/description_play_button"
             android:scaleType="fitCenter"
             android:src="@drawable/play" />
@@ -54,7 +54,7 @@
             android:id="@+id/buttonRewind"
             android:layout_width="80sp"
             android:layout_height="match_parent"
-            android:background="#000"
+            android:background="@color/mat_grey_mid"
             android:paddingTop="10dp"
             android:paddingBottom="10dp"
             android:paddingRight="5dp"
@@ -67,7 +67,7 @@
             android:id="@+id/buttonBookmark"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:background="#000"
+            android:background="@color/mat_grey_mid"
             android:padding="5sp"
             android:layout_toLeftOf="@id/buttonRewind"
             android:contentDescription="@string/description_rewind_button"
@@ -78,7 +78,7 @@
             android:id="@+id/buttonForward"
             android:layout_width="80sp"
             android:layout_height="wrap_content"
-            android:background="#000"
+            android:background="@color/mat_grey_mid"
             android:paddingTop="10dp"
             android:paddingBottom="10dp"
             android:paddingLeft="5dp"
@@ -91,7 +91,7 @@
             android:id="@+id/buttonShuffle"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:background="#000"
+            android:background="@color/mat_grey_mid"
             android:padding="5dp"
             android:layout_toRightOf="@id/buttonForward"
             android:contentDescription="@string/description_rewind_button"
@@ -105,14 +105,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/controlLayout"
-        android:background="#000" />
+        android:background="@color/mat_grey_mid" />
 
     <TextView
         android:id="@+id/textSongTimeCurrent"
         android:layout_above="@id/seekBar"
         android:layout_marginBottom="8dp"
         android:textSize="13sp"
-        android:textColor="#ffc6c6c6"
+        android:textColor="@color/white_light"
         android:layout_marginLeft="16dp"
         android:layout_alignLeft="@id/seekBar"
         android:layout_width="wrap_content"
@@ -123,7 +123,7 @@
         android:layout_above="@id/seekBar"
         android:layout_marginBottom="8dp"
         android:textSize="13sp"
-        android:textColor="#ffc6c6c6"
+        android:textColor="@color/white_light"
         android:layout_marginRight="16dp"
         android:layout_alignRight="@id/seekBar"
         android:layout_width="wrap_content"

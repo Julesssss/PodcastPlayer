@@ -2,9 +2,15 @@ package website.julianrosser.podcastplayer.fragments;
 
 
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +24,7 @@ import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
+import website.julianrosser.podcastplayer.helpers.SaveBookmarkDialog;
 import website.julianrosser.podcastplayer.objects.Song;
 
 
@@ -31,6 +38,11 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
     // For logging purposes
     private static final String TAG = "PlayerFragment";
+
+    public static String formattedPosition;
+
+    // Sets an ID for the notification
+    public static int mNotificationId = 111;
 
     // View references
     public static SeekBar seekBar;
@@ -58,6 +70,35 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         return fragment;
     }
 
+    public static void addNewBookmark(String note) {
+        // Values reference
+        ContentValues values = new ContentValues();
+
+        // Get song
+        Song s = MainActivity.songList.get(MusicService.songPosition);
+
+        // Get String values of names, other info
+        values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
+        values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
+        values.put(DatabaseOpenHelper.TRACK_NAME, s.getTitle());
+        values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
+        values.put(DatabaseOpenHelper.BOOKMARK_NOTE, note);
+
+        double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+        values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
+
+        // Change from millis to seconds
+        songCurrentPos = songCurrentPos / 1000;
+
+        // Format position for DB Fragment display
+        formattedPosition = " -  (" + (int) songCurrentPos / 60 + ":" + String.format("%02d", (int) songCurrentPos % 60)
+                + " / " + s.getLength() + ")";
+        values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
+
+        // Add values to new database row
+        MainActivity.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -80,13 +121,20 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                     if (MainActivity.musicSrv.isPng()) {
                         MainActivity.musicSrv.pausePlayer();
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
+                        swipeableNotification();
                     } else {
 
                         MainActivity.musicSrv.resume();
-                        startTimer();
+                        if (!MainActivity.firstSongPlayed) {
+                            startTimer();
+                        }
+
                         MainActivity.firstSongPlayed = true;
 
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+
+                        NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+                        notificationManager.cancel(PlayerFragment.mNotificationId);
                     }
 
                 } else {
@@ -185,7 +233,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-                addNewBookmark();
+               new SaveBookmarkDialog(getActivity(), Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition())));
 
             }
         });
@@ -229,37 +277,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
         return view;
 
-    }
-
-    public void addNewBookmark() {
-        // Values reference
-        ContentValues values = new ContentValues();
-
-        // Get song
-        Song s = MainActivity.songList.get(MusicService.songPosition);
-
-        // Get String values of names, other info
-        values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
-        values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
-        values.put(DatabaseOpenHelper.TRACK_NAME, s.getTitle());
-        values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
-
-        double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
-        values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
-
-        // Change from millis to seconds
-        songCurrentPos = songCurrentPos / 1000;
-
-        // Format position for DB Fragment display
-        String formattedPosition = " -  (" + (int) songCurrentPos / 60 + ":" + String.format("%02d", (int) songCurrentPos % 60)
-                + " / " + s.getLength() + ")";
-        values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
-
-        // Add values to new database row
-        MainActivity.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
-
-        // Notify user that the bookmark was saved
-        Toast.makeText(getActivity(), "Bookmark saved " + formattedPosition, Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -350,4 +367,45 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         super.onDestroy();
         // AudioPlayerService.stop();
     }
+
+    /**
+     * Workaround function for having swipeable notification when paused. Can't work out how to update
+     * foreground noti and allow to be dismissed. Come back to this later.
+     */
+    public void swipeableNotification() {
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(getActivity())
+                        .setSmallIcon(R.drawable.ic_pause_dark)
+                        .setTicker(MusicService.songTitle)
+                        .setContentTitle(MusicService.songTitle)
+                        .setContentText(MusicService.songArtist)
+                        .setAutoCancel(true);
+
+        Intent resultIntent = new Intent(getActivity(), MainActivity.class);
+        // Because clicking the notification opens a new ("special") activity, there's
+        // no need to create an artificial back stack.
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        getActivity(),
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+
+        mBuilder.setContentIntent(resultPendingIntent);
+
+        // Pass the Notification to the NotificationManager:
+        NotificationManager mNotificationManager = (NotificationManager) getActivity()
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) { // api
+            // 16+
+            mNotificationManager.notify(mNotificationId,
+                    mBuilder.build());
+        } else {
+            mNotificationManager.notify(mNotificationId,
+                    mBuilder.getNotification());
+        }
+
+    }
+
 }
