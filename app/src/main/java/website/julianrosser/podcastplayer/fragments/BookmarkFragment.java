@@ -81,7 +81,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         // Create a cursor for updating bookmark list
         Cursor c = bookmarks();
         mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.listview_bookmark, c,
-                DatabaseOpenHelper.columnsForCursorAdaptor, new int[]{R.id.songListArtist, R.id.songListTitle, R.id.songListPosition},
+                DatabaseOpenHelper.columnsForCursorAdaptor, new int[]{R.id.songListArtist, R.id.songListTitle, R.id.songListPosition, R.id.bookmarkNote},
                 0);
 
         mAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
@@ -93,6 +93,15 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
                 textView.setText(cursor.getString(columnIndex));
                 textView.setTypeface(fontRobotoRegular);
 
+                // If note empty, hide. Add ""
+                if (columnIndex == 6) {
+                    if (cursor.getString(columnIndex).length() == 0) {
+                        textView.setVisibility(View.GONE);
+                    } else {
+                        textView.setText("Note - '" + cursor.getString(columnIndex) + "'");
+                    }
+                }
+
                 return true;
             }
         });
@@ -102,7 +111,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         mListView.setAdapter(mAdapter);
         mListView.setScrollbarFadingEnabled(false);
 
-
+        //mListView.setBackgroundColor(getResources().getColor(R.color.mat_grey_mid));
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);

@@ -64,12 +64,15 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_audiofile, container, false);
 
-        // Set the custom adapter
-        /*
-      The fragment's ListView/GridView.
-     */
         AbsListView mListView = (AbsListView) view.findViewById(android.R.id.list);
+
+        // Set the custom adapter
         mListView.setAdapter(librarySongListAdapter);
+
+        //mListView.setBackgroundColor(getResources().getColor(R.color.mat_grey_mid));
+
+        // Show scrollbar
+        mListView.setScrollbarFadingEnabled(false);
 
         // Set OnItemClickListener so we can be notified on item clicks
         mListView.setOnItemClickListener(this);

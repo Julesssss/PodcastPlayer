@@ -1,15 +1,18 @@
-# PodcastPlayer 0.2
+# PodcastPlayer 0.3
 Android application for bookmarking Audiobooks & podcasts. Easily track progress of multiple audiobooks and shows.
 
-![](http://julianrosser.website/images/app_screenshots/pp_3.png)
+![](http://julianrosser.website/images/app_screenshots/pp_4.png)
 
 TODO
-- Get widget to fire Pending Intent that is recognised by Service
-- Make Bookmark Dialog with option for note
-- If music is paused, allow notification to be swiped away.
-- Change order of bookmarks
+- Change bookmark sorting
+- BUG: When setting current progress string in PlayerFragment, uses old format (no hours)
+- Add % to bookmark list
+- Material ListViews - only show divider between seperate songs
+- Don't touch views before big file load or it'll skip
+- Fully custom Dialog buttons, so whole view is BG colour
 
 Log
+- 29/07 - Made SaveBookmarkDialog class & custom view. List shows notes if available. Material grey re-design. Notification can be dismissed when paused & icon changes.
 - 28/07 - Activity destroyed & Re-Created without effecting playback. Material design for ListViews. Exit button. Fixed getDuration while prepping bug.
 - 27/07 - App opens to last played song, at last played position. Play time formatted correctly. Various SeekBar bugs. Added Scrollbar to ListView.
 - 26/07 - UI updates to Library and Bookmark Lists. Fixed display bugs where SeekBar reset to 0. Cleaned rest of project.
@@ -28,21 +31,14 @@ Log
 
 Notes & things to do later
 - Is shuffle even needed?
+- Wording for Dialog - "Keep old bookmarks", "Replace old bookmark?", "Remove old Bookmarks"??
+- Get widget to fire Pending Intent that is recognised by Service
 - Does GitHub project load properly?
 - The order of song-list might change, wrong 'LastSong' will be loaded. Does this matter?
 - When loading big file, seekBar / timer aren't set until song is ready, problem??.
 - might crash if song list changes or song changes, test
-- What if Fragment dies and is restarted
 - Memory slowly fills, play stutters, then space is freed up. Is this normal?
-- ListView - have artist/title on seperate lines to use up space, show percentage/time at right side?
-- Should database be opened and closed on data change? would this affect the cursor?
-- Should the db be in main activity? Should there just be the DB and no array list? Yes probably
-- Should adding a bookmark overwrite old or create new??
-- Expand SeekBar on touch for easy seeking?
+- ListView - show percentage/time at right side?
 - Name - 'PodCats - AudioBook & Podcast bookmarker'     ??
-- Should I make intent & fragment references private/hidden?
-- Shuffle music app???s
 - Find better Unique ID? media_id changes if files move or get renamed, how does other apps handle this?
-- FIRST ONCREATE, moveing seekbar dows nothing before clicking play.
-- If paused and activiy destroyed, will play on resume
 

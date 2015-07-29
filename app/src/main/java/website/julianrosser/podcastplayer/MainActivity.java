@@ -1,6 +1,7 @@
 package website.julianrosser.podcastplayer;
 
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -164,6 +165,8 @@ public class MainActivity extends AppCompatActivity
 
         MusicService.exiting = false;
 
+        // If not already using Matirial theme, set ActionBar color
+
     }
 
     /**
@@ -213,6 +216,9 @@ public class MainActivity extends AppCompatActivity
         }
 
         mDB.close();
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(PlayerFragment.mNotificationId);
 
     }
 
@@ -278,6 +284,7 @@ public class MainActivity extends AppCompatActivity
             return true;
         }
     }
+
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
@@ -401,6 +408,10 @@ public class MainActivity extends AppCompatActivity
                 stopService(playIntent);
             }
 
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(PlayerFragment.mNotificationId);
+
+
             finish();
 
             return true;
@@ -408,6 +419,7 @@ public class MainActivity extends AppCompatActivity
 
         return super.onOptionsItemSelected(item);
     }
+
 
     public void onFragmentInteraction(String id) {
         Log.i(TAG, "onFragInteraction: " + id);

@@ -16,7 +16,6 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -44,16 +43,17 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     // De decide between loading from bookmark or playing from start
     public static boolean loadFromBookmark;
     public static boolean exiting;
-
     // Ensure MediaPlayer isn;t preparing
     public static boolean isPreparing = false;
-
     // Millisecond value of current bookmark
     public static int millisecondToSeekTo;
     // ArrayList of songs
     private static ArrayList<Song> songs;
     // Binder returned to Activity
     private final IBinder musicBind = new MusicBinder();
+    public String NOTI_PLAY = "notificationPlay";
+    public String NOTI_RESUME = "notificationResume";
+    public String NOTI_PAUSE = "notificationPause";
     // For logging purposes
     public String TAG = getClass().getSimpleName();
 
@@ -174,8 +174,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             }
 
 
-
-
             isPreparing = true;
 
             // Prepare Asynchronously
@@ -237,7 +235,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     private void handleIntent(Intent intent) {
 
-        if (intent == null || intent.getAction() == null){
+        if (intent == null || intent.getAction() == null) {
             return;
         }
 
@@ -267,64 +265,90 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             mediaPlayer.start();
             mediaPlayer.pause();
 
+
         } else {
             // Start playback
             mediaPlayer.start();
+            launchNotification(NOTI_PLAY);
             //noinspection deprecation
             PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
         }
 
         loadFromBookmark = false;
-
-        // Create Intents for notification builder
-        Intent notIntent = new Intent(this, MainActivity.class);
-        notIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent pendInt = PendingIntent.getActivity(this, 0,
-                notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        // Initialize builder
-        Notification.Builder builder = new Notification.Builder(this);
-
-        // Get Bitmap drawable for notification image
-        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.play);
-
-        // Build notification with required settings
-        builder.setContentIntent(pendInt)
-                .setSmallIcon(R.drawable.notification_play_icon)
-                .setLargeIcon(largeIcon)
-                .setTicker(songTitle)
-                .setOngoing(true)
-                .setContentTitle(songTitle)
-                .setContentText(songArtist);
-
-        // Generic notification reference, needed to differentiate between old / new code below.
-        Notification notification;
+    }
 
 
-        Intent intent = new Intent(MusicService.ACTION_PREVIOUS);
-        PendingIntent pendingIntent = PendingIntent.getService(this,
-                0 /* no requestCode */, intent, 0 /* no flags */);
+    public void launchNotification(String noti) {
+
+        if (noti.equals(NOTI_PLAY) || noti.equals(NOTI_RESUME)) {
+
+            // Create Intents for notification builder
+            Intent notIntent = new Intent(this, MainActivity.class);
+            notIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            PendingIntent pendInt = PendingIntent.getActivity(this, 0,
+                    notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            // Initialize builder
+            Notification.Builder builder = new Notification.Builder(this);
+
+            // Get Bitmap drawable for notification image
+            Bitmap largeIconPlay = BitmapFactory.decodeResource(getResources(), R.drawable.play);
+            Bitmap largeIconPause = BitmapFactory.decodeResource(getResources(), R.drawable.pause);
+
+            // Build notification with required settings
+            builder.setContentIntent(pendInt)
+                    .setSmallIcon(R.drawable.ic_play_dark)
+                    .setTicker(songTitle)
+                    .setContentTitle(songTitle)
+                    .setContentText(songArtist)
+                    .setOngoing(true);
+
+            /*
+                stopForeground(false);
+                builder.setSmallIcon(R.drawable.ic_pause_dark);
+                builder.setLargeIcon(largeIconPause);
+                builder.setOngoing(false);
+                */
+
+            // Generic notification reference, needed to differentiate between old / new code below.
+            Notification notification;
 
 
-        // If running 5+, set as media controller
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            builder.setStyle(new Notification.MediaStyle());
-            builder.addAction(new Notification.Action(android.R.drawable.ic_media_previous, "Previous", pendingIntent));
 
-            notification = builder.build();
 
-            // If running Android version 16+
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            notification = builder.build();
 
-        } else {
-            // Running version 15 or below
-            //noinspection deprecation
-            notification = builder.getNotification();
+            // If running 5+, set as media controller
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+                /* // todo ignore this ftm
+                Intent intent = new Intent(MusicService.ACTION_PREVIOUS);
+                PendingIntent pendingIntent = PendingIntent.getService(this, */
+                      //  0 /* no requestCode */, intent, 0 /* no flags */);
+
+                //builder.setStyle(new Notification.MediaStyle());
+                //builder.addAction(new Notification.Action(android.R.drawable.ic_media_previous, "Previous", pendingIntent));
+
+
+                builder.setLargeIcon(largeIconPlay);
+                notification = builder.build();
+
+                // If running Android version 16+
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                notification = builder.build();
+
+            } else {
+                // Running version 15 or below
+                //noinspection deprecation
+                notification = builder.getNotification();
+            }
+
+            // Start ongoing notification
+            startForeground(NOTIFY_ID, notification);
+
+        } else if (noti.equals(NOTI_PAUSE)) {
+            stopForeground(true);
+            //stopForeground(false);
         }
-
-        // Start ongoing notification
-        startForeground(NOTIFY_ID, notification);
     }
 
 
@@ -372,6 +396,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public void pausePlayer() {
         mPlayer.pause();
+        launchNotification(NOTI_PAUSE);
     }
 
     public void seek(int position) {
@@ -384,6 +409,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public void resume() {
         mPlayer.start();
+        launchNotification(NOTI_RESUME);
     }
 
     public void playPrev() {

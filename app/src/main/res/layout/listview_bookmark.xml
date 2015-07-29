@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="16dp"
-    android:background="#000"
+    android:background="@color/mat_grey_mid"
     android:baselineAligned="false"
     android:orientation="vertical"
     android:paddingTop="10dp"
@@ -16,7 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:textColor="#fff5f5f5"
+            android:textColor="@color/white_light"
             android:textSize="16sp" />
 
     <LinearLayout
@@ -30,7 +30,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:textColor="#ff9c9c9c"
+            android:textColor="@color/grey_light"
             android:textSize="14sp"/>
 
         <TextView
@@ -39,10 +39,17 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="4dp"
             android:singleLine="true"
-            android:textColor="#ff9c9c9c"
+            android:textColor="@color/grey_light"
             android:textSize="14sp"
             android:textStyle="bold" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/bookmarkNote"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/grey_light"
+        android:textSize="14sp" />
 
 </LinearLayout>

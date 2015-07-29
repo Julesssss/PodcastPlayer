@@ -4,6 +4,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import java.util.ArrayList;
 
 /**
  * Class for helping with DataBase operations and requests
@@ -17,18 +20,22 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     final public static String UNIQUE_ID = "unique_id";
     final public static String BOOKMARK_FORMATTED = "bookmark_formatted";
     final public static String BOOKMARK_MILLIS = "bookmark_millis";
+    final public static String BOOKMARK_NOTE = "bookmark_note";
     final public static String _ID = "_id";
-    final public static String[] columns = {_ID, UNIQUE_ID, ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED, BOOKMARK_MILLIS};
+    final public static String[] columns = {_ID, UNIQUE_ID, ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED, BOOKMARK_MILLIS, BOOKMARK_NOTE};
 
     // Only the columns that are to be passed to ListView for display
-    final public static String[] columnsForCursorAdaptor = {ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED};
+    final public static String[] columnsForCursorAdaptor = {ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED, BOOKMARK_NOTE};
+
+    // Sting array of current bookmarks, to be deleted
+    public static ArrayList<Integer> bookmarksToDelete;
 
     // Command for initializing database
     final private static String CREATE_CMD =
             "CREATE TABLE bookmarks (" + _ID
                     + " INTEGER PRIMARY KEY AUTOINCREMENT, " + UNIQUE_ID + " TEXT NOT NULL, "
                     + ARTIST_NAME + " TEXT NOT NULL, " + TRACK_NAME + " TEXT NOT NULL, " + BOOKMARK_FORMATTED
-                    + " TEXT NOT NULL," + BOOKMARK_MILLIS + " TEXT NOT NULL)";
+                    + " TEXT NOT NULL," + BOOKMARK_MILLIS + " TEXT NOT NULL," + BOOKMARK_NOTE + " TEXT NOT NULL)";
 
     final private static String NAME = "bookmark_db";
     final private static Integer VERSION = 1;
@@ -135,10 +142,64 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         String[] infoToDelete = getID(position);
         String id = infoToDelete[0];
 
+        Log.i("TAG", "INFO: " + id);
+
         // delete using _ID
         db.delete(DatabaseOpenHelper.TABLE_NAME,
                 DatabaseOpenHelper._ID + "=?",
                 new String[]{id});
+    }
+
+    /**
+     * Delete Bookmark entry from Database
+     */
+    public void deleteEntryFromPosition(int position) {
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // get row and _ID
+        String[] infoToDelete = getID(position);
+        String id = infoToDelete[0];
+
+        // delete using _ID
+        db.delete(DatabaseOpenHelper.TABLE_NAME,
+                DatabaseOpenHelper._ID + "=?",
+                new String[]{id});
+    }
+
+    public boolean bookmarkAlreadyExists(long id) {
+
+        int STRING_ARGS = 1;
+        boolean foundBookmark = false;
+
+        String selectQuery = "SELECT " + UNIQUE_ID + " FROM " + TABLE_NAME;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+        String[] data = new String[STRING_ARGS];
+
+        int j = 0;
+        bookmarksToDelete = new ArrayList<>();
+
+        while (cursor.moveToNext()) {
+            for (int i = 0; i < STRING_ARGS; i++) {
+                data[i] = cursor.getString(i);
+
+                if (String.valueOf(id).equals(data[0])) {
+                    foundBookmark = true;
+                    Log.i(getClass().getSimpleName(), "FOUND AT POSITION: " + j);
+
+                    bookmarksToDelete.add(j);
+                }
+            }
+            j++;
+        }
+
+        /// todo - keep reference to foundBookmark position
+
+        cursor.close();
+
+        return foundBookmark;
     }
 
 }
