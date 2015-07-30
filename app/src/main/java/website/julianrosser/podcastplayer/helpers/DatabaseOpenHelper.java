@@ -21,11 +21,12 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     final public static String BOOKMARK_FORMATTED = "bookmark_formatted";
     final public static String BOOKMARK_MILLIS = "bookmark_millis";
     final public static String BOOKMARK_NOTE = "bookmark_note";
+    final public static String BOOKMARK_PERCENT = "bookmark_percent";
     final public static String _ID = "_id";
-    final public static String[] columns = {_ID, UNIQUE_ID, ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED, BOOKMARK_MILLIS, BOOKMARK_NOTE};
+    final public static String[] columns = {_ID, UNIQUE_ID, ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED, BOOKMARK_MILLIS, BOOKMARK_NOTE, BOOKMARK_PERCENT};
 
     // Only the columns that are to be passed to ListView for display
-    final public static String[] columnsForCursorAdaptor = {ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED, BOOKMARK_NOTE};
+    final public static String[] columnsForCursorAdaptor = {ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED, BOOKMARK_NOTE, BOOKMARK_PERCENT};
 
     // Sting array of current bookmarks, to be deleted
     public static ArrayList<Integer> bookmarksToDelete;
@@ -35,7 +36,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
             "CREATE TABLE bookmarks (" + _ID
                     + " INTEGER PRIMARY KEY AUTOINCREMENT, " + UNIQUE_ID + " TEXT NOT NULL, "
                     + ARTIST_NAME + " TEXT NOT NULL, " + TRACK_NAME + " TEXT NOT NULL, " + BOOKMARK_FORMATTED
-                    + " TEXT NOT NULL," + BOOKMARK_MILLIS + " TEXT NOT NULL," + BOOKMARK_NOTE + " TEXT NOT NULL)";
+                    + " TEXT NOT NULL," + BOOKMARK_MILLIS + " TEXT NOT NULL," + BOOKMARK_NOTE + " TEXT NOT NULL," + BOOKMARK_PERCENT + " TEXT NOT NULL)";
 
     final private static String NAME = "bookmark_db";
     final private static Integer VERSION = 1;

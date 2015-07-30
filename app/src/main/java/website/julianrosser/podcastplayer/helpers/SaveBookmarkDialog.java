@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
@@ -25,7 +26,7 @@ public class SaveBookmarkDialog extends DialogFragment {
         final MainActivity mActivityContext = (MainActivity) mContext;
 
         // Instantiate an AlertDialog.Builder with its constructor
-        final AlertDialog.Builder builder = new AlertDialog.Builder(mActivityContext);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(mActivityContext, R.style.AlertDialogCustom));
 
         // Get the layout inflater
         final LayoutInflater inflater =  mActivityContext.getLayoutInflater();

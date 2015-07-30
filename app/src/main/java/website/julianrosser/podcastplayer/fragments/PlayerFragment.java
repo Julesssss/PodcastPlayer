@@ -87,6 +87,16 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
         values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
 
+
+        Log.i(TAG, "Percent: " + songCurrentPos + " / " + s.getLengthMillis() + "%");
+
+        double percent = songCurrentPos / s.getLengthMillis();
+        percent = percent * 100;
+        int percentFormatted = (int) percent;
+        Log.i(TAG, "Percent: " + percentFormatted);
+
+        values.put(DatabaseOpenHelper.BOOKMARK_PERCENT, percentFormatted);
+
         // Change from millis to seconds
         songCurrentPos = songCurrentPos / 1000;
 
