@@ -5,13 +5,12 @@ Android application for bookmarking Audiobooks & podcasts. Easily track progress
 
 TODO
 - Change bookmark sorting, add icon to ActionBar
-- Style Nav Drawer with custom adapter / view. Design to material standards.
-- find all places time is formatted, put in same function --V
-- BUG: When setting current progress string in PlayerFragment, uses old format (no hours)
 - Don't touch views before big file has finished loading or it'll skip track
-- When saving bookmark, use time at click, not save / Change toasts info
+- Update dialog title with timer
+- Delete doesn't work???
 
 Log
+- 31/07 - Designed NavDrawer custom adaptor view, material design icons, item layout & font. Fixed Sting formatting for currentPosition.
 - 30/07 - Added percent icon to Bookmark ListView & DB. Display message if bookmarks are empty. Updated Dialog style.
 - 29/07 - Made SaveBookmarkDialog class & custom view. List shows notes if available. Material grey re-design. Notification can be dismissed when paused & icon changes.
 - 28/07 - Activity destroyed & Re-Created without effecting playback. Material design for ListViews. Exit button. Fixed getDuration while prepping bug.
@@ -35,10 +34,12 @@ Notes & things to do later
 - If I change the bookmark format, will be hard to implement new tables. Formatting of displayed bookmarks, should formatt when needed.
 - Should % be kept as sql row? or formatted when displaying from data??
 - Is shuffle even needed?
+- Test This: When opening fragment, add to backstack if not playerfragment
 - Wording for Dialog - "Keep old bookmarks", "Replace old bookmark?", "Remove old Bookmarks"??
 - Get widget to fire Pending Intent that is recognised by Service
 - Does GitHub project load properly?
 - Check delete works properly
+- What should I do about
 - The order of song-list might change, wrong 'LastSong' will be loaded. Does this matter?
 - When loading big file, seekBar / timer aren't set until song is ready, problem??.
 - might crash if song list changes or song changes, test

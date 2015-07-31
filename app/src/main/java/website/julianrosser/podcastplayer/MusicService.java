@@ -73,7 +73,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         // Format time to minutes, secs
         long second = (millisecondToSeekTo / 1000) % 60;
         int minutes = (millisecondToSeekTo / 1000) / 60;
-        songCurrentPosition = String.valueOf(minutes) + ":" + String.format("%02d", second);
+
+        songCurrentPosition = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
 
         // If Fragment is in view & not null, update track information TextViews
         if (MainActivity.playerFragment != null) {

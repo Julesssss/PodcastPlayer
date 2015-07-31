@@ -108,12 +108,12 @@ public class MainActivity extends AppCompatActivity
 
                         if (MainActivity.musicSrv != null && PlayerFragment.seekBar != null) {
                             PlayerFragment.seekBar.setProgress((int) MusicService.songBookmarkSeekPosition);
+                            PlayerFragment.textSongCurrent.setText(Song.convertTime(String.valueOf(MusicService.millisecondToSeekTo)));
                         }
                     } else {
                         // Already playing, so just set TextViews
                         MusicService.updateTextViews();
                     }
-
                 }
             }
         }
@@ -215,11 +215,8 @@ public class MainActivity extends AppCompatActivity
             unbindService(musicConnection);
         }
 
-        mDB.close();
-
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(PlayerFragment.mNotificationId);
-
     }
 
     /**

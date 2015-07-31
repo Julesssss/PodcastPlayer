@@ -6,7 +6,10 @@
     <string name="title_section1">Now Playing</string>
     <string name="title_section2">Bookmarks</string>
     <string name="title_section3">Library</string>
-    <string name="title_section4">Playlists</string>
+
+    <string name="title_section4">Settings</string>
+    <string name="title_section5">Help</string>
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 

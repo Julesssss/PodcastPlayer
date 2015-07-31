@@ -16,7 +16,7 @@ import android.widget.TextView;
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.helpers.LibrarySongListAdapter;
+import website.julianrosser.podcastplayer.adapters.LibrarySongListAdapter;
 
 
 /**

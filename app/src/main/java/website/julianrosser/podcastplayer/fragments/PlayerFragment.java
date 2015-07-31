@@ -87,21 +87,12 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
         values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
 
-
-        Log.i(TAG, "Percent: " + songCurrentPos + " / " + s.getLengthMillis() + "%");
-
-        double percent = songCurrentPos / s.getLengthMillis();
-        percent = percent * 100;
-        int percentFormatted = (int) percent;
-        Log.i(TAG, "Percent: " + percentFormatted);
-
+        // Format bookmark percent
+        int percentFormatted = (int) ((songCurrentPos / s.getLengthMillis()) * 100);
         values.put(DatabaseOpenHelper.BOOKMARK_PERCENT, percentFormatted);
 
-        // Change from millis to seconds
-        songCurrentPos = songCurrentPos / 1000;
-
-        // Format position for DB Fragment display
-        formattedPosition = " -  (" + (int) songCurrentPos / 60 + ":" + String.format("%02d", (int) songCurrentPos % 60)
+        // Format poition string
+        formattedPosition = " -  (" + Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()))
                 + " / " + s.getLength() + ")";
         values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
 
@@ -243,7 +234,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-               new SaveBookmarkDialog(getActivity(), Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition())));
+               new SaveBookmarkDialog(getActivity());
 
             }
         });
@@ -297,8 +288,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
 
             public void run() {
-
-                // Ensure ServIce is initialized
+                // Ensure Service is initialized
                 for (int i = 0; i < 30; i++) {
                     if (MusicService.mPlayer == null) {
                         Log.i(getClass().getSimpleName(), "Player Progress Tracker - Music Service not initialized: " + i);
@@ -331,7 +321,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                                     PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
                                     String formatted = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
                                     PlayerFragment.textSongCurrent.setText(formatted);
-
                                 }
                             }
                         });
