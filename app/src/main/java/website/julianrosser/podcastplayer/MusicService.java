@@ -1,6 +1,7 @@
 package website.julianrosser.podcastplayer;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentUris;
@@ -273,6 +274,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             launchNotification(NOTI_PLAY);
             //noinspection deprecation
             PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+
+            removePauseNotification();
+
         }
 
         loadFromBookmark = false;
@@ -351,6 +355,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             //stopForeground(false);
         }
     }
+
+    public void removePauseNotification() {
+        NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(PlayerFragment.mNotificationId);
+    }
+
 
 
     /**

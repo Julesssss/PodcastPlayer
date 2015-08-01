@@ -10,6 +10,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +20,8 @@ import android.widget.AdapterView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Random;
 
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
@@ -61,10 +65,11 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         return fragment;
     }
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -79,10 +84,27 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
                 "Roboto-Regular.ttf");
 
         // Create a cursor for updating bookmark list
-        Cursor c = bookmarks();
+        Cursor c;
+
+        // If first use, set sorting to date added
+        if (MainActivity.bookmarkSortInt == -1) {
+            MainActivity.bookmarkSortInt= 0;
+        }
+
+        // Set Cursor depending on preference
+        if (MainActivity.bookmarkSortInt == 0) {
+            c = bookmarksByDate();
+        } else if (MainActivity.bookmarkSortInt == 1) {
+            c = bookmarksByTitle();
+        } else if (MainActivity.bookmarkSortInt == 2) {
+            c = bookmarksByArtist();
+        } else {
+            c = bookmarksByPercent();
+        }
+
         mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.listview_bookmark, c,
-                DatabaseOpenHelper.columnsForCursorAdaptor, new int[]{R.id.songListArtist, R.id.songListTitle, R.id.songListPosition, R.id.bookmarkNote, R.id.text_percent},
-                0);
+                DatabaseOpenHelper.columnsForCursorAdaptor, new int[]{R.id.songListArtist, R.id.songListTitle,
+                R.id.songListPosition, R.id.bookmarkNote, R.id.text_percent}, 0);
 
         // Custom views, set typeface, hide view if not needed
         mAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
@@ -134,10 +156,31 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
     }
 
     // Returns all bookmark records in the database
-    private Cursor bookmarks() {
+    private Cursor bookmarksByDate() {
         return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
                 DatabaseOpenHelper.columns, null, new String[]{}, null, null,
-                null);
+                 DatabaseOpenHelper._ID + " ASC");
+    }
+
+    // Returns all bookmark records in the database
+    private Cursor bookmarksByTitle() {
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
+                DatabaseOpenHelper.TRACK_NAME +" ASC");
+    }
+
+    // Returns all bookmark records in the database
+    private Cursor bookmarksByArtist() {
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
+                DatabaseOpenHelper.ARTIST_NAME+ " ASC");
+    }
+
+    // Returns all bookmark records in the database
+    private Cursor bookmarksByPercent() {
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
+                DatabaseOpenHelper.BOOKMARK_PERCENT + " ASC");
     }
 
     @Override
@@ -243,10 +286,50 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         switch (item.getItemId()) {
             case R.id.action_context_delete:
                 MainActivity.mDbHelper.deleteEntry(position);
-                mAdapter.swapCursor(bookmarks());
                 return true;
         }
         return super.onContextItemSelected(item);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.menu_fragment_bookmark, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+        if (id == R.id.action_order) {
+
+            if (MainActivity.bookmarkSortInt == 0) {
+                mAdapter.swapCursor(bookmarksByTitle());
+                MainActivity.bookmarkSortInt = 1;
+                Toast.makeText(getActivity(), "Sorted by Title", Toast.LENGTH_SHORT).show();
+
+            } else if (MainActivity.bookmarkSortInt == 1) {
+                mAdapter.swapCursor(bookmarksByArtist());
+                MainActivity.bookmarkSortInt = 2;
+                Toast.makeText(getActivity(), "Sorted by Artist", Toast.LENGTH_SHORT).show();
+
+            } else if (MainActivity.bookmarkSortInt == 2) {
+                mAdapter.swapCursor(bookmarksByPercent());
+                MainActivity.bookmarkSortInt = 3;
+                Toast.makeText(getActivity(), "Sorted by Progress", Toast.LENGTH_SHORT).show();
+
+            } else if (MainActivity.bookmarkSortInt == 3) {
+                mAdapter.swapCursor(bookmarksByDate());
+                MainActivity.bookmarkSortInt = 0;
+                Toast.makeText(getActivity(), "Sorted by Date", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        return super.onOptionsItemSelected(item);
+
+
     }
 
     /**

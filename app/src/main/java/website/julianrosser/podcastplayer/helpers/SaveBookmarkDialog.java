@@ -4,6 +4,7 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,7 +53,9 @@ public class SaveBookmarkDialog extends DialogFragment {
                 if (cb.isChecked()) {
 
                     for (int k = 0; k < DatabaseOpenHelper.bookmarksToDelete.size(); k++) {
-                        MainActivity.mDbHelper.deleteEntry(k);
+                        Log.i("SaveBookmarkDialog", "Delete row with ID: " + DatabaseOpenHelper.bookmarksToDelete.get(k));
+                        MainActivity.mDbHelper.deleteEntryFromID(   DatabaseOpenHelper.bookmarksToDelete.get(k)    );
+                        //MainActivity.mDbHelper.deleteEntry(DatabaseOpenHelper.bookmarksToDelete.get(k));
                     }
                 }
 

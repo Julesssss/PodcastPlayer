@@ -29,14 +29,14 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     final public static String[] columnsForCursorAdaptor = {ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED, BOOKMARK_NOTE, BOOKMARK_PERCENT};
 
     // Sting array of current bookmarks, to be deleted
-    public static ArrayList<Integer> bookmarksToDelete;
+    public static ArrayList<String> bookmarksToDelete;
 
     // Command for initializing database
     final private static String CREATE_CMD =
             "CREATE TABLE bookmarks (" + _ID
                     + " INTEGER PRIMARY KEY AUTOINCREMENT, " + UNIQUE_ID + " TEXT NOT NULL, "
                     + ARTIST_NAME + " TEXT NOT NULL, " + TRACK_NAME + " TEXT NOT NULL, " + BOOKMARK_FORMATTED
-                    + " TEXT NOT NULL," + BOOKMARK_MILLIS + " TEXT NOT NULL," + BOOKMARK_NOTE + " TEXT NOT NULL," + BOOKMARK_PERCENT + " TEXT NOT NULL)";
+                    + " TEXT NOT NULL," + BOOKMARK_MILLIS + " TEXT NOT NULL," + BOOKMARK_NOTE + " TEXT NOT NULL," + BOOKMARK_PERCENT + " INTEGER)";
 
     final private static String NAME = "bookmark_db";
     final private static Integer VERSION = 1;
@@ -91,7 +91,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     /**
      * Return the requested track's id
      */
-    public String[] getID(int position) {
+    public String getID(int position) {
 
         int STRING_ARGS = 1;
 
@@ -99,11 +99,11 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
-        String[] data = new String[STRING_ARGS];
+        String data = "";
 
         while (cursor.moveToNext()) {
             for (int i = 0; i < STRING_ARGS; i++) {
-                data[i] = cursor.getString(i);
+                data = cursor.getString(i);
             }
         }
         cursor.close();
@@ -140,8 +140,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
 
         // get row and _ID
-        String[] infoToDelete = getID(position);
-        String id = infoToDelete[0];
+        String id = getID(position);
 
         Log.i("TAG", "INFO: " + id);
 
@@ -150,23 +149,22 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
                 DatabaseOpenHelper._ID + "=?",
                 new String[]{id});
     }
-
     /**
      * Delete Bookmark entry from Database
      */
-    public void deleteEntryFromPosition(int position) {
+    public void deleteEntryFromID(String id) {
 
         SQLiteDatabase db = this.getReadableDatabase();
 
-        // get row and _ID
-        String[] infoToDelete = getID(position);
-        String id = infoToDelete[0];
+        Log.i("deleteEntryFromID", "ID: " + id);
 
         // delete using _ID
         db.delete(DatabaseOpenHelper.TABLE_NAME,
                 DatabaseOpenHelper._ID + "=?",
                 new String[]{id});
     }
+
+
 
     public boolean bookmarkAlreadyExists(long id) {
 
@@ -190,11 +188,13 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
                     foundBookmark = true;
                     Log.i(getClass().getSimpleName(), "FOUND AT POSITION: " + j);
 
-                    bookmarksToDelete.add(j);
+                    bookmarksToDelete.add(getID(j));
                 }
             }
             j++;
         }
+
+        Log.i("DBH", "bookmarks to delete: " + bookmarksToDelete.size());
 
         /// todo - keep reference to foundBookmark position
 

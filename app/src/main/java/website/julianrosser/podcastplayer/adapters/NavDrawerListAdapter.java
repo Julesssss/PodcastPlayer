@@ -69,6 +69,8 @@ public class NavDrawerListAdapter extends BaseAdapter {
                 holder.icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_settings_white_24dp));
             } else if (position == 4) {
                 holder.icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_help_white_24dp));
+            } else if (position == 5) {
+                holder.icon.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_exit_to_app_white_24dp));
             }
 
 

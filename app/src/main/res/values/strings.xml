@@ -18,6 +18,7 @@
 
     <!-- Settings -->
     <string name="action_settings">Settings</string>
+    <string name="action_order">Order</string>
     <string name="action_exit">Exit</string>
     <string name="action_random">Shuffle Mode</string>
     <string name="action_bookmark">Bookmark Here</string>

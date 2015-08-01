@@ -109,7 +109,7 @@ public class NavigationDrawerFragment extends Fragment {
         sections = new String[]{
                 getString(R.string.title_section1),
                 getString(R.string.title_section2),
-                getString(R.string.title_section3),"Settings", "Help",
+                getString(R.string.title_section3),"Settings", "Help", "Exit"
         };
 
         mDrawerListView.setAdapter(new NavDrawerListAdapter(getActivity(), sections));
@@ -245,7 +245,7 @@ public class NavigationDrawerFragment extends Fragment {
         mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
-    @Override
+    /* @Override TODO: not needed!
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // If the drawer is open, show the global app actions in the action bar. See also
         // showGlobalContextActionBar, which controls the top-left area of the action bar.
@@ -254,7 +254,7 @@ public class NavigationDrawerFragment extends Fragment {
             showGlobalContextActionBar();
         }
         super.onCreateOptionsMenu(menu, inflater);
-    }
+    } */
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
