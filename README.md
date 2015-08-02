@@ -4,14 +4,13 @@ Android application for bookmarking Audiobooks & podcasts. Easily track progress
 ![](http://julianrosser.website/images/app_screenshots/pp_4.png) ![](http://julianrosser.website/images/app_screenshots/pp_8.png)
 
 TODO
-- Don't touch views before big file has finished loading or it'll skip track
-- Update dialog title with timer
+- Don't touch views before big file has finished loading or it'll skip track, also should update textviews before loading.
 - Take sorting into account when Bookmark.onCLick()
-- how does Rocket player handle track name being too long?? duration is hidden in bookmarks
-- show percent in playerFrag??
+- Exit on swipe
+- Save bookmark formatted, total time & percent only
 
 Log
-- 02/08 - Sorting DialogFragment and custom views.
+- 02/08 - Added SortBookmarkDialog Fragment.
 - 01/08 - Added option to sort bookmarks, using SharedPreference. Exit option now in NavDrawer. Fixed delete bug, wasn't checking position. Fixed pause noti bug.
 - 31/07 - Designed NavDrawer custom adaptor view, material design icons, item layout & font. Fixed Sting formatting for currentPosition.
 - 30/07 - Added percent icon to Bookmark ListView & DB. Display message if bookmarks are empty. Updated Dialog style.
@@ -37,6 +36,7 @@ Notes & things to do later
 - If I change the bookmark format, will be hard to implement new tables. Formatting of displayed bookmarks, should formatt when needed.
 - Should % be kept as sql row? or formatted when displaying from data??
 - Is shuffle even needed?
+- show percent in playerFrag??
 - Test This: When opening fragment, add to backstack if not playerfragment
 - Wording for Dialog - "Keep old bookmarks", "Replace old bookmark?", "Remove old Bookmarks"??
 - Get widget to fire Pending Intent that is recognised by Service

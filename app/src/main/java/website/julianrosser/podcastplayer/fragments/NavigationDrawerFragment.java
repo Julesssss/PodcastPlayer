@@ -106,11 +106,7 @@ public class NavigationDrawerFragment extends Fragment {
             }
         });
 
-        sections = new String[]{
-                getString(R.string.title_section1),
-                getString(R.string.title_section2),
-                getString(R.string.title_section3),"Settings", "Help", "Exit"
-        };
+        sections = getResources().getStringArray(R.array.arrayNavDrawerTitles);
 
         mDrawerListView.setAdapter(new NavDrawerListAdapter(getActivity(), sections));
 

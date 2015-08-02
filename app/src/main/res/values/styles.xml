@@ -6,8 +6,16 @@
         <!-- Set AppCompat’s color theming attrs -->
         <item name="colorPrimary">@color/mat_grey_dark</item>
         <item name="colorPrimaryDark">@color/mat_black</item>
+        <item name="colorAccent">@color/primary_turq</item>
         <item name="android:windowBackground">@color/mat_grey_mid</item>
+        <item name="android:actionModeBackground">@color/material_deep</item>
+        <item name="android:textColorPrimary">@color/white_light</item>
+    </style>
 
+    <style name="AppCompatAlertDialogStyle" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="colorAccent">@color/primary_turq</item>
+        <item name="android:textColorPrimary">@color/white_light</item>
+        <item name="android:background">@color/mat_grey_light</item>
     </style>
 
     <style name="AlertDialogCustom" parent="@android:style/Theme.Dialog">

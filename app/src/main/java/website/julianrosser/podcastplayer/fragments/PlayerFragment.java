@@ -24,7 +24,7 @@ import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
-import website.julianrosser.podcastplayer.helpers.SaveBookmarkDialog;
+import website.julianrosser.podcastplayer.helpers.DialogSaveBookmark;
 import website.julianrosser.podcastplayer.objects.Song;
 
 
@@ -98,6 +98,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
         // Add values to new database row
         MainActivity.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
+
     }
 
     @Override
@@ -234,7 +235,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-               new SaveBookmarkDialog(getActivity());
+               new DialogSaveBookmark(getActivity());
 
             }
         });

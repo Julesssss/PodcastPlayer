@@ -29,7 +29,7 @@ import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
-import website.julianrosser.podcastplayer.helpers.SortBookmarkDialog;
+import website.julianrosser.podcastplayer.helpers.DialogSortBookmark;
 import website.julianrosser.podcastplayer.objects.Song;
 
 
@@ -212,7 +212,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
             case DIALOG_FRAGMENT:
 
-                DialogFragment dialogFrag = SortBookmarkDialog.newInstance(123, getActivity());
+                DialogFragment dialogFrag = DialogSortBookmark.newInstance(123, getActivity());
                 dialogFrag.setTargetFragment(this, DIALOG_FRAGMENT);
                 dialogFrag.show(getFragmentManager().beginTransaction(), "dialog");
 
@@ -227,7 +227,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
                 if (resultCode == Activity.RESULT_OK) {
 
-                    changeBookmarkSorting(data.getExtras().getInt(SortBookmarkDialog.DATA_SORTING_KEY));
+                    changeBookmarkSorting(data.getExtras().getInt(DialogSortBookmark.DATA_SORTING_KEY));
 
                 } else if (resultCode == Activity.RESULT_CANCELED) {
 
@@ -284,6 +284,8 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
         // Find bookmark information in database
         String[] returnedData = MainActivity.mDbHelper.getData(position);
+
+        // todo use view to find place in db
 
         // find song from list
         boolean matched = false;
@@ -364,6 +366,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         switch (item.getItemId()) {
             case R.id.action_context_delete:
                 MainActivity.mDbHelper.deleteEntry(position);
+                changeBookmarkSorting(MainActivity.bookmarkSortInt);
                 return true;
         }
         return super.onContextItemSelected(item);

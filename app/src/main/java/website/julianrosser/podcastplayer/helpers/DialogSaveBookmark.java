@@ -18,22 +18,12 @@ import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.fragments.PlayerFragment;
+import website.julianrosser.podcastplayer.objects.Song;
 
-public class SaveBookmarkDialog extends DialogFragment {
+public class DialogSaveBookmark extends DialogFragment {
 
 
-    public static SaveBookmarkDialog newInstance(int num, Context mContext){
-
-        SaveBookmarkDialog dialogFragment = new SaveBookmarkDialog(mContext);
-        Bundle bundle = new Bundle();
-        bundle.putInt("num", num);
-        dialogFragment.setArguments(bundle);
-
-        return dialogFragment;
-
-    }
-
-    public SaveBookmarkDialog(Context mContext) {
+    public DialogSaveBookmark(Context mContext) {
 
         final MainActivity mActivityContext = (MainActivity) mContext;
 
@@ -66,7 +56,7 @@ public class SaveBookmarkDialog extends DialogFragment {
 
                     for (int k = 0; k < DatabaseOpenHelper.bookmarksToDelete.size(); k++) {
                         Log.i("SaveBookmarkDialog", "Delete row with ID: " + DatabaseOpenHelper.bookmarksToDelete.get(k));
-                        MainActivity.mDbHelper.deleteEntryFromID(   DatabaseOpenHelper.bookmarksToDelete.get(k)    );
+                        MainActivity.mDbHelper.deleteEntryFromID(DatabaseOpenHelper.bookmarksToDelete.get(k));
                     }
                 }
 
@@ -75,8 +65,21 @@ public class SaveBookmarkDialog extends DialogFragment {
                 // Call method to add bookmark
                 PlayerFragment.addNewBookmark(note);
 
+                // Get song
+                Song s = MainActivity.songList.get(MusicService.songPosition);
+                double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+                int percentFormatted = (int) ((songCurrentPos / s.getLengthMillis()) * 100);
+
                 // Notify user that the bookmark was saved
-                Toast.makeText(mActivityContext, "Bookmark saved " + PlayerFragment.formattedPosition, Toast.LENGTH_LONG).show();
+                String toastMessage;
+
+                if (note.length() == 0) {
+                    toastMessage = "Bookmark saved at " + percentFormatted + "%";
+                } else {
+                    toastMessage = "Bookmark saved at " + percentFormatted + "% - '" + note + "'";
+                }
+
+                Toast.makeText(mActivityContext, toastMessage, Toast.LENGTH_LONG).show();
             }
         });
 
@@ -96,26 +99,15 @@ public class SaveBookmarkDialog extends DialogFragment {
 
     }
 
-/*
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
+    public static DialogSaveBookmark newInstance(int num, Context mContext) {
 
-        return new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.ERROR)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setPositiveButton(R.string.ok_button,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int whichButton) {
-                                getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, getActivity().getIntent());
-                            }
-                        }
-                )
-                .setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_CANCELED, getActivity().getIntent());
-                    }
-                })
-                .create();
-    } */
+        DialogSaveBookmark dialogFragment = new DialogSaveBookmark(mContext);
+        Bundle bundle = new Bundle();
+        bundle.putInt("num", num);
+        dialogFragment.setArguments(bundle);
+
+        return dialogFragment;
+
+    }
 
 }
