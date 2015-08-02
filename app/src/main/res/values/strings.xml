@@ -36,6 +36,8 @@
     <string name="dialog_bookmark_hint">Add note&#8230;</string>
     <string name="dialog_bookmark_positive">Save</string>
     <string name="dialog_bookmark_negative">Cancel</string>
+    <string name="dialog_bookmark_sort_positive">Sort</string>
+    <string name="dialog_bookmark_sort_negative">Cancel</string>
 
     <!-- BookmarkFragment -->
     <string name="bookmark_list_empty_text">No saved bookmarks, click the \'B\' button while listening to audio.</string>

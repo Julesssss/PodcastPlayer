@@ -3,6 +3,7 @@ package website.julianrosser.podcastplayer.helpers;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -17,9 +18,20 @@ import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.fragments.PlayerFragment;
-import website.julianrosser.podcastplayer.objects.Song;
 
 public class SaveBookmarkDialog extends DialogFragment {
+
+
+    public static SaveBookmarkDialog newInstance(int num, Context mContext){
+
+        SaveBookmarkDialog dialogFragment = new SaveBookmarkDialog(mContext);
+        Bundle bundle = new Bundle();
+        bundle.putInt("num", num);
+        dialogFragment.setArguments(bundle);
+
+        return dialogFragment;
+
+    }
 
     public SaveBookmarkDialog(Context mContext) {
 
@@ -31,7 +43,7 @@ public class SaveBookmarkDialog extends DialogFragment {
         // Get the layout inflater
         final LayoutInflater inflater = mActivityContext.getLayoutInflater();
 
-        View v = inflater.inflate(R.layout.dialog_bookmark, null);
+        View v = inflater.inflate(R.layout.dialog_bookmark_save, null);
 
         final CheckBox cb = (CheckBox) v.findViewById(R.id.dialog_bookmark_checkbox);
         final EditText et = (EditText) v.findViewById(R.id.dialog_bookmark_note);
@@ -55,7 +67,6 @@ public class SaveBookmarkDialog extends DialogFragment {
                     for (int k = 0; k < DatabaseOpenHelper.bookmarksToDelete.size(); k++) {
                         Log.i("SaveBookmarkDialog", "Delete row with ID: " + DatabaseOpenHelper.bookmarksToDelete.get(k));
                         MainActivity.mDbHelper.deleteEntryFromID(   DatabaseOpenHelper.bookmarksToDelete.get(k)    );
-                        //MainActivity.mDbHelper.deleteEntry(DatabaseOpenHelper.bookmarksToDelete.get(k));
                     }
                 }
 
@@ -84,5 +95,27 @@ public class SaveBookmarkDialog extends DialogFragment {
         dialog.show();
 
     }
+
+/*
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        return new AlertDialog.Builder(getActivity())
+                .setTitle(R.string.ERROR)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setPositiveButton(R.string.ok_button,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, getActivity().getIntent());
+                            }
+                        }
+                )
+                .setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_CANCELED, getActivity().getIntent());
+                    }
+                })
+                .create();
+    } */
 
 }

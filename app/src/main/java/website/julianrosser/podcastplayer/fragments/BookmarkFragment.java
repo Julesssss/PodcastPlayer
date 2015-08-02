@@ -1,9 +1,13 @@
 package website.julianrosser.podcastplayer.fragments;
 
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -21,12 +25,11 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Random;
-
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
+import website.julianrosser.podcastplayer.helpers.SortBookmarkDialog;
 import website.julianrosser.podcastplayer.objects.Song;
 
 
@@ -41,14 +44,16 @@ import website.julianrosser.podcastplayer.objects.Song;
  */
 public class BookmarkFragment extends android.support.v4.app.Fragment implements AbsListView.OnItemClickListener {
 
+    public static final int DIALOG_FRAGMENT = 300;
     private static final String ARG_SECTION_NUMBER = "bookmark";
+    // SQL
+    public static SimpleCursorAdapter mAdapter;
+
+    int mStackLevel = 0;
     /**
      * The fragment's ListView/GridView.
      */
     private AbsListView mListView;
-
-    // SQL
-    private SimpleCursorAdapter mAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -65,11 +70,42 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         return fragment;
     }
 
+    // Returns all bookmark records in the database
+    public static Cursor bookmarksByDate() {
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
+                DatabaseOpenHelper._ID + " ASC");
+    }
+
+    // Returns all bookmark records in the database
+    public static Cursor bookmarksByTitle() {
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
+                DatabaseOpenHelper.TRACK_NAME + " ASC");
+    }
+
+    // Returns all bookmark records in the database
+    public static Cursor bookmarksByArtist() {
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
+                DatabaseOpenHelper.ARTIST_NAME + " ASC");
+    }
+
+    // Returns all bookmark records in the database
+    public static Cursor bookmarksByPercent() {
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
+                DatabaseOpenHelper.BOOKMARK_PERCENT + " ASC");
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        if (savedInstanceState != null) {
+            mStackLevel = savedInstanceState.getInt("level");
+        }
     }
 
     @Override
@@ -88,10 +124,10 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
         // If first use, set sorting to date added
         if (MainActivity.bookmarkSortInt == -1) {
-            MainActivity.bookmarkSortInt= 0;
+            MainActivity.bookmarkSortInt = 0;
         }
 
-        // Set Cursor depending on preference
+        // Set Cursor depending on preference // todo - combine this with other method, below
         if (MainActivity.bookmarkSortInt == 0) {
             c = bookmarksByDate();
         } else if (MainActivity.bookmarkSortInt == 1) {
@@ -155,32 +191,74 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         return view;
     }
 
-    // Returns all bookmark records in the database
-    private Cursor bookmarksByDate() {
-        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
-                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
-                 DatabaseOpenHelper._ID + " ASC");
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("level", mStackLevel);
     }
 
-    // Returns all bookmark records in the database
-    private Cursor bookmarksByTitle() {
-        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
-                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
-                DatabaseOpenHelper.TRACK_NAME +" ASC");
+    public void showDialog(int type) {
+
+        mStackLevel++;
+
+        FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction();
+        Fragment prev = getActivity().getFragmentManager().findFragmentByTag("dialog");
+        if (prev != null) {
+            ft.remove(prev);
+        }
+        ft.addToBackStack(null);
+
+        switch (type) {
+
+            case DIALOG_FRAGMENT:
+
+                DialogFragment dialogFrag = SortBookmarkDialog.newInstance(123, getActivity());
+                dialogFrag.setTargetFragment(this, DIALOG_FRAGMENT);
+                dialogFrag.show(getFragmentManager().beginTransaction(), "dialog");
+
+                break;
+        }
     }
 
-    // Returns all bookmark records in the database
-    private Cursor bookmarksByArtist() {
-        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
-                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
-                DatabaseOpenHelper.ARTIST_NAME+ " ASC");
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case DIALOG_FRAGMENT:
+
+                if (resultCode == Activity.RESULT_OK) {
+
+                    changeBookmarkSorting(data.getExtras().getInt(SortBookmarkDialog.DATA_SORTING_KEY));
+
+                } else if (resultCode == Activity.RESULT_CANCELED) {
+
+                    Log.d(getClass().getSimpleName(), "ActivityResult: CANCELED");
+                }
+
+                break;
+        }
     }
 
-    // Returns all bookmark records in the database
-    private Cursor bookmarksByPercent() {
-        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
-                DatabaseOpenHelper.columns, null, new String[]{}, null, null,
-                DatabaseOpenHelper.BOOKMARK_PERCENT + " ASC");
+    public void changeBookmarkSorting(int sortKey) {
+
+        MainActivity.bookmarkSortInt = sortKey;
+
+        switch(sortKey) {
+            case 0:
+                mAdapter.swapCursor(bookmarksByDate());
+                break;
+
+            case 1:
+                mAdapter.swapCursor(bookmarksByTitle());
+                break;
+
+            case 2:
+                mAdapter.swapCursor(bookmarksByArtist());
+                break;
+
+            case 3:
+                mAdapter.swapCursor(bookmarksByPercent());
+                break;
+        }
     }
 
     @Override
@@ -305,6 +383,11 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
         if (id == R.id.action_order) {
 
+            showDialog(DIALOG_FRAGMENT);
+        }
+
+            /*
+
             if (MainActivity.bookmarkSortInt == 0) {
                 mAdapter.swapCursor(bookmarksByTitle());
                 MainActivity.bookmarkSortInt = 1;
@@ -324,8 +407,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
                 mAdapter.swapCursor(bookmarksByDate());
                 MainActivity.bookmarkSortInt = 0;
                 Toast.makeText(getActivity(), "Sorted by Date", Toast.LENGTH_SHORT).show();
-            }
-        }
+            } */
 
         return super.onOptionsItemSelected(item);
 

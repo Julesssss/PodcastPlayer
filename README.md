@@ -6,10 +6,12 @@ Android application for bookmarking Audiobooks & podcasts. Easily track progress
 TODO
 - Don't touch views before big file has finished loading or it'll skip track
 - Update dialog title with timer
-- Delete doesn't work???
 - Take sorting into account when Bookmark.onCLick()
+- how does Rocket player handle track name being too long?? duration is hidden in bookmarks
+- show percent in playerFrag??
 
 Log
+- 02/08 - Sorting DialogFragment and custom views.
 - 01/08 - Added option to sort bookmarks, using SharedPreference. Exit option now in NavDrawer. Fixed delete bug, wasn't checking position. Fixed pause noti bug.
 - 31/07 - Designed NavDrawer custom adaptor view, material design icons, item layout & font. Fixed Sting formatting for currentPosition.
 - 30/07 - Added percent icon to Bookmark ListView & DB. Display message if bookmarks are empty. Updated Dialog style.
