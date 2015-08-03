@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.view.View;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -46,6 +47,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public static boolean exiting;
     // Ensure MediaPlayer isn;t preparing
     public static boolean isPreparing = false;
+
+    public static boolean fileIsLoading = false;
+
     // Millisecond value of current bookmark
     public static int millisecondToSeekTo;
     // ArrayList of songs
@@ -70,10 +74,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         songBookmarkSeekPosition = ((double) millisecondToSeekTo / (double) playSong.getLengthMillis()) * 1000;
         // TODO - What if this is called while prepping?? -  if (!MusicService.isPreparing);
-
-        // Format time to minutes, secs
-        long second = (millisecondToSeekTo / 1000) % 60;
-        int minutes = (millisecondToSeekTo / 1000) / 60;
 
         songCurrentPosition = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
 
@@ -139,7 +139,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public void onDestroy() {
         Log.i(TAG, "onDestroy");
-        exiting = true;
         mPlayer.release();
         // Remove Service from foreground when closed
         stopForeground(true);
@@ -161,6 +160,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
             // Get reference to current song
             Song playSong = songs.get(songPosition);
+
+            PlayerFragment.progressBarLoading.setVisibility(View.VISIBLE);
 
             // Get song ID, then create track URI
             long currSong = playSong.getID();
@@ -253,6 +254,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.i(TAG, "onPrepared");
+
+        PlayerFragment.progressBarLoading.setVisibility(View.INVISIBLE);
 
         isPreparing = false;
 

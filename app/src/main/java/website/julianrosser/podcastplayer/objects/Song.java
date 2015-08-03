@@ -2,6 +2,7 @@ package website.julianrosser.podcastplayer.objects;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 /**
  * A Song Object is created for each audiofile file found on device. Keeps track of title, artist, length & id information
@@ -13,13 +14,19 @@ public class Song implements Parcelable {
     private String artist;
     private String duration;
     private int posInSongList;
+    private int albumID;
 
-    public Song(long songID, String songTitle, String songArtist, String songLength, int pos) {
+    public Song(long songID, String songTitle, String songArtist, String songLength, int pos, int intAlbumnID) {
         id = songID;
         title = songTitle;
         artist = songArtist;
         duration = songLength;
         posInSongList = pos;
+        albumID = intAlbumnID;
+    }
+
+    public int getAlbumID() {
+        return albumID;
     }
 
     public long getID() {

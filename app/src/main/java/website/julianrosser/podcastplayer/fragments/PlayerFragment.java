@@ -7,7 +7,10 @@ import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
@@ -16,6 +19,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,12 +43,9 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
     // For logging purposes
     private static final String TAG = "PlayerFragment";
-
     public static String formattedPosition;
-
     // Sets an ID for the notification
     public static int mNotificationId = 111;
-
     // View references
     public static SeekBar seekBar;
     public static ImageButton playPause;
@@ -51,6 +53,11 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     public static TextView textSongArtist;
     public static TextView textSongCurrent;
     public static TextView textSongLength;
+
+    public static ProgressBar progressBarLoading;
+
+    private String SPREF_STRING_POS_FORMATTED = "trackCurrentPosFormatted";
+    private String SPREF_INT_POS_SEEKBAR = "trackCurrentPosSeekbar";
 
     /**
      * Required empty public constructor
@@ -92,8 +99,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         values.put(DatabaseOpenHelper.BOOKMARK_PERCENT, percentFormatted);
 
         // Format poition string
-        formattedPosition = " -  (" + Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()))
-                + " / " + s.getLength() + ")";
+        formattedPosition = " -  (" + s.getLength() + ")";
         values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
 
         // Add values to new database row
@@ -118,7 +124,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-                if (MainActivity.musicSrv != null && MainActivity.musicBound) {
+                if (MainActivity.musicSrv != null && MainActivity.musicBound && ! MusicService.isPreparing) {
                     // if already playing, pause
                     if (MainActivity.musicSrv.isPng()) {
                         MainActivity.musicSrv.pausePlayer();
@@ -235,7 +241,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-               new DialogSaveBookmark(getActivity());
+                new DialogSaveBookmark(getActivity());
 
             }
         });
@@ -265,17 +271,33 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             }
         });
 
+        ImageView im = (ImageView) view.findViewById(R.id.imageView);
+
+        Song s = MainActivity.songList.get(MusicService.songPosition);
+        long albumID = s.getAlbumID();
+
+        Bitmap bm = MainActivity.getAlbumart(albumID, getActivity());
+
+        Log.i(TAG, "Bitmap: " + bm.getWidth() + " / " + bm.getHeight() + " / " + bm.toString() + " / ");
+
+        //im.setImageBitmap(MainActivity.getArtworkQuick(getActivity(), albumID, im.getHeight(), im.getWidth()));
+
 
         // Start timer if not the first time fragment is opened
         if (MainActivity.firstSongPlayed) {
             startTimer();
         }
 
+        progressBarLoading = (ProgressBar) view.findViewById(R.id.progressBar);
+
+
         // If playing, show pause button.
         if (MainActivity.musicBound && MusicService.mPlayer != null && MusicService.mPlayer.isPlaying()) {
             //noinspection deprecation
             playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
         }
+
+
 
         return view;
 
@@ -335,15 +357,31 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        seekBar.setProgress(MainActivity.seekbarPosition);
-        textSongCurrent.setText(MainActivity.textCurrentPos);
+
+        if (MusicService.isPreparing) {
+            progressBarLoading.setVisibility(View.VISIBLE);
+        }
+
+        if (MusicService.mPlayer != null && MainActivity.musicBound) {
+
+            // Load position and id of last played
+            SharedPreferences sp = getActivity().getSharedPreferences(MainActivity.SPREF_KEY, Activity.MODE_PRIVATE);
+            textSongCurrent.setText(sp.getString(SPREF_STRING_POS_FORMATTED, "0:00"));
+            seekBar.setProgress(sp.getInt(SPREF_INT_POS_SEEKBAR, 0));
+
+        }
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        MainActivity.seekbarPosition = seekBar.getProgress();
-        MainActivity.textCurrentPos = textSongCurrent.getText().toString();
+    public void onStop() {
+        super.onStop();
+        if (!MusicService.exiting) {
+            SharedPreferences sp = getActivity().getSharedPreferences(MainActivity.SPREF_KEY, Activity.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sp.edit();
+            editor.putString(SPREF_STRING_POS_FORMATTED, textSongCurrent.getText().toString());
+            editor.putInt(SPREF_INT_POS_SEEKBAR, seekBar.getProgress());
+            editor.apply();
+        }
     }
 
     /**

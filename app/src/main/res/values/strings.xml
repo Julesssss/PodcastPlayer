@@ -8,7 +8,6 @@
     <string name="title_section3">Library</string>
     <string name="title_section4">Settings</string>
     <string name="title_section5">Help</string>
-    <string name="title_section6">Exit</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
@@ -54,7 +53,6 @@
         <item>@string/title_section3</item>
         <item>@string/title_section4</item>
         <item>@string/title_section5</item>
-        <item>@string/title_section6</item>
     </string-array>
 
     <string-array name="arraySortOptions">

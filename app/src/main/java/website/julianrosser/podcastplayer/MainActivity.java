@@ -4,16 +4,20 @@ import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
@@ -24,6 +28,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import website.julianrosser.podcastplayer.fragments.BookmarkFragment;
@@ -37,6 +44,9 @@ public class MainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks, LibraryFragment.OnFragmentInteractionListener, BookmarkFragment.OnFragmentInteractionListener {
 
 
+    private static final BitmapFactory.Options sBitmapOptionsCache = new BitmapFactory.Options();
+    private static final Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
+
     // Array of songs
     public static ArrayList<Song> songList;
     // To check if MusicService is bound to Activity
@@ -44,8 +54,8 @@ public class MainActivity extends AppCompatActivity
     // To prevent song starting on first play
     public static boolean firstPreparedSong = true;
     // to check if first song has played yet
-    public static int seekbarPosition;
-    public static String textCurrentPos;
+
+
     public static boolean firstSongPlayed = false;
     // Shuffle mode boolean
     public static boolean shuffleMode = false;
@@ -61,17 +71,18 @@ public class MainActivity extends AppCompatActivity
     public static DatabaseOpenHelper mDbHelper;
     // Seekbar ratio reference
     public static int SEEKBAR_RATIO = 1000;
+    public static int bookmarkSortInt;
+    public static String SPREF_INT_APP_MODE = "appMode";
+    public static int APP_MODE_PODCASTS = 10;
+    public static int APP_MODE_AUDIO = 20;
+    // For loading last played in correct position
+    public static String SPREF_KEY = "your_prefs";
     // Bundle
     public int lastPlayedListPosition;
     public int lastPlayedCurrentPosition;
-
-    public static int bookmarkSortInt;
-
     public String SPREF_INT_LIST_POSITION = "songListPosition";
     public String SPREF_INT_CURRENT_POSITION = "songCurrentPosition";
     public String SPREF_INT_BOOKMARK_ORDER = "bookmarkOrder";
-    // For loading last played in correct position
-    private String SPREF_KEY = "your_prefs";
     // For logging purposes
     private String TAG = getClass().getSimpleName();
     // Intent used for binding service to Activity
@@ -108,6 +119,7 @@ public class MainActivity extends AppCompatActivity
                         MainActivity.firstPreparedSong = true;
 
                         MusicService.millisecondToSeekTo = lastPlayedCurrentPosition;
+
                         MainActivity.musicSrv.setSongAtPosButDontPlay(lastPlayedListPosition);
 
                         if (MainActivity.musicSrv != null && PlayerFragment.seekBar != null) {
@@ -132,6 +144,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Log.i(TAG, "onCreate()");
 
         // Initialize song list
@@ -167,6 +180,12 @@ public class MainActivity extends AppCompatActivity
         lastPlayedCurrentPosition = sp.getInt(SPREF_INT_CURRENT_POSITION, -1);
         bookmarkSortInt = sp.getInt(SPREF_INT_BOOKMARK_ORDER, -1);
         // todo - Songlist may have changed, this would make list position incorrect. Maybe should use different ID?
+
+        //
+        if (lastPlayedListPosition >= songList.size()) {
+            lastPlayedListPosition = 0;
+            // todo - now don't load from bookmark
+        }
 
         MusicService.exiting = false;
 
@@ -215,9 +234,7 @@ public class MainActivity extends AppCompatActivity
         super.onDestroy();
         Log.i(TAG, "onDestroy()");
 
-        if (musicConnection != null && musicBound) {
-            unbindService(musicConnection);
-        }
+        exitApp();
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(PlayerFragment.mNotificationId);
@@ -228,7 +245,6 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
         Intent startMain = new Intent(Intent.ACTION_MAIN);
         startMain.addCategory(Intent.CATEGORY_HOME);
         startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -239,7 +255,10 @@ public class MainActivity extends AppCompatActivity
      * Search phone for music tracks and add to the newly created song array list. Return false if no tracks
      */
     public boolean getSongList() {
-        int pos = 0;
+
+        int appMode = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE).getInt(SPREF_INT_APP_MODE, APP_MODE_PODCASTS);
+
+        int positionInSongList = 0;
         // Retrieve song info
         ContentResolver musicResolver = getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -256,17 +275,39 @@ public class MainActivity extends AppCompatActivity
             int songDuration = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
             int songPodcast = musicCursor.getColumnIndex(MediaStore.Audio.Media.IS_PODCAST);
             int songMusic = musicCursor.getColumnIndex(MediaStore.Audio.Media.IS_MUSIC);
+            int songAlbumID = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
+
             // Add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
                 String thisDuration = musicCursor.getString(songDuration);
+                int thisAlbumID = Integer.valueOf(musicCursor.getString(songAlbumID));
+
+                // Bitmap bit = BitmapFactory.decodeFile("");
+
 
                 // Workaround for filtering invalid tracks and podcasts todo - invert to get podcasts
                 if (thisDuration != null && musicCursor.getString(songPodcast) != null) {
-                    songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration, pos));
-                    pos += 1;
+
+                    if (appMode == APP_MODE_PODCASTS) {
+
+                        if (musicCursor.getString(songPodcast).equals("1")) {
+
+                            Log.i(TAG, "Found with podcast tag");
+                            songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration, positionInSongList, thisAlbumID));
+                            positionInSongList += 1;
+
+                        } else if (Integer.valueOf(musicCursor.getString(songDuration)) > 1200000) {
+
+                            Log.i(TAG, "Found with long duration");
+
+                            songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration, positionInSongList, thisAlbumID));
+                            positionInSongList += 1;
+
+                        }
+                    }
                 }
             }
             while (musicCursor.moveToNext());
@@ -281,7 +322,7 @@ public class MainActivity extends AppCompatActivity
             finish();
             return false;
         } else {
-            Log.i(TAG, "Song array created with " + songList.size() + " songs.");
+            Log.i(TAG, "Song array created with " + songList.size() + " files.");
             return true;
         }
     }
@@ -297,11 +338,9 @@ public class MainActivity extends AppCompatActivity
         } else if (position == 2) {
             getNewLibraryFragment(position);
         } else if (position == 3) {
-           // getNewLibraryFragment(position);
+            // getNewLibraryFragment(position);
         } else if (position == 4) {
             //getNewLibraryFragment(position);
-        } else if (position == 5) {
-            exitApp();
         } else {
             Log.e(TAG, "Nav drawer id error");
         }
@@ -350,6 +389,8 @@ public class MainActivity extends AppCompatActivity
 
     public void exitApp() {
 
+        MusicService.exiting = true;
+
         if (musicConnection != null && musicBound) {
             musicSrv.onDestroy();
             unbindService(musicConnection);
@@ -387,9 +428,6 @@ public class MainActivity extends AppCompatActivity
             case 5:
                 mTitle = getString(R.string.title_section5);
                 break;
-            case 6:
-                mTitle = getString(R.string.title_section6);
-                break;
         }
     }
 
@@ -426,6 +464,94 @@ public class MainActivity extends AppCompatActivity
 
 
         return super.onOptionsItemSelected(item);
+    }
+
+    // Get album art for specified album. This method will not try to
+    // fall back to getting artwork directly from the file, nor will
+    // it attempt to repair the database.
+    public static Bitmap getArtworkQuick(Context context, long album_id, Uri artUri, int w, int h) {
+        // NOTE: There is in fact a 1 pixel border on the right side in the ImageView
+        // used to display this drawable. Take it into account now, so we don't have to
+        // scale later.
+
+        w -= 1;
+        ContentResolver res = context.getContentResolver();
+        Uri uri = ContentUris.withAppendedId(artUri, album_id);
+        if (uri != null) {
+            ParcelFileDescriptor fd = null;
+            try {
+                fd = res.openFileDescriptor(uri, "r");
+                int sampleSize = 1;
+
+                // Compute the closest power-of-two scale factor
+                // and pass that to sBitmapOptionsCache.inSampleSize, which will
+                // result in faster decoding and better quality
+                sBitmapOptionsCache.inJustDecodeBounds = true;
+                BitmapFactory.decodeFileDescriptor(
+                        fd.getFileDescriptor(), null, sBitmapOptionsCache);
+                int nextWidth = sBitmapOptionsCache.outWidth >> 1;
+                int nextHeight = sBitmapOptionsCache.outHeight >> 1;
+                while (nextWidth>w && nextHeight>h) {
+                    sampleSize <<= 1;
+                    nextWidth >>= 1;
+                    nextHeight >>= 1;
+                }
+
+                sBitmapOptionsCache.inSampleSize = sampleSize;
+                sBitmapOptionsCache.inJustDecodeBounds = false;
+                Bitmap b = BitmapFactory.decodeFileDescriptor(
+                        fd.getFileDescriptor(), null, sBitmapOptionsCache);
+
+                if (b != null) {
+                    // finally rescale to exactly the size we need
+                    if (sBitmapOptionsCache.outWidth != w || sBitmapOptionsCache.outHeight != h) {
+                        Bitmap tmp = Bitmap.createScaledBitmap(b, w, h, true);
+                        // Bitmap.createScaledBitmap() can return the same bitmap
+                        if (tmp != b) b.recycle();
+                        b = tmp;
+                    }
+                }
+
+                return b;
+            } catch (FileNotFoundException e) {
+            } finally {
+                try {
+                    if (fd != null)
+                        fd.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        Log.i("BITMAP FAC", "NULL URI");
+        return null;
+    }
+
+    public static Bitmap getAlbumart(Long album_id, Context c)
+    {
+        Bitmap bm = BitmapFactory.decodeResource(c.getResources(),
+                R.drawable.audio_icon);
+
+        try
+        {
+            final Uri sArtworkUri = Uri
+                    .parse("content://media/external/audio/albumart");
+
+            Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
+
+            ParcelFileDescriptor pfd = c.getContentResolver()
+                    .openFileDescriptor(uri, "r");
+
+            if (pfd != null)
+            {
+                FileDescriptor fd = pfd.getFileDescriptor();
+                bm = BitmapFactory.decodeFileDescriptor(fd);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return bm;
     }
 
 

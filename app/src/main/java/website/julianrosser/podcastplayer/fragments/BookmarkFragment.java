@@ -46,6 +46,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
     public static final int DIALOG_FRAGMENT = 300;
     private static final String ARG_SECTION_NUMBER = "bookmark";
+    private final String TAG = getClass().getSimpleName();
     // SQL
     public static SimpleCursorAdapter mAdapter;
 
@@ -302,7 +303,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
         if (matched) {
 
             MainActivity.firstSongPlayed = true;
-            MusicService.loadFromBookmark = false;
+           //MusicService.loadFromBookmark = false; // todo - problem?
 
             // Load song and start
             MainActivity.musicSrv.setSongAtPos(songTrackPos);
@@ -314,7 +315,6 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
             NavigationDrawerFragment.mDrawerListView.setItemChecked(0, true);
 
-            // Launch player fragment todo - necessary??
             // update the main content by replacing fragments
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
             fragmentManager.beginTransaction()

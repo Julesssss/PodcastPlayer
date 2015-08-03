@@ -4,13 +4,12 @@ Android application for bookmarking Audiobooks & podcasts. Easily track progress
 ![](http://julianrosser.website/images/app_screenshots/pp_4.png) ![](http://julianrosser.website/images/app_screenshots/pp_8.png)
 
 TODO
-- Don't touch views before big file has finished loading or it'll skip track, also should update textviews before loading.
-- Take sorting into account when Bookmark.onCLick()
-- Exit on swipe
-- Save bookmark formatted, total time & percent only
+- Albumn Art
+- Remove SQL rows for formatting, do all with int pos and duration. Remove formatted & percent, make int duration column, FIND ALL REFS!!!
 
 Log
-- 02/08 - Added SortBookmarkDialog Fragment.
+- 03/08 - Filtered audio content. App lifecycle correctly destroys with swipe away. View bugs while loading. PlayerFragment SharedPrefs.
+- 02/08 - Added SortBookmarkDialog Fragment. Refactored arrays. Fixed dark styles. New Toast when bookmark is saved.
 - 01/08 - Added option to sort bookmarks, using SharedPreference. Exit option now in NavDrawer. Fixed delete bug, wasn't checking position. Fixed pause noti bug.
 - 31/07 - Designed NavDrawer custom adaptor view, material design icons, item layout & font. Fixed Sting formatting for currentPosition.
 - 30/07 - Added percent icon to Bookmark ListView & DB. Display message if bookmarks are empty. Updated Dialog style.
@@ -35,19 +34,15 @@ Notes & things to do later
 - Library context menu: delete all BM, add BM, play, delete, play next
 - If I change the bookmark format, will be hard to implement new tables. Formatting of displayed bookmarks, should formatt when needed.
 - Should % be kept as sql row? or formatted when displaying from data??
-- Is shuffle even needed?
 - show percent in playerFrag??
-- Test This: When opening fragment, add to backstack if not playerfragment
-- Wording for Dialog - "Keep old bookmarks", "Replace old bookmark?", "Remove old Bookmarks"??
 - Get widget to fire Pending Intent that is recognised by Service
 - Does GitHub project load properly?
+- Only show prog if taking long to load
 - Check delete works properly
-- What should I do about
 - The order of song-list might change, wrong 'LastSong' will be loaded. Does this matter?
 - When loading big file, seekBar / timer aren't set until song is ready, problem??.
 - might crash if song list changes or song changes, test
 - Memory slowly fills, play stutters, then space is freed up. Is this normal?
-- ListView - show percentage/time at right side?
 - Name - 'PodCats - AudioBook & Podcast bookmarker'     ??
 - Find better Unique ID? media_id changes if files move or get renamed, how does other apps handle this?
 
