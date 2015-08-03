@@ -7,6 +7,19 @@
     <color name="primary_text">#212121</color>
     <color name="secondary_text">#727272</color>
     <color name="light_text">#ffe8e8e8</color>
+    <color name="dim_white_text">#ffcbcbcb</color>
     <color name="icons">#FFFFFF</color>
     <color name="divider">#B6B6B6</color>
+
+    <color name="primary_turq">#ff009587</color>
+
+    <color name="material_deep">#673AB7</color>
+    <color name="white_light">#fff5f5f5</color>
+    <color name="grey_light">#ff9c9c9c</color>
+    <color name="grey_mid">#ff6e6e6e</color>
+
+    <color name="mat_black">#000</color>
+    <color name="mat_grey_dark">#212121</color>
+    <color name="mat_grey_mid">#303030</color>
+    <color name="mat_grey_light">#424242</color>
 </resources>

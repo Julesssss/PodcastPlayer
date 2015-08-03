@@ -11,11 +11,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.TextView;
 
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.helpers.LibrarySongListAdapter;
+import website.julianrosser.podcastplayer.adapters.LibrarySongListAdapter;
 
 
 /**
@@ -69,7 +70,11 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
         // Set the custom adapter
         mListView.setAdapter(librarySongListAdapter);
 
-        //mListView.setBackgroundColor(getResources().getColor(R.color.mat_grey_mid));
+        // This is to ensure 5.0+ works
+        mListView.setBackgroundColor(getResources().getColor(R.color.mat_grey_mid));
+
+        TextView emptyText = (TextView) view.findViewById(android.R.id.empty);
+        mListView.setEmptyView(emptyText);
 
         // Show scrollbar
         mListView.setScrollbarFadingEnabled(false);

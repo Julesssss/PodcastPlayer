@@ -1,17 +1,18 @@
 # PodcastPlayer 0.3
 Android application for bookmarking Audiobooks & podcasts. Easily track progress of multiple audiobooks and shows.
 
-![](http://julianrosser.website/images/app_screenshots/pp_4.png)
+![](http://julianrosser.website/images/app_screenshots/pp_4.png) ![](http://julianrosser.website/images/app_screenshots/pp_8.png)
 
 TODO
-- Change bookmark sorting
-- BUG: When setting current progress string in PlayerFragment, uses old format (no hours)
-- Add % to bookmark list
-- Material ListViews - only show divider between seperate songs
-- Don't touch views before big file load or it'll skip
-- Fully custom Dialog buttons, so whole view is BG colour
+- Don't touch views before big file has finished loading or it'll skip track
+- Update dialog title with timer
+- Delete doesn't work???
+- Take sorting into account when Bookmark.onCLick()
 
 Log
+- 01/08 - Added option to sort bookmarks, using SharedPreference. Exit option now in NavDrawer. Fixed delete bug, wasn't checking position. Fixed pause noti bug.
+- 31/07 - Designed NavDrawer custom adaptor view, material design icons, item layout & font. Fixed Sting formatting for currentPosition.
+- 30/07 - Added percent icon to Bookmark ListView & DB. Display message if bookmarks are empty. Updated Dialog style.
 - 29/07 - Made SaveBookmarkDialog class & custom view. List shows notes if available. Material grey re-design. Notification can be dismissed when paused & icon changes.
 - 28/07 - Activity destroyed & Re-Created without effecting playback. Material design for ListViews. Exit button. Fixed getDuration while prepping bug.
 - 27/07 - App opens to last played song, at last played position. Play time formatted correctly. Various SeekBar bugs. Added Scrollbar to ListView.
@@ -30,10 +31,16 @@ Log
 - 11/06 - Started log. Opened project for the first time in weeks, NOT a good idea to leave unfixed bugs, took me a while to debug.
 
 Notes & things to do later
+- Library context menu: delete all BM, add BM, play, delete, play next
+- If I change the bookmark format, will be hard to implement new tables. Formatting of displayed bookmarks, should formatt when needed.
+- Should % be kept as sql row? or formatted when displaying from data??
 - Is shuffle even needed?
+- Test This: When opening fragment, add to backstack if not playerfragment
 - Wording for Dialog - "Keep old bookmarks", "Replace old bookmark?", "Remove old Bookmarks"??
 - Get widget to fire Pending Intent that is recognised by Service
 - Does GitHub project load properly?
+- Check delete works properly
+- What should I do about
 - The order of song-list might change, wrong 'LastSong' will be loaded. Does this matter?
 - When loading big file, seekBar / timer aren't set until song is ready, problem??.
 - might crash if song list changes or song changes, test

@@ -64,8 +64,12 @@ public class MainActivity extends AppCompatActivity
     // Bundle
     public int lastPlayedListPosition;
     public int lastPlayedCurrentPosition;
+
+    public static int bookmarkSortInt;
+
     public String SPREF_INT_LIST_POSITION = "songListPosition";
     public String SPREF_INT_CURRENT_POSITION = "songCurrentPosition";
+    public String SPREF_INT_BOOKMARK_ORDER = "bookmarkOrder";
     // For loading last played in correct position
     private String SPREF_KEY = "your_prefs";
     // For logging purposes
@@ -108,12 +112,12 @@ public class MainActivity extends AppCompatActivity
 
                         if (MainActivity.musicSrv != null && PlayerFragment.seekBar != null) {
                             PlayerFragment.seekBar.setProgress((int) MusicService.songBookmarkSeekPosition);
+                            PlayerFragment.textSongCurrent.setText(Song.convertTime(String.valueOf(MusicService.millisecondToSeekTo)));
                         }
                     } else {
                         // Already playing, so just set TextViews
                         MusicService.updateTextViews();
                     }
-
                 }
             }
         }
@@ -161,11 +165,10 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
         lastPlayedListPosition = sp.getInt(SPREF_INT_LIST_POSITION, -1);
         lastPlayedCurrentPosition = sp.getInt(SPREF_INT_CURRENT_POSITION, -1);
+        bookmarkSortInt = sp.getInt(SPREF_INT_BOOKMARK_ORDER, -1);
         // todo - Songlist may have changed, this would make list position incorrect. Maybe should use different ID?
 
         MusicService.exiting = false;
-
-        // If not already using Matirial theme, set ActionBar color
 
     }
 
@@ -198,6 +201,7 @@ public class MainActivity extends AppCompatActivity
             SharedPreferences.Editor editor = sp.edit();
             editor.putInt(SPREF_INT_CURRENT_POSITION, MusicService.mPlayer.getCurrentPosition());
             editor.putInt(SPREF_INT_LIST_POSITION, MusicService.songPosition);
+            editor.putInt(SPREF_INT_BOOKMARK_ORDER, bookmarkSortInt);
             editor.apply();
         }
 
@@ -215,11 +219,8 @@ public class MainActivity extends AppCompatActivity
             unbindService(musicConnection);
         }
 
-        mDB.close();
-
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(PlayerFragment.mNotificationId);
-
     }
 
     /**
@@ -295,6 +296,12 @@ public class MainActivity extends AppCompatActivity
             getNewBookmarkFragment(position);
         } else if (position == 2) {
             getNewLibraryFragment(position);
+        } else if (position == 3) {
+           // getNewLibraryFragment(position);
+        } else if (position == 4) {
+            //getNewLibraryFragment(position);
+        } else if (position == 5) {
+            exitApp();
         } else {
             Log.e(TAG, "Nav drawer id error");
         }
@@ -341,6 +348,24 @@ public class MainActivity extends AppCompatActivity
                 .commit();
     }
 
+    public void exitApp() {
+
+        if (musicConnection != null && musicBound) {
+            musicSrv.onDestroy();
+            unbindService(musicConnection);
+            musicBound = false;
+        }
+
+        if (playIntent != null) {
+            stopService(playIntent);
+        }
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(PlayerFragment.mNotificationId);
+
+        finish();
+    }
+
     /**
      * Update ActionBar title when a Fragment is attatched.
      */
@@ -379,7 +404,7 @@ public class MainActivity extends AppCompatActivity
             // Only show items in the action bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
             // decide what to show in the action bar.
-            getMenuInflater().inflate(R.menu.main, menu);
+            //getMenuInflater().inflate(R.menu.main, menu);
             restoreActionBar();
             return true;
         }
@@ -393,29 +418,6 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
-            Log.i(TAG, "Settings button");
-            return true;
-        } else if (id == R.id.action_exit) {
-
-            if (musicConnection != null && musicBound) {
-                musicSrv.onDestroy();
-                unbindService(musicConnection);
-                musicBound = false;
-            }
-
-            if (playIntent != null) {
-                stopService(playIntent);
-            }
-
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.cancel(PlayerFragment.mNotificationId);
-
-
-            finish();
-
-            return true;
-        }
 
         return super.onOptionsItemSelected(item);
     }

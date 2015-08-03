@@ -12,6 +12,8 @@
         android:id="@+id/dialog_bookmark_note"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textColorHint="@color/white_light"
+        android:textColor="@color/white_light"
         android:hint="@string/dialog_bookmark_hint"
         android:inputType="text" />
 
@@ -27,6 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginRight="8dp"
             android:textSize="18sp"
+            android:textColor="@color/white_light"
             android:text="@string/dialog_bookmark_message" />
 
         <CheckBox

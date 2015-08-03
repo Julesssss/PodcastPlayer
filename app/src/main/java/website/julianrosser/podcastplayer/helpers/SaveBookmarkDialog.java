@@ -3,9 +3,9 @@ package website.julianrosser.podcastplayer.helpers;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
@@ -17,18 +17,19 @@ import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.fragments.PlayerFragment;
+import website.julianrosser.podcastplayer.objects.Song;
 
 public class SaveBookmarkDialog extends DialogFragment {
 
-    public SaveBookmarkDialog(Context mContext, String stringPosition) {
+    public SaveBookmarkDialog(Context mContext) {
 
         final MainActivity mActivityContext = (MainActivity) mContext;
 
         // Instantiate an AlertDialog.Builder with its constructor
-        final AlertDialog.Builder builder = new AlertDialog.Builder(mActivityContext);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(mActivityContext, R.style.AlertDialogCustom));
 
         // Get the layout inflater
-        final LayoutInflater inflater =  mActivityContext.getLayoutInflater();
+        final LayoutInflater inflater = mActivityContext.getLayoutInflater();
 
         View v = inflater.inflate(R.layout.dialog_bookmark, null);
 
@@ -39,8 +40,9 @@ public class SaveBookmarkDialog extends DialogFragment {
         // Pass null as the parent view because its going in the dialog layout
         builder.setView(v);
 
-        builder.setTitle("Bookmark - " + stringPosition);
-
+        // todo title info
+        //String stringPosition = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+        //builder.setTitle("Bookmark - " + stringPosition);
 
         // Set positive button
         builder.setPositiveButton(R.string.dialog_bookmark_positive, new DialogInterface.OnClickListener() {
@@ -51,14 +53,16 @@ public class SaveBookmarkDialog extends DialogFragment {
                 if (cb.isChecked()) {
 
                     for (int k = 0; k < DatabaseOpenHelper.bookmarksToDelete.size(); k++) {
-                        MainActivity.mDbHelper.deleteEntry(k);
+                        Log.i("SaveBookmarkDialog", "Delete row with ID: " + DatabaseOpenHelper.bookmarksToDelete.get(k));
+                        MainActivity.mDbHelper.deleteEntryFromID(   DatabaseOpenHelper.bookmarksToDelete.get(k)    );
+                        //MainActivity.mDbHelper.deleteEntry(DatabaseOpenHelper.bookmarksToDelete.get(k));
                     }
                 }
 
                 String note = et.getText().toString();
 
-                        // Call method to add bookmark
-                        PlayerFragment.addNewBookmark(note);
+                // Call method to add bookmark
+                PlayerFragment.addNewBookmark(note);
 
                 // Notify user that the bookmark was saved
                 Toast.makeText(mActivityContext, "Bookmark saved " + PlayerFragment.formattedPosition, Toast.LENGTH_LONG).show();
@@ -73,7 +77,6 @@ public class SaveBookmarkDialog extends DialogFragment {
 
             final LinearLayout ll = (LinearLayout) v.findViewById(R.id.dialog_bookmark_old_layout);
             ll.setVisibility(View.GONE);
-
         }
 
         // Get the AlertDialog from create()

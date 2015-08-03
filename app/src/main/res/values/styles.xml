@@ -10,6 +10,11 @@
 
     </style>
 
+    <style name="AlertDialogCustom" parent="@android:style/Theme.Dialog">
+        <item name="android:background">@color/mat_grey_light</item>
+        <item name="android:textColor">@color/white_light</item>
+    </style>
+
     <style name="CustomActionBarTheme"
         parent="@style/Theme.AppCompat.Light.DarkActionBar">
         <item name="android:actionBarStyle">@style/MyActionBar</item>

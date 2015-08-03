@@ -1,6 +1,7 @@
 package website.julianrosser.podcastplayer;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentUris;
@@ -73,7 +74,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         // Format time to minutes, secs
         long second = (millisecondToSeekTo / 1000) % 60;
         int minutes = (millisecondToSeekTo / 1000) / 60;
-        songCurrentPosition = String.valueOf(minutes) + ":" + String.format("%02d", second);
+
+        songCurrentPosition = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
 
         // If Fragment is in view & not null, update track information TextViews
         if (MainActivity.playerFragment != null) {
@@ -272,6 +274,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             launchNotification(NOTI_PLAY);
             //noinspection deprecation
             PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+
+            removePauseNotification();
+
         }
 
         loadFromBookmark = false;
@@ -350,6 +355,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             //stopForeground(false);
         }
     }
+
+    public void removePauseNotification() {
+        NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(PlayerFragment.mNotificationId);
+    }
+
 
 
     /**
