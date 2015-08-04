@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer;
+package website.julianrosser.podcastplayer.activities;
 
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -31,24 +31,27 @@ import android.widget.Toast;
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
-import website.julianrosser.podcastplayer.fragments.BookmarkFragment;
-import website.julianrosser.podcastplayer.fragments.LibraryFragment;
-import website.julianrosser.podcastplayer.fragments.NavigationDrawerFragment;
-import website.julianrosser.podcastplayer.fragments.PlayerFragment;
+import website.julianrosser.podcastplayer.R;
+import website.julianrosser.podcastplayer.fragments.FragmentBookmark;
+import website.julianrosser.podcastplayer.fragments.FragmentLibrary;
+import website.julianrosser.podcastplayer.fragments.FragmentNavigationDrawer;
+import website.julianrosser.podcastplayer.fragments.FragmentNowPlaying;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
-import website.julianrosser.podcastplayer.objects.Song;
+import website.julianrosser.podcastplayer.objects.AudioFile;
+import website.julianrosser.podcastplayer.services.ServiceMusic;
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks, LibraryFragment.OnFragmentInteractionListener, BookmarkFragment.OnFragmentInteractionListener {
+public class ActivityMain extends AppCompatActivity
+        implements FragmentNavigationDrawer.NavigationDrawerCallbacks, FragmentLibrary.OnFragmentInteractionListener, FragmentBookmark.OnFragmentInteractionListener {
 
 
     private static final BitmapFactory.Options sBitmapOptionsCache = new BitmapFactory.Options();
     private static final Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
 
     // Array of songs
-    public static ArrayList<Song> songList;
+    public static ArrayList<AudioFile> audioFileList;
     // To check if MusicService is bound to Activity
     public static boolean musicBound = false;
     // To prevent song starting on first play
@@ -60,9 +63,9 @@ public class MainActivity extends AppCompatActivity
     // Shuffle mode boolean
     public static boolean shuffleMode = false;
     // Reference to music service
-    public static MusicService musicSrv;
+    public static ServiceMusic musicSrv;
     // Reference to PlayerFragment
-    public static PlayerFragment playerFragment;
+    public static FragmentNowPlaying fragmentNowPlaying;
     // Used to store the last screen title. For use in {@link #restoreActionBar()}.
     public static CharSequence mTitle;
     // SQL Database reference
@@ -88,7 +91,7 @@ public class MainActivity extends AppCompatActivity
     // Intent used for binding service to Activity
     private Intent playIntent;
     // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-    private NavigationDrawerFragment mNavigationDrawerFragment;
+    private FragmentNavigationDrawer mFragmentNavigationDrawer;
     /**
      * connect to the service
      */
@@ -97,38 +100,38 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.i(TAG, "onServiceConnected");
-            MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
+            ServiceMusic.MusicBinder binder = (ServiceMusic.MusicBinder) service;
             // Get service
             musicSrv = binder.getService();
             // Pass song list to - Should I check for empty list here?
-            musicSrv.setList(MainActivity.songList);
+            musicSrv.setList(ActivityMain.audioFileList);
             // update boolean to show service is bound
             musicBound = true;
 
 
             // Check that songs exist on device
-            if (songList.size() > 0 && MusicService.mPlayer != null) {
+            if (audioFileList.size() > 0 && ServiceMusic.mPlayer != null) {
 
                 // Check if this is first open (Or error with last played song)
                 if (lastPlayedListPosition == -1 || lastPlayedCurrentPosition == -1) {
                     // First time
-                    MainActivity.musicSrv.setSongAtPosButDontPlay(0);
+                    ActivityMain.musicSrv.setSongAtPosButDontPlay(0);
                 } else {
-                    if (!MusicService.mPlayer.isPlaying()) {
+                    if (!ServiceMusic.mPlayer.isPlaying()) {
 
-                        MainActivity.firstPreparedSong = true;
+                        ActivityMain.firstPreparedSong = true;
 
-                        MusicService.millisecondToSeekTo = lastPlayedCurrentPosition;
+                        ServiceMusic.millisecondToSeekTo = lastPlayedCurrentPosition;
 
-                        MainActivity.musicSrv.setSongAtPosButDontPlay(lastPlayedListPosition);
+                        ActivityMain.musicSrv.setSongAtPosButDontPlay(lastPlayedListPosition);
 
-                        if (MainActivity.musicSrv != null && PlayerFragment.seekBar != null) {
-                            PlayerFragment.seekBar.setProgress((int) MusicService.songBookmarkSeekPosition);
-                            PlayerFragment.textSongCurrent.setText(Song.convertTime(String.valueOf(MusicService.millisecondToSeekTo)));
+                        if (ActivityMain.musicSrv != null && FragmentNowPlaying.seekBar != null) {
+                            FragmentNowPlaying.seekBar.setProgress((int) ServiceMusic.songBookmarkSeekPosition);
+                            FragmentNowPlaying.textSongCurrent.setText(AudioFile.convertTime(String.valueOf(ServiceMusic.millisecondToSeekTo)));
                         }
                     } else {
                         // Already playing, so just set TextViews
-                        MusicService.updateTextViews();
+                        ServiceMusic.updateTextViews();
                     }
                 }
             }
@@ -148,7 +151,7 @@ public class MainActivity extends AppCompatActivity
         Log.i(TAG, "onCreate()");
 
         // Initialize song list
-        songList = new ArrayList<>();
+        audioFileList = new ArrayList<>();
 
         // Search for songs and update list, if songs are available
         getSongList();
@@ -157,11 +160,11 @@ public class MainActivity extends AppCompatActivity
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         // Get Navigation Drawer reference
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
+        mFragmentNavigationDrawer = (FragmentNavigationDrawer)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
 
         // Set up the navigation drawer.
-        mNavigationDrawerFragment.setUp(
+        mFragmentNavigationDrawer.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
@@ -182,12 +185,12 @@ public class MainActivity extends AppCompatActivity
         // todo - Songlist may have changed, this would make list position incorrect. Maybe should use different ID?
 
         //
-        if (lastPlayedListPosition >= songList.size()) {
+        if (lastPlayedListPosition >= audioFileList.size()) {
             lastPlayedListPosition = 0;
             // todo - now don't load from bookmark
         }
 
-        MusicService.exiting = false;
+        ServiceMusic.exiting = false;
 
     }
 
@@ -202,7 +205,7 @@ public class MainActivity extends AppCompatActivity
         // if already alive, just bind
 
         if (playIntent == null) {
-            playIntent = new Intent(this, MusicService.class);
+            playIntent = new Intent(this, ServiceMusic.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
         } else {
@@ -215,11 +218,11 @@ public class MainActivity extends AppCompatActivity
         super.onStop();
         Log.i(TAG, "onStop()");
 
-        if (!MusicService.exiting) {
+        if (!ServiceMusic.exiting) {
             SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = sp.edit();
-            editor.putInt(SPREF_INT_CURRENT_POSITION, MusicService.mPlayer.getCurrentPosition());
-            editor.putInt(SPREF_INT_LIST_POSITION, MusicService.songPosition);
+            editor.putInt(SPREF_INT_CURRENT_POSITION, ServiceMusic.mPlayer.getCurrentPosition());
+            editor.putInt(SPREF_INT_LIST_POSITION, ServiceMusic.songPosition);
             editor.putInt(SPREF_INT_BOOKMARK_ORDER, bookmarkSortInt);
             editor.apply();
         }
@@ -237,7 +240,7 @@ public class MainActivity extends AppCompatActivity
         exitApp();
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(PlayerFragment.mNotificationId);
+        notificationManager.cancel(FragmentNowPlaying.mNotificationId);
     }
 
     /**
@@ -256,7 +259,7 @@ public class MainActivity extends AppCompatActivity
      */
     public boolean getSongList() {
 
-        int appMode = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE).getInt(SPREF_INT_APP_MODE, APP_MODE_PODCASTS);
+        int appMode = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE).getInt(SPREF_INT_APP_MODE, APP_MODE_AUDIO);
 
         int positionInSongList = 0;
         // Retrieve song info
@@ -275,7 +278,6 @@ public class MainActivity extends AppCompatActivity
             int songDuration = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
             int songPodcast = musicCursor.getColumnIndex(MediaStore.Audio.Media.IS_PODCAST);
             int songMusic = musicCursor.getColumnIndex(MediaStore.Audio.Media.IS_MUSIC);
-            int songAlbumID = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
 
             // Add songs to list
             do {
@@ -283,7 +285,7 @@ public class MainActivity extends AppCompatActivity
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
                 String thisDuration = musicCursor.getString(songDuration);
-                int thisAlbumID = Integer.valueOf(musicCursor.getString(songAlbumID));
+                long thisAlbumID = musicCursor.getLong(musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
 
                 // Bitmap bit = BitmapFactory.decodeFile("");
 
@@ -296,16 +298,22 @@ public class MainActivity extends AppCompatActivity
                         if (musicCursor.getString(songPodcast).equals("1")) {
 
                             Log.i(TAG, "Found with podcast tag");
-                            songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration, positionInSongList, thisAlbumID));
+                            audioFileList.add(new AudioFile(thisId, thisTitle, thisArtist, thisDuration, positionInSongList, thisAlbumID));
                             positionInSongList += 1;
 
                         } else if (Integer.valueOf(musicCursor.getString(songDuration)) > 1200000) {
 
                             Log.i(TAG, "Found with long duration");
 
-                            songList.add(new Song(thisId, thisTitle, thisArtist, thisDuration, positionInSongList, thisAlbumID));
+                            audioFileList.add(new AudioFile(thisId, thisTitle, thisArtist, thisDuration, positionInSongList, thisAlbumID));
                             positionInSongList += 1;
 
+                        }
+                    } else if (appMode == APP_MODE_AUDIO) {
+
+                        if (!musicCursor.getString(songPodcast).equals("-1")){
+                            audioFileList.add(new AudioFile(thisId, thisTitle, thisArtist, thisDuration, positionInSongList, thisAlbumID));
+                            positionInSongList += 1;
                         }
                     }
                 }
@@ -317,12 +325,12 @@ public class MainActivity extends AppCompatActivity
             musicCursor.close();
         }
 
-        if (songList.size() == 0) {
+        if (audioFileList.size() == 0) {
             Toast.makeText(this, "No audio files found on device", Toast.LENGTH_LONG).show();
             finish();
             return false;
         } else {
-            Log.i(TAG, "Song array created with " + songList.size() + " files.");
+            Log.i(TAG, "Song array created with " + audioFileList.size() + " files.");
             return true;
         }
     }
@@ -353,10 +361,10 @@ public class MainActivity extends AppCompatActivity
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        playerFragment = PlayerFragment.newInstance(position + 1);
+        fragmentNowPlaying = FragmentNowPlaying.newInstance(position + 1);
 
         fragmentManager.beginTransaction()
-                .replace(R.id.container, playerFragment)
+                .replace(R.id.container, fragmentNowPlaying)
                 .commit();
     }
 
@@ -367,10 +375,10 @@ public class MainActivity extends AppCompatActivity
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        BookmarkFragment bookmarkFragment = BookmarkFragment.newInstance(position + 1);
+        FragmentBookmark fragmentBookmark = FragmentBookmark.newInstance(position + 1);
 
         fragmentManager.beginTransaction()
-                .replace(R.id.container, bookmarkFragment)
+                .replace(R.id.container, fragmentBookmark)
                 .commit();
     }
 
@@ -380,16 +388,16 @@ public class MainActivity extends AppCompatActivity
     private void getNewLibraryFragment(int position) {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        LibraryFragment libraryFragment = LibraryFragment.newInstance(position + 1);
+        FragmentLibrary fragmentLibrary = FragmentLibrary.newInstance(position + 1);
 
         fragmentManager.beginTransaction()
-                .replace(R.id.container, libraryFragment)
+                .replace(R.id.container, fragmentLibrary)
                 .commit();
     }
 
     public void exitApp() {
 
-        MusicService.exiting = true;
+        ServiceMusic.exiting = true;
 
         if (musicConnection != null && musicBound) {
             musicSrv.onDestroy();
@@ -402,7 +410,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(PlayerFragment.mNotificationId);
+        notificationManager.cancel(FragmentNowPlaying.mNotificationId);
 
         finish();
     }
@@ -444,7 +452,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (!mNavigationDrawerFragment.isDrawerOpen()) {
+        if (!mFragmentNavigationDrawer.isDrawerOpen()) {
             // Only show items in the action bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
             // decide what to show in the action bar.
@@ -527,6 +535,25 @@ public class MainActivity extends AppCompatActivity
         return null;
     }
 
+
+    static public Bitmap albumArt(Context c, long albumId) {
+        Bitmap artwork = BitmapFactory.decodeResource(c.getResources(),
+                R.drawable.audio_icon);
+        Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
+        Uri uri = ContentUris.withAppendedId(sArtworkUri, albumId);
+        ContentResolver res = c.getContentResolver();
+        InputStream in;
+        try {
+            in = res.openInputStream(uri);
+            artwork = BitmapFactory.decodeStream(in);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return artwork;
+    }
+
+
     public static Bitmap getAlbumart(Long album_id, Context c)
     {
         Bitmap bm = BitmapFactory.decodeResource(c.getResources(),
@@ -539,20 +566,29 @@ public class MainActivity extends AppCompatActivity
 
             Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
 
+            Log.i("ART", "URI; " + uri.toString() + "  /  " + uri.getPath());
+
             ParcelFileDescriptor pfd = c.getContentResolver()
                     .openFileDescriptor(uri, "r");
 
+
             if (pfd != null)
             {
+                Log.i("ART", "pfd: " + pfd.toString());
                 FileDescriptor fd = pfd.getFileDescriptor();
                 bm = BitmapFactory.decodeFileDescriptor(fd);
             }
+            else {
+                Log.i("ART", "NOOOOO");
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return bm;
     }
+
 
 
     public void onFragmentInteraction(String id) {

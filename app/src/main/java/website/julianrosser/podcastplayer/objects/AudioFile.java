@@ -7,25 +7,28 @@ import android.util.Log;
 /**
  * A Song Object is created for each audiofile file found on device. Keeps track of title, artist, length & id information
  */
-public class Song implements Parcelable {
+public class AudioFile implements Parcelable {
 
     public long id;
     private String title;
     private String artist;
     private String duration;
     private int posInSongList;
-    private int albumID;
+    private long albumID;
 
-    public Song(long songID, String songTitle, String songArtist, String songLength, int pos, int intAlbumnID) {
+    public AudioFile(long songID, String songTitle, String songArtist, String songLength, int pos, long intAlbumnID) {
         id = songID;
         title = songTitle;
         artist = songArtist;
         duration = songLength;
         posInSongList = pos;
         albumID = intAlbumnID;
+
+
+        Log.i("SONG", "AID: '" + albumID + "'");
     }
 
-    public int getAlbumID() {
+    public long getAlbumID() {
         return albumID;
     }
 
@@ -77,7 +80,7 @@ public class Song implements Parcelable {
     }
 
 
-        protected Song(Parcel in) {
+        protected AudioFile(Parcel in) {
             id = in.readLong();
             title = in.readString();
             artist = in.readString();
@@ -100,15 +103,15 @@ public class Song implements Parcelable {
         }
 
         @SuppressWarnings("unused")
-        public static final Parcelable.Creator<Song> CREATOR = new Parcelable.Creator<Song>() {
+        public static final Parcelable.Creator<AudioFile> CREATOR = new Parcelable.Creator<AudioFile>() {
             @Override
-            public Song createFromParcel(Parcel in) {
-                return new Song(in);
+            public AudioFile createFromParcel(Parcel in) {
+                return new AudioFile(in);
             }
 
             @Override
-            public Song[] newArray(int size) {
-                return new Song[size];
+            public AudioFile[] newArray(int size) {
+                return new AudioFile[size];
             }
         };
     }

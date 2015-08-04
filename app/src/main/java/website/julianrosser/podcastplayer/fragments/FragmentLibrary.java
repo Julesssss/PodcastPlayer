@@ -13,10 +13,10 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.TextView;
 
-import website.julianrosser.podcastplayer.MainActivity;
-import website.julianrosser.podcastplayer.MusicService;
+import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.services.ServiceMusic;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.adapters.LibrarySongListAdapter;
+import website.julianrosser.podcastplayer.adapters.AdapterLibrarySongList;
 
 
 /**
@@ -26,25 +26,25 @@ import website.julianrosser.podcastplayer.adapters.LibrarySongListAdapter;
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
-public class LibraryFragment extends android.support.v4.app.Fragment implements AbsListView.OnItemClickListener {
+public class FragmentLibrary extends android.support.v4.app.Fragment implements AbsListView.OnItemClickListener {
 
     private static final String ARG_SECTION_NUMBER = "library";
     /**
      * The Adapter which will be used to populate the ListView/GridView with
      * Views.
      */
-    public LibrarySongListAdapter librarySongListAdapter;
+    public AdapterLibrarySongList adapterLibrarySongList;
     private OnFragmentInteractionListener mListener;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public LibraryFragment() {
+    public FragmentLibrary() {
     }
 
-    public static LibraryFragment newInstance(int sectionNumber) {
-        LibraryFragment fragment = new LibraryFragment();
+    public static FragmentLibrary newInstance(int sectionNumber) {
+        FragmentLibrary fragment = new FragmentLibrary();
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
@@ -56,7 +56,7 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
         super.onCreate(savedInstanceState);
 
         // Create custom adapter
-        librarySongListAdapter = new LibrarySongListAdapter(getActivity());
+        adapterLibrarySongList = new AdapterLibrarySongList(getActivity());
 
     }
 
@@ -68,7 +68,7 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
         AbsListView mListView = (AbsListView) view.findViewById(android.R.id.list);
 
         // Set the custom adapter
-        mListView.setAdapter(librarySongListAdapter);
+        mListView.setAdapter(adapterLibrarySongList);
 
         // This is to ensure 5.0+ works
         mListView.setBackgroundColor(getResources().getColor(R.color.mat_grey_mid));
@@ -88,7 +88,7 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((MainActivity) activity).onSectionAttached(
+        ((ActivityMain) activity).onSectionAttached(
                 getArguments().getInt(ARG_SECTION_NUMBER));
 
         try {
@@ -108,25 +108,25 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        MainActivity.firstSongPlayed = true;
-        MusicService.loadFromBookmark = false;
+        ActivityMain.firstSongPlayed = true;
+        ServiceMusic.loadFromBookmark = false;
 
-        MainActivity.musicSrv.setSong(position);
+        ActivityMain.musicSrv.setSong(position);
 
         Log.i(getClass().getSimpleName(), "onItemClick: " + position);
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onFragmentInteraction(String.valueOf(MainActivity.songList.get(position).getTitle()));
+            mListener.onFragmentInteraction(String.valueOf(ActivityMain.audioFileList.get(position).getTitle()));
         }
 
-        NavigationDrawerFragment.mDrawerListView.setItemChecked(0, true);
+        FragmentNavigationDrawer.mDrawerListView.setItemChecked(0, true);
 
         // Launch player fragment
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, PlayerFragment.newInstance(position + 1))
+                .replace(R.id.container, FragmentNowPlaying.newInstance(position + 1))
                 .commit();
 
 
@@ -134,7 +134,7 @@ public class LibraryFragment extends android.support.v4.app.Fragment implements 
         getActionBar().setTitle(getString(R.string.title_section1));
 
         // update textviews
-        MusicService.updateTextViews();
+        ServiceMusic.updateTextViews();
 
     }
 

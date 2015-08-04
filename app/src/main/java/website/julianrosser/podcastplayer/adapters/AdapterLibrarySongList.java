@@ -7,31 +7,31 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.activities.ActivityMain;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.objects.Song;
+import website.julianrosser.podcastplayer.objects.AudioFile;
 
-public class LibrarySongListAdapter extends BaseAdapter {
+public class AdapterLibrarySongList extends BaseAdapter {
 
     public LayoutInflater inflater;
 
-    public LibrarySongListAdapter(Context c) {
+    public AdapterLibrarySongList(Context c) {
         inflater = LayoutInflater.from(c);
     }
 
     @Override
     public int getCount() {
-        return MainActivity.songList.size();
+        return ActivityMain.audioFileList.size();
     }
 
     @Override
-    public Song getItem(int i) {
-        return MainActivity.songList.get(i);
+    public AudioFile getItem(int i) {
+        return ActivityMain.audioFileList.get(i);
     }
 
     @Override
     public long getItemId(int i) {
-        return MainActivity.songList.get(i).getID();
+        return ActivityMain.audioFileList.get(i).getID();
     }
 
     @Override
@@ -39,7 +39,7 @@ public class LibrarySongListAdapter extends BaseAdapter {
 
 
         final ViewHolder holder;
-        final Song s = getItem(position);
+        final AudioFile s = getItem(position);
 
         if (null == convertView) {
             holder = new ViewHolder();

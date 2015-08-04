@@ -1,13 +1,16 @@
 # PodcastPlayer 0.3
 Android application for bookmarking Audiobooks & podcasts. Easily track progress of multiple audiobooks and shows.
 
-![](http://julianrosser.website/images/app_screenshots/pp_4.png) ![](http://julianrosser.website/images/app_screenshots/pp_8.png)
+![](http://julianrosser.website/images/app_screenshots/pp_9.png) ![](http://julianrosser.website/images/app_screenshots/pp_8.png)
 
 TODO
-- Albumn Art
-- Remove SQL rows for formatting, do all with int pos and duration. Remove formatted & percent, make int duration column, FIND ALL REFS!!!
+- Settings - AUDIO / PODCAST MODE, shuffle mode
+- Temporary HelpFragment
+- DialogViewBookmark custom ListView adapter, and delete icon with undo button/toast/thing
+- Service function for DBHelper.getBookmarkArrayORClass
 
 Log
+- 04/08 - UI redesign, functionality & Dialog for managing Bookmarks in FragmentNowPlaying. Restructured packages, renamed Classes.
 - 03/08 - Filtered audio content. App lifecycle correctly destroys with swipe away. View bugs while loading. PlayerFragment SharedPrefs.
 - 02/08 - Added SortBookmarkDialog Fragment. Refactored arrays. Fixed dark styles. New Toast when bookmark is saved.
 - 01/08 - Added option to sort bookmarks, using SharedPreference. Exit option now in NavDrawer. Fixed delete bug, wasn't checking position. Fixed pause noti bug.
@@ -31,6 +34,11 @@ Log
 - 11/06 - Started log. Opened project for the first time in weeks, NOT a good idea to leave unfixed bugs, took me a while to debug.
 
 Notes & things to do later
+- DialogFragment Ripple effect
+- Library design
+- White Theme, material theme
+- Settings
+- Help
 - Library context menu: delete all BM, add BM, play, delete, play next
 - If I change the bookmark format, will be hard to implement new tables. Formatting of displayed bookmarks, should formatt when needed.
 - Should % be kept as sql row? or formatted when displaying from data??
@@ -44,5 +52,6 @@ Notes & things to do later
 - might crash if song list changes or song changes, test
 - Memory slowly fills, play stutters, then space is freed up. Is this normal?
 - Name - 'PodCats - AudioBook & Podcast bookmarker'     ??
+- Remove SQL rows for formatting, do all with int pos and duration. Remove formatted & percent, make int duration column, FIND ALL REFS!!!
 - Find better Unique ID? media_id changes if files move or get renamed, how does other apps handle this?
 

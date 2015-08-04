@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer;
+package website.julianrosser.podcastplayer.services;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -22,11 +22,13 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.Random;
 
-import website.julianrosser.podcastplayer.fragments.PlayerFragment;
-import website.julianrosser.podcastplayer.objects.Song;
+import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.R;
+import website.julianrosser.podcastplayer.fragments.FragmentNowPlaying;
+import website.julianrosser.podcastplayer.objects.AudioFile;
 
 
-public class MusicService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
+public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
     public static final String ACTION_PREVIOUS = "action_previous";
@@ -48,12 +50,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     // Ensure MediaPlayer isn;t preparing
     public static boolean isPreparing = false;
 
-    public static boolean fileIsLoading = false;
-
     // Millisecond value of current bookmark
     public static int millisecondToSeekTo;
     // ArrayList of songs
-    private static ArrayList<Song> songs;
+    private static ArrayList<AudioFile> audioFiles;
     // Binder returned to Activity
     private final IBinder musicBind = new MusicBinder();
     public String NOTI_PLAY = "notificationPlay";
@@ -65,35 +65,35 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public static void updateTextViews() {
 
         // Song reference
-        Song playSong = songs.get(songPosition);
+        AudioFile playAudioFile = audioFiles.get(songPosition);
 
         //Get song Object and update information references
-        songTitle = playSong.getTitle();
-        songArtist = playSong.getArtist();
-        songDuration = playSong.getLength();
+        songTitle = playAudioFile.getTitle();
+        songArtist = playAudioFile.getArtist();
+        songDuration = playAudioFile.getLength();
 
-        songBookmarkSeekPosition = ((double) millisecondToSeekTo / (double) playSong.getLengthMillis()) * 1000;
+        songBookmarkSeekPosition = ((double) millisecondToSeekTo / (double) playAudioFile.getLengthMillis()) * 1000;
         // TODO - What if this is called while prepping?? -  if (!MusicService.isPreparing);
 
-        songCurrentPosition = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+        songCurrentPosition = AudioFile.convertTime(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
 
         // If Fragment is in view & not null, update track information TextViews
-        if (MainActivity.playerFragment != null) {
+        if (ActivityMain.fragmentNowPlaying != null) {
 
-            if (PlayerFragment.textSongTitle != null) {
-                PlayerFragment.textSongTitle.setText(songTitle);
+            if (FragmentNowPlaying.textSongTitle != null) {
+                FragmentNowPlaying.textSongTitle.setText(songTitle);
             }
 
-            if (PlayerFragment.textSongArtist != null) {
-                PlayerFragment.textSongArtist.setText(songArtist);
+            if (FragmentNowPlaying.textSongArtist != null) {
+                FragmentNowPlaying.textSongArtist.setText(songArtist);
             }
 
-            if (PlayerFragment.textSongLength != null) {
-                PlayerFragment.textSongLength.setText(songDuration);
+            if (FragmentNowPlaying.textSongLength != null) {
+                FragmentNowPlaying.textSongLength.setText(songDuration);
             }
 
-            if (PlayerFragment.textSongCurrent != null) {
-                PlayerFragment.textSongCurrent.setText(songCurrentPosition);
+            if (FragmentNowPlaying.textSongCurrent != null) {
+                FragmentNowPlaying.textSongCurrent.setText(songCurrentPosition);
             }
         }
     }
@@ -101,7 +101,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public static int getCurrentProgress() {
         double pos = mPlayer.getCurrentPosition();
         double dur = mPlayer.getDuration();
-        double prog = (pos / dur) * MainActivity.SEEKBAR_RATIO;
+        double prog = (pos / dur) * ActivityMain.SEEKBAR_RATIO;
 
         return (int) Math.round(prog * 10) / 10;
     }
@@ -156,15 +156,15 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mPlayer.reset();
 
         // Ensure track list isn't empty
-        if (songs.size() >= 0) {
+        if (audioFiles.size() >= 0) {
 
             // Get reference to current song
-            Song playSong = songs.get(songPosition);
+            AudioFile playAudioFile = audioFiles.get(songPosition);
 
-            PlayerFragment.progressBarLoading.setVisibility(View.VISIBLE);
+            FragmentNowPlaying.progressBarLoading.setVisibility(View.VISIBLE);
 
             // Get song ID, then create track URI
-            long currSong = playSong.getID();
+            long currSong = playAudioFile.getID();
             Uri trackUri = ContentUris.withAppendedId(
                     android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     currSong);
@@ -191,8 +191,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     /**
      * Method for passing device song list from MainActivity
      */
-    public void setList(ArrayList<Song> theSongs) {
-        songs = theSongs;
+    public void setList(ArrayList<AudioFile> theAudioFiles) {
+        audioFiles = theAudioFiles;
     }
 
     /**
@@ -203,7 +203,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         Log.i(TAG, "onCompletion()");
         mPlayer.reset();
 
-        if (MainActivity.shuffleMode) {
+        if (ActivityMain.shuffleMode) {
             playRandom();
         } else {
             playNext();
@@ -255,7 +255,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.i(TAG, "onPrepared");
 
-        PlayerFragment.progressBarLoading.setVisibility(View.INVISIBLE);
+        FragmentNowPlaying.progressBarLoading.setVisibility(View.INVISIBLE); // todo - need to check fragment is alive????????/ --V
 
         isPreparing = false;
 
@@ -265,18 +265,19 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             millisecondToSeekTo = 0;
         }
 
-        if (MainActivity.firstPreparedSong) {
-            MainActivity.firstPreparedSong = false;
+        if (ActivityMain.firstPreparedSong) {
+            ActivityMain.firstPreparedSong = false;
             mediaPlayer.start();
             mediaPlayer.pause();
-
 
         } else {
             // Start playback
             mediaPlayer.start();
             launchNotification(NOTI_PLAY);
             //noinspection deprecation
-            PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+            FragmentNowPlaying.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+
+            FragmentNowPlaying.checkForBookmarks();
 
             removePauseNotification();
 
@@ -291,7 +292,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (noti.equals(NOTI_PLAY) || noti.equals(NOTI_RESUME)) {
 
             // Create Intents for notification builder
-            Intent notIntent = new Intent(this, MainActivity.class);
+            Intent notIntent = new Intent(this, ActivityMain.class);
             notIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             PendingIntent pendInt = PendingIntent.getActivity(this, 0,
                     notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -361,7 +362,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public void removePauseNotification() {
         NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(PlayerFragment.mNotificationId);
+        notificationManager.cancel(FragmentNowPlaying.mNotificationId);
     }
 
 
@@ -414,7 +415,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void seek(int position) {
-        mPlayer.seekTo((getLength() / MainActivity.SEEKBAR_RATIO) * position);
+        mPlayer.seekTo((getLength() / ActivityMain.SEEKBAR_RATIO) * position);
     }
 
     public int getLength() {
@@ -428,20 +429,20 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public void playPrev() {
         songPosition--;
-        if (songPosition < 0) songPosition = songs.size() - 1;
+        if (songPosition < 0) songPosition = audioFiles.size() - 1;
         playSong();
     }
 
     // play current song again
     public void playCurrent() {
-        if (songPosition == songs.size()) songPosition = 0;
+        if (songPosition == audioFiles.size()) songPosition = 0;
         playSong();
     }
 
     //skip to next
     public void playNext() {
         songPosition++;
-        if (songPosition == songs.size()) songPosition = 0;
+        if (songPosition == audioFiles.size()) songPosition = 0;
         playSong();
     }
 
@@ -450,17 +451,17 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         int oldPos = songPosition;
 
-        songPosition = new Random().nextInt(songs.size() + 1);
+        songPosition = new Random().nextInt(audioFiles.size() + 1);
 
         for (int j = 0; j < 5; j++) {
             if (oldPos == songPosition) {
-                songPosition = new Random().nextInt(songs.size() + 1);
+                songPosition = new Random().nextInt(audioFiles.size() + 1);
             } else {
                 break;
             }
         }
 
-        if (songPosition == songs.size()) {
+        if (songPosition == audioFiles.size()) {
             songPosition = 0;
         }
 
@@ -485,8 +486,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
      * Required Bind Methods
      */
     public class MusicBinder extends Binder {
-        MusicService getService() {
-            return MusicService.this;
+        public ServiceMusic getService() {
+            return ServiceMusic.this;
         }
     }
 }

@@ -1,9 +1,11 @@
-package website.julianrosser.podcastplayer.helpers;
+package website.julianrosser.podcastplayer.dialogs;
 
-import android.app.DialogFragment;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
@@ -14,18 +16,37 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import website.julianrosser.podcastplayer.MainActivity;
-import website.julianrosser.podcastplayer.MusicService;
+import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
+import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.services.ServiceMusic;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.fragments.PlayerFragment;
-import website.julianrosser.podcastplayer.objects.Song;
+import website.julianrosser.podcastplayer.fragments.FragmentNowPlaying;
+import website.julianrosser.podcastplayer.objects.AudioFile;
 
 public class DialogSaveBookmark extends DialogFragment {
 
+    public static ActivityMain mActivityContext;
 
-    public DialogSaveBookmark(Context mContext) {
+    public static android.support.v4.app.DialogFragment newInstance(int num, Context mContext) {
 
-        final MainActivity mActivityContext = (MainActivity) mContext;
+        mActivityContext = (ActivityMain) mContext;
+
+        DialogSaveBookmark dialogFragment = new DialogSaveBookmark();
+        Bundle bundle = new Bundle();
+        bundle.putInt("num", num);
+        dialogFragment.setArguments(bundle);
+
+        return dialogFragment;
+
+    }
+
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+        // AlertDialog.Builder builder = new AlertDialog.Builder(mActivityContext, R.style.AppCompatAlertDialogStyle);
+
+        //final MainActivity mActivityContext = (MainActivity) mContext;
 
         // Instantiate an AlertDialog.Builder with its constructor
         final AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(mActivityContext, R.style.AlertDialogCustom));
@@ -56,18 +77,18 @@ public class DialogSaveBookmark extends DialogFragment {
 
                     for (int k = 0; k < DatabaseOpenHelper.bookmarksToDelete.size(); k++) {
                         Log.i("SaveBookmarkDialog", "Delete row with ID: " + DatabaseOpenHelper.bookmarksToDelete.get(k));
-                        MainActivity.mDbHelper.deleteEntryFromID(DatabaseOpenHelper.bookmarksToDelete.get(k));
+                        ActivityMain.mDbHelper.deleteEntryFromID(DatabaseOpenHelper.bookmarksToDelete.get(k));
                     }
                 }
 
                 String note = et.getText().toString();
 
                 // Call method to add bookmark
-                PlayerFragment.addNewBookmark(note);
+                FragmentNowPlaying.addNewBookmark(note);
 
                 // Get song
-                Song s = MainActivity.songList.get(MusicService.songPosition);
-                double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+                AudioFile s = ActivityMain.audioFileList.get(ServiceMusic.songPosition);
+                double songCurrentPos = Double.valueOf(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
                 int percentFormatted = (int) ((songCurrentPos / s.getLengthMillis()) * 100);
 
                 // Notify user that the bookmark was saved
@@ -87,27 +108,13 @@ public class DialogSaveBookmark extends DialogFragment {
         builder.setNegativeButton(R.string.dialog_bookmark_negative, null);
 
         // If no bookmarks exist, no need to ask question, so hide checkbox layout
-        if (!MainActivity.mDbHelper.bookmarkAlreadyExists(MainActivity.songList.get(MusicService.songPosition).getID())) {
+        if (!ActivityMain.mDbHelper.bookmarkAlreadyExists(ActivityMain.audioFileList.get(ServiceMusic.songPosition).getID())) {
 
             final LinearLayout ll = (LinearLayout) v.findViewById(R.id.dialog_bookmark_old_layout);
             ll.setVisibility(View.GONE);
         }
 
-        // Get the AlertDialog from create()
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-    }
-
-    public static DialogSaveBookmark newInstance(int num, Context mContext) {
-
-        DialogSaveBookmark dialogFragment = new DialogSaveBookmark(mContext);
-        Bundle bundle = new Bundle();
-        bundle.putInt("num", num);
-        dialogFragment.setArguments(bundle);
-
-        return dialogFragment;
-
+        return builder.create();
     }
 
 }

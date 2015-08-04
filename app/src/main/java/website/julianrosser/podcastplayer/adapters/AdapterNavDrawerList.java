@@ -10,16 +10,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.fragments.NavigationDrawerFragment;
+import website.julianrosser.podcastplayer.fragments.FragmentNavigationDrawer;
 
-public class NavDrawerListAdapter extends BaseAdapter {
+public class AdapterNavDrawerList extends BaseAdapter {
 
     final Typeface fontRobotoMedium;
     public LayoutInflater inflater;
     String[] sections;
     Context mContext;
 
-    public NavDrawerListAdapter(Context c, String[] sectionsInput) {
+    public AdapterNavDrawerList(Context c, String[] sectionsInput) {
 
         inflater = LayoutInflater.from(c);
         mContext = c;
@@ -31,7 +31,7 @@ public class NavDrawerListAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return NavigationDrawerFragment.sections.length;
+        return FragmentNavigationDrawer.sections.length;
     }
 
     @Override

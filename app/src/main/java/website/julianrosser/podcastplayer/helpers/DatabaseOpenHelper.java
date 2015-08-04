@@ -178,7 +178,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         String[] data = new String[STRING_ARGS];
 
         int j = 0;
-        bookmarksToDelete = new ArrayList<>();
+        bookmarksToDelete = new ArrayList<>(); // todo, might be to show, not delete
 
         while (cursor.moveToNext()) {
             for (int i = 0; i < STRING_ARGS; i++) {
@@ -194,7 +194,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
             j++;
         }
 
-        Log.i("DBH", "bookmarks to delete: " + bookmarksToDelete.size());
+        Log.i("DBH", "bookmarks to delete: " + bookmarksToDelete.size()); // todo - not delet???  ---> new method!!!!!!!!!!!
 
         /// todo - keep reference to foundBookmark position
 

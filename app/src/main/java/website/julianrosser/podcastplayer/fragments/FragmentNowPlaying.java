@@ -2,20 +2,24 @@ package website.julianrosser.podcastplayer.fragments;
 
 
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -25,18 +29,19 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import website.julianrosser.podcastplayer.MainActivity;
-import website.julianrosser.podcastplayer.MusicService;
+import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.services.ServiceMusic;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
-import website.julianrosser.podcastplayer.helpers.DialogSaveBookmark;
-import website.julianrosser.podcastplayer.objects.Song;
+import website.julianrosser.podcastplayer.dialogs.DialogSaveBookmark;
+import website.julianrosser.podcastplayer.dialogs.DialogViewBookmarks;
+import website.julianrosser.podcastplayer.objects.AudioFile;
 
 
 /**
  * A fragment containing a the player / controlls
  */
-public class PlayerFragment extends android.support.v4.app.Fragment {
+public class FragmentNowPlaying extends android.support.v4.app.Fragment {
 
 
     // The fragment argument representing the section number for this fragment.
@@ -49,10 +54,17 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     // View references
     public static SeekBar seekBar;
     public static ImageButton playPause;
+    public static ImageButton bookmarkSkipPrev;
+    public static ImageButton bookmarkSkipNext;
     public static TextView textSongTitle;
     public static TextView textSongArtist;
     public static TextView textSongCurrent;
     public static TextView textSongLength;
+
+    public static final int DIALOG_VIEW_BOOKMARKS = 200;
+    public static final int DIALOG_SAVE_BOOKMARK = 250;
+
+    int mStackLevel = 0;
 
     public static ProgressBar progressBarLoading;
 
@@ -62,15 +74,22 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     /**
      * Required empty public constructor
      */
-    public PlayerFragment() {
+    public FragmentNowPlaying() {
     }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
 
     /**
      * Returns a new instance of this fragment for the given section
      * number.
      */
-    public static PlayerFragment newInstance(int sectionNumber) {
-        PlayerFragment fragment = new PlayerFragment();
+    public static FragmentNowPlaying newInstance(int sectionNumber) {
+        FragmentNowPlaying fragment = new FragmentNowPlaying();
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
@@ -82,7 +101,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         ContentValues values = new ContentValues();
 
         // Get song
-        Song s = MainActivity.songList.get(MusicService.songPosition);
+        AudioFile s = ActivityMain.audioFileList.get(ServiceMusic.songPosition);
 
         // Get String values of names, other info
         values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
@@ -91,7 +110,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
         values.put(DatabaseOpenHelper.BOOKMARK_NOTE, note);
 
-        double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+        double songCurrentPos = Double.valueOf(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
         values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
 
         // Format bookmark percent
@@ -103,7 +122,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         values.put(DatabaseOpenHelper.BOOKMARK_FORMATTED, formattedPosition);
 
         // Add values to new database row
-        MainActivity.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
+        ActivityMain.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
 
     }
 
@@ -124,29 +143,29 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-                if (MainActivity.musicSrv != null && MainActivity.musicBound && ! MusicService.isPreparing) {
+                if (ActivityMain.musicSrv != null && ActivityMain.musicBound && ! ServiceMusic.isPreparing) {
                     // if already playing, pause
-                    if (MainActivity.musicSrv.isPng()) {
-                        MainActivity.musicSrv.pausePlayer();
+                    if (ActivityMain.musicSrv.isPng()) {
+                        ActivityMain.musicSrv.pausePlayer();
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
                         swipeableNotification();
                     } else {
 
-                        MainActivity.musicSrv.resume();
-                        if (!MainActivity.firstSongPlayed) {
+                        ActivityMain.musicSrv.resume();
+                        if (!ActivityMain.firstSongPlayed) {
                             startTimer();
                         }
 
-                        MainActivity.firstSongPlayed = true;
+                        ActivityMain.firstSongPlayed = true;
 
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
 
                         NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-                        notificationManager.cancel(PlayerFragment.mNotificationId);
+                        notificationManager.cancel(FragmentNowPlaying.mNotificationId);
                     }
 
                 } else {
-                    Log.e(TAG, "SERVICE NULL / PLAYER NOT BOUND " + MainActivity.musicSrv + MainActivity.musicBound);
+                    Log.e(TAG, "SERVICE NULL / PLAYER NOT BOUND " + ActivityMain.musicSrv + ActivityMain.musicBound);
                 }
             }
 
@@ -165,15 +184,15 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         textSongArtist.setTypeface(fontRobotoRegular);
 
         // Set track information if service is initialised
-        if (MainActivity.musicBound && MainActivity.musicSrv != null) { // or still loading
+        if (ActivityMain.musicBound && ActivityMain.musicSrv != null) { // or still loading
 
-            textSongTitle.setText(MusicService.songTitle);
-            textSongArtist.setText(MusicService.songArtist);
-            textSongCurrent.setText(MusicService.songCurrentPosition);
-            textSongLength.setText(MusicService.songDuration);
+            textSongTitle.setText(ServiceMusic.songTitle);
+            textSongArtist.setText(ServiceMusic.songArtist);
+            textSongCurrent.setText(ServiceMusic.songCurrentPosition);
+            textSongLength.setText(ServiceMusic.songDuration);
 
             // set button to play
-            if (MainActivity.musicSrv.isPng()) {
+            if (ActivityMain.musicSrv.isPng()) {
                 //noinspection deprecation
                 playPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
             }
@@ -184,15 +203,15 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         rewind.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MusicService.loadFromBookmark = false;
+                ServiceMusic.loadFromBookmark = false;
 
-                if (MusicService.mPlayer.getCurrentPosition() < 3000) {
-                    MainActivity.musicSrv.playPrev();
+                if (ServiceMusic.mPlayer.getCurrentPosition() < 3000) {
+                    ActivityMain.musicSrv.playPrev();
                 } else {
-                    MainActivity.musicSrv.playCurrent();
+                    ActivityMain.musicSrv.playCurrent();
                 }
 
-                if (!MainActivity.firstSongPlayed) {
+                if (!ActivityMain.firstSongPlayed) {
                     startTimer();
                 }
 
@@ -204,14 +223,14 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         forward.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MusicService.loadFromBookmark = false;
-                if (MainActivity.shuffleMode) {
-                    MainActivity.musicSrv.playRandom();
+                ServiceMusic.loadFromBookmark = false;
+                if (ActivityMain.shuffleMode) {
+                    ActivityMain.musicSrv.playRandom();
                 } else {
-                    MainActivity.musicSrv.playNext();
+                    ActivityMain.musicSrv.playNext();
                 }
 
-                if (!MainActivity.firstSongPlayed) {
+                if (!ActivityMain.firstSongPlayed) {
                     startTimer();
                 }
             }
@@ -223,41 +242,57 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-                if (MainActivity.shuffleMode) {
+                if (ActivityMain.shuffleMode) {
                     Toast.makeText(getActivity(), "Shuffle Mode OFF", Toast.LENGTH_SHORT).show();
-                    MainActivity.shuffleMode = false;
+                    ActivityMain.shuffleMode = false;
 
                 } else {
                     Toast.makeText(getActivity(), "Shuffle Mode ON", Toast.LENGTH_SHORT).show();
-                    MainActivity.shuffleMode = true;
+                    ActivityMain.shuffleMode = true;
                 }
 
             }
         });
 
         // Bookmark listener
-        ImageButton buttonBookmark = (ImageButton) view.findViewById(R.id.buttonBookmark);
+        ImageButton buttonBookmark = (ImageButton) view.findViewById(R.id.mainBookmarkButtonSave);
         buttonBookmark.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                new DialogSaveBookmark(getActivity());
+                showDialog(DIALOG_SAVE_BOOKMARK);
 
+            }
+        });
+
+        bookmarkSkipPrev = (ImageButton) view.findViewById(R.id.buttonBookmarkSkipPrev);
+        bookmarkSkipPrev.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // todo
+            }
+        });
+
+        bookmarkSkipNext = (ImageButton) view.findViewById(R.id.buttonBookmarkSkipNext);
+        bookmarkSkipNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // todo
             }
         });
 
         // Seek bar listener
         seekBar = (SeekBar) view.findViewById(R.id.seekBar);
-        seekBar.setMax(MainActivity.SEEKBAR_RATIO);
+        seekBar.setMax(ActivityMain.SEEKBAR_RATIO);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean fromUser) {
-                if (fromUser && MainActivity.musicSrv != null) {
+                if (fromUser && ActivityMain.musicSrv != null) {
 
-                    MainActivity.musicSrv.seek(i);
+                    ActivityMain.musicSrv.seek(i);
 
-                    String formatted = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
-                    PlayerFragment.textSongCurrent.setText(formatted);
+                    String formatted = AudioFile.convertTime(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
+                    FragmentNowPlaying.textSongCurrent.setText(formatted);
                 }
 
             }
@@ -273,18 +308,18 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
         ImageView im = (ImageView) view.findViewById(R.id.imageView);
 
-        Song s = MainActivity.songList.get(MusicService.songPosition);
-        long albumID = s.getAlbumID();
+//        Song s = MainActivity.songList.get(MusicService.songPosition);
+        //long albumID = s.getAlbumID();
 
-        Bitmap bm = MainActivity.getAlbumart(albumID, getActivity());
+        //Bitmap bm = MainActivity.albumArt(getActivity(), albumID);
 
-        Log.i(TAG, "Bitmap: " + bm.getWidth() + " / " + bm.getHeight() + " / " + bm.toString() + " / ");
+        //Log.i(TAG, "Bitmap: " + bm.getWidth() + " / " + bm.getHeight() + " / " + bm.toString() + " / ");
 
-        //im.setImageBitmap(MainActivity.getArtworkQuick(getActivity(), albumID, im.getHeight(), im.getWidth()));
+        //im.setImageBitmap(bm);
 
 
         // Start timer if not the first time fragment is opened
-        if (MainActivity.firstSongPlayed) {
+        if (ActivityMain.firstSongPlayed) {
             startTimer();
         }
 
@@ -292,12 +327,10 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
 
         // If playing, show pause button.
-        if (MainActivity.musicBound && MusicService.mPlayer != null && MusicService.mPlayer.isPlaying()) {
+        if (ActivityMain.musicBound && ServiceMusic.mPlayer != null && ServiceMusic.mPlayer.isPlaying()) {
             //noinspection deprecation
             playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
         }
-
-
 
         return view;
 
@@ -313,7 +346,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             public void run() {
                 // Ensure Service is initialized
                 for (int i = 0; i < 30; i++) {
-                    if (MusicService.mPlayer == null) {
+                    if (ServiceMusic.mPlayer == null) {
                         Log.i(getClass().getSimpleName(), "Player Progress Tracker - Music Service not initialized: " + i);
                         try {
                             Thread.sleep(200);
@@ -325,7 +358,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                 Log.i(TAG, "Thread started");
 
                 // update textview while service is alive
-                while (MusicService.mPlayer != null && PlayerFragment.seekBar != null && !MusicService.exiting) {
+                while (ServiceMusic.mPlayer != null && FragmentNowPlaying.seekBar != null && !ServiceMusic.exiting) {
 
                     try {
                         Thread.sleep(200);
@@ -340,10 +373,10 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                             public void run() {
                                 // Local reference for millis
 
-                                if (PlayerFragment.seekBar != null && !MusicService.isPreparing && !MusicService.exiting) {
-                                    PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
-                                    String formatted = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
-                                    PlayerFragment.textSongCurrent.setText(formatted);
+                                if (FragmentNowPlaying.seekBar != null && !ServiceMusic.isPreparing && !ServiceMusic.exiting) {
+                                    FragmentNowPlaying.seekBar.setProgress(ServiceMusic.getCurrentProgress());
+                                    String formatted = AudioFile.convertTime(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
+                                    FragmentNowPlaying.textSongCurrent.setText(formatted);
                                 }
                             }
                         });
@@ -358,25 +391,52 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     public void onResume() {
         super.onResume();
 
-        if (MusicService.isPreparing) {
+        checkForBookmarks();
+
+        if (ServiceMusic.isPreparing) {
             progressBarLoading.setVisibility(View.VISIBLE);
         }
 
-        if (MusicService.mPlayer != null && MainActivity.musicBound) {
+        if (ServiceMusic.mPlayer != null && ActivityMain.musicBound) {
 
             // Load position and id of last played
-            SharedPreferences sp = getActivity().getSharedPreferences(MainActivity.SPREF_KEY, Activity.MODE_PRIVATE);
+            SharedPreferences sp = getActivity().getSharedPreferences(ActivityMain.SPREF_KEY, Activity.MODE_PRIVATE);
             textSongCurrent.setText(sp.getString(SPREF_STRING_POS_FORMATTED, "0:00"));
             seekBar.setProgress(sp.getInt(SPREF_INT_POS_SEEKBAR, 0));
 
         }
     }
 
+    /**
+     * Return an object array which holds all bookmarks for the current song. Set Alpha for skip buttons
+     */
+    public static void checkForBookmarks() {
+        if (ActivityMain.mDbHelper.bookmarkAlreadyExists(ActivityMain.audioFileList.get(ServiceMusic.songPosition).getID())) {
+
+            // todo - add helper which checks for bookmarks, and returns Bookmarks class
+
+            // todo - bookmarksForCurrentSong = DatabaseOpenHelper.getBookmarkArrayIfAvaliable();
+
+            // todo use Service.bookmarkArray to populate skippable PlayerFragment array
+
+            bookmarkSkipPrev.setAlpha(1f);
+            bookmarkSkipNext.setAlpha(1f);
+            bookmarkSkipPrev.setClickable(true);
+            bookmarkSkipNext.setClickable(true);
+
+        } else {
+            bookmarkSkipPrev.setAlpha(0.5f);
+            bookmarkSkipNext.setAlpha(0.5f);
+            bookmarkSkipPrev.setClickable(false);
+            bookmarkSkipNext.setClickable(false); // todo - check these
+        }
+    }
+
     @Override
     public void onStop() {
         super.onStop();
-        if (!MusicService.exiting) {
-            SharedPreferences sp = getActivity().getSharedPreferences(MainActivity.SPREF_KEY, Activity.MODE_PRIVATE);
+        if (!ServiceMusic.exiting) {
+            SharedPreferences sp = getActivity().getSharedPreferences(ActivityMain.SPREF_KEY, Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = sp.edit();
             editor.putString(SPREF_STRING_POS_FORMATTED, textSongCurrent.getText().toString());
             editor.putInt(SPREF_INT_POS_SEEKBAR, seekBar.getProgress());
@@ -390,7 +450,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((MainActivity) activity).onSectionAttached(
+        ((ActivityMain) activity).onSectionAttached(
                 getArguments().getInt(ARG_SECTION_NUMBER));
     }
 
@@ -414,12 +474,12 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(getActivity())
                         .setSmallIcon(R.drawable.ic_pause_dark)
-                        .setTicker(MusicService.songTitle)
-                        .setContentTitle(MusicService.songTitle)
-                        .setContentText(MusicService.songArtist)
+                        .setTicker(ServiceMusic.songTitle)
+                        .setContentTitle(ServiceMusic.songTitle)
+                        .setContentText(ServiceMusic.songArtist)
                         .setAutoCancel(true);
 
-        Intent resultIntent = new Intent(getActivity(), MainActivity.class);
+        Intent resultIntent = new Intent(getActivity(), ActivityMain.class);
         // Because clicking the notification opens a new ("special") activity, there's
         // no need to create an artificial back stack.
         PendingIntent resultPendingIntent =
@@ -443,6 +503,68 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             mNotificationManager.notify(mNotificationId,
                     mBuilder.getNotification());
         }
+
+    }
+
+    public void showDialog(int type) {
+
+        mStackLevel++;
+
+        FragmentTransaction ft = getActivity().getFragmentManager().beginTransaction();
+        Fragment prev = getActivity().getFragmentManager().findFragmentByTag("dialogView"); // todo something here to destinguish
+        if (prev != null) {
+            ft.remove(prev);
+        }
+        ft.addToBackStack(null);
+
+        switch (type) {
+
+            case DIALOG_VIEW_BOOKMARKS:
+
+                if (! ActivityMain.mDbHelper.bookmarkAlreadyExists(ActivityMain.audioFileList.get(ServiceMusic.songPosition).getID())) {
+                    Toast.makeText(getActivity(), "No bookmarks saved for 'TRACK_NAME'", Toast.LENGTH_SHORT).show();
+
+                    break;
+
+                } else {
+                    DialogFragment dialogView = DialogViewBookmarks.newInstance(123, getActivity());
+                    dialogView.setTargetFragment(this, DIALOG_VIEW_BOOKMARKS);
+                    dialogView.show(getFragmentManager().beginTransaction(), "dialogView");
+
+                    break;
+                }
+
+
+
+            case DIALOG_SAVE_BOOKMARK:
+
+                DialogFragment dialogFragmentSave = DialogSaveBookmark.newInstance(123, getActivity());
+                dialogFragmentSave.setTargetFragment(this, DIALOG_SAVE_BOOKMARK);
+                dialogFragmentSave.show(getFragmentManager().beginTransaction(), "dialogSave");
+
+                break;
+        }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.menu_fragment_player, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+        if (id == R.id.action_view_bookmarks) {
+
+            showDialog(DIALOG_VIEW_BOOKMARKS);
+        }
+
+        return super.onOptionsItemSelected(item);
+
 
     }
 

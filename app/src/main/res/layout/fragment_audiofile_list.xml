@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:background="@color/mat_grey_mid"
     android:layout_height="match_parent"
-    tools:context="website.julianrosser.podcastplayer.fragments.LibraryFragment">
+    tools:context="website.julianrosser.podcastplayer.fragments.FragmentLibrary">
 
     <ListView
         android:id="@android:id/list"
