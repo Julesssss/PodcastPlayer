@@ -41,6 +41,10 @@
     <!-- BookmarkFragment -->
     <string name="bookmark_list_empty_text">No saved bookmarks, click the \'B\' button while listening to audio.</string>
 
+    <!-- Preference Keys -->
+    <string name="pref_key_shuffle">checkbox_pref_shuffle</string>
+    <string name="pref_key_podcastmode">checkbox_pref_podcast_mode</string>
+
     <!-- To be removed -->
 
     <!-- To be placed -->
@@ -65,5 +69,8 @@
     <string name="title_activity_test">TestActivity</string>
 
     <string name="hello_world">Hello world!</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

@@ -5,7 +5,7 @@
 
     <item
         android:id="@+id/action_view_bookmarks"
-        android:icon="@drawable/ic_library_books_white_24dp"
+        android:icon="@drawable/ic_bookmark_border_white_18dp"
         android:orderInCategory="500"
         android:title="@string/action_view_bookmarks"
         app:showAsAction="ifRoom" />

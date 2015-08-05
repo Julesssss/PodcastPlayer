@@ -23,9 +23,7 @@ public class AudioFile implements Parcelable {
         duration = songLength;
         posInSongList = pos;
         albumID = intAlbumnID;
-
-
-        Log.i("SONG", "AID: '" + albumID + "'");
+        // Log.i("SONG", "AID: '" + albumID + "'");
     }
 
     public long getAlbumID() {

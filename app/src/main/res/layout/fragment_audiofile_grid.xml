@@ -1,13 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/mat_grey_mid"
     tools:context="website.julianrosser.podcastplayer.fragments.FragmentLibrary">
 
-    <GridView android:id="@android:id/list" android:layout_width="match_parent"
-        android:layout_height="match_parent" android:numColumns="2" />
+    <GridView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:divider="@color/mat_grey_light"
+        android:scrollbarThumbVertical="@drawable/custom_scroll_bar_dark"
+        android:dividerHeight="1dp"
+        android:fadeScrollbars="false"
+        android:numColumns="2"
+        android:scrollbarAlwaysDrawVerticalTrack="true" />
 
-    <TextView android:id="@android:id/empty" android:layout_width="match_parent"
-        android:layout_height="match_parent" android:gravity="center" />
+    <TextView
+        android:id="@android:id/empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text="@string/bookmark_list_empty_text"
+        android:textColor="@color/white_light"
+        android:textSize="16sp" />
 
 </FrameLayout>

@@ -172,6 +172,7 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
             }
         });
 
+
         // Set the custom adapter
         mListView = (AbsListView) view.findViewById(android.R.id.list);
         mListView.setAdapter(mAdapter);
@@ -267,12 +268,6 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
         super.onAttach(activity);
         ((ActivityMain) activity).onSectionAttached(
                 getArguments().getInt(ARG_SECTION_NUMBER));
-
-        try {
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
     }
 
     @Override
@@ -315,10 +310,18 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
 
             FragmentNavigationDrawer.mDrawerListView.setItemChecked(0, true);
 
-            // update the main content by replacing fragments
+
+
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+
+            if (ActivityMain.fragmentNowPlaying == null) {
+                ActivityMain.fragmentNowPlaying = FragmentNowPlaying.newInstance(position + 1);
+            } else {
+                ActivityMain.mTitle = "Now Playing";
+            }
+
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, FragmentNowPlaying.newInstance(position + 1))
+                    .replace(R.id.container, ActivityMain.fragmentNowPlaying)
                     .commit();
 
             // Update ActionBar title
@@ -416,6 +419,10 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
 
 
     }
+    public boolean isFragmentUIActive() {
+        return isAdded() && !isDetached() && !isRemoving();
+    }
+
 
     /**
      * This interface must be implemented by activities that contain this

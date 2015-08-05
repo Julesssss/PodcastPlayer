@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
@@ -16,6 +17,7 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 
@@ -203,7 +205,7 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
         Log.i(TAG, "onCompletion()");
         mPlayer.reset();
 
-        if (ActivityMain.shuffleMode) {
+        if (shuffleMode(this)) {
             playRandom();
         } else {
             playNext();
@@ -480,6 +482,13 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
         //mPlayer.stop();
         //mPlayer.reset();
         return false;
+    }
+
+    public static boolean shuffleMode(Context c) {
+        // Get preference to check if in shuffle mode
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(c);
+
+        return sharedPref.getBoolean("checkbox_pref_shuffle", false);
     }
 
     /**

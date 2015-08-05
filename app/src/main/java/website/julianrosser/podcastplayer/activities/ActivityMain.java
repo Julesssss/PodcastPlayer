@@ -18,6 +18,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
@@ -36,15 +37,17 @@ import java.util.ArrayList;
 
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.fragments.FragmentBookmark;
+import website.julianrosser.podcastplayer.fragments.FragmentHelp;
 import website.julianrosser.podcastplayer.fragments.FragmentLibrary;
 import website.julianrosser.podcastplayer.fragments.FragmentNavigationDrawer;
 import website.julianrosser.podcastplayer.fragments.FragmentNowPlaying;
+import website.julianrosser.podcastplayer.fragments.FragmentPreferences;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 import website.julianrosser.podcastplayer.services.ServiceMusic;
 
 public class ActivityMain extends AppCompatActivity
-        implements FragmentNavigationDrawer.NavigationDrawerCallbacks, FragmentLibrary.OnFragmentInteractionListener, FragmentBookmark.OnFragmentInteractionListener {
+        implements FragmentNavigationDrawer.NavigationDrawerCallbacks, FragmentHelp.OnFragmentInteractionListener, FragmentPreferences.OnFragmentInteractionListener, FragmentLibrary.OnFragmentInteractionListener, FragmentBookmark.OnFragmentInteractionListener {
 
 
     private static final BitmapFactory.Options sBitmapOptionsCache = new BitmapFactory.Options();
@@ -60,12 +63,16 @@ public class ActivityMain extends AppCompatActivity
 
 
     public static boolean firstSongPlayed = false;
-    // Shuffle mode boolean
-    public static boolean shuffleMode = false;
     // Reference to music service
     public static ServiceMusic musicSrv;
     // Reference to PlayerFragment
     public static FragmentNowPlaying fragmentNowPlaying;
+    public static FragmentBookmark fragmentBookmark;
+    public static FragmentLibrary fragmentLibrary;
+    public static FragmentPreferences fragmentPreferences;
+    public static FragmentHelp fragmentHelp;
+
+
     // Used to store the last screen title. For use in {@link #restoreActionBar()}.
     public static CharSequence mTitle;
     // SQL Database reference
@@ -75,9 +82,6 @@ public class ActivityMain extends AppCompatActivity
     // Seekbar ratio reference
     public static int SEEKBAR_RATIO = 1000;
     public static int bookmarkSortInt;
-    public static String SPREF_INT_APP_MODE = "appMode";
-    public static int APP_MODE_PODCASTS = 10;
-    public static int APP_MODE_AUDIO = 20;
     // For loading last played in correct position
     public static String SPREF_KEY = "your_prefs";
     // Bundle
@@ -143,10 +147,122 @@ public class ActivityMain extends AppCompatActivity
         }
     };
 
+    // Get album art for specified album. This method will not try to
+    // fall back to getting artwork directly from the file, nor will
+    // it attempt to repair the database.
+    public static Bitmap getArtworkQuick(Context context, long album_id, Uri artUri, int w, int h) {
+        // NOTE: There is in fact a 1 pixel border on the right side in the ImageView
+        // used to display this drawable. Take it into account now, so we don't have to
+        // scale later.
+
+        w -= 1;
+        ContentResolver res = context.getContentResolver();
+        Uri uri = ContentUris.withAppendedId(artUri, album_id);
+        if (uri != null) {
+            ParcelFileDescriptor fd = null;
+            try {
+                fd = res.openFileDescriptor(uri, "r");
+                int sampleSize = 1;
+
+                // Compute the closest power-of-two scale factor
+                // and pass that to sBitmapOptionsCache.inSampleSize, which will
+                // result in faster decoding and better quality
+                sBitmapOptionsCache.inJustDecodeBounds = true;
+                BitmapFactory.decodeFileDescriptor(
+                        fd.getFileDescriptor(), null, sBitmapOptionsCache);
+                int nextWidth = sBitmapOptionsCache.outWidth >> 1;
+                int nextHeight = sBitmapOptionsCache.outHeight >> 1;
+                while (nextWidth > w && nextHeight > h) {
+                    sampleSize <<= 1;
+                    nextWidth >>= 1;
+                    nextHeight >>= 1;
+                }
+
+                sBitmapOptionsCache.inSampleSize = sampleSize;
+                sBitmapOptionsCache.inJustDecodeBounds = false;
+                Bitmap b = BitmapFactory.decodeFileDescriptor(
+                        fd.getFileDescriptor(), null, sBitmapOptionsCache);
+
+                if (b != null) {
+                    // finally rescale to exactly the size we need
+                    if (sBitmapOptionsCache.outWidth != w || sBitmapOptionsCache.outHeight != h) {
+                        Bitmap tmp = Bitmap.createScaledBitmap(b, w, h, true);
+                        // Bitmap.createScaledBitmap() can return the same bitmap
+                        if (tmp != b) b.recycle();
+                        b = tmp;
+                    }
+                }
+
+                return b;
+            } catch (FileNotFoundException e) {
+            } finally {
+                try {
+                    if (fd != null)
+                        fd.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        Log.i("BITMAP FAC", "NULL URI");
+        return null;
+    }
+
+    static public Bitmap albumArt(Context c, long albumId) {
+        Bitmap artwork = BitmapFactory.decodeResource(c.getResources(),
+                R.drawable.audio_icon);
+        Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
+        Uri uri = ContentUris.withAppendedId(sArtworkUri, albumId);
+        ContentResolver res = c.getContentResolver();
+        InputStream in;
+        try {
+            in = res.openInputStream(uri);
+            artwork = BitmapFactory.decodeStream(in);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return artwork;
+    }
+
+    public static Bitmap getAlbumart(Long album_id, Context c) {
+        Bitmap bm = BitmapFactory.decodeResource(c.getResources(),
+                R.drawable.audio_icon);
+
+        try {
+            final Uri sArtworkUri = Uri
+                    .parse("content://media/external/audio/albumart");
+
+            Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
+
+            Log.i("ART", "URI; " + uri.toString() + "  /  " + uri.getPath());
+
+            ParcelFileDescriptor pfd = c.getContentResolver()
+                    .openFileDescriptor(uri, "r");
+
+
+            if (pfd != null) {
+                Log.i("ART", "pfd: " + pfd.toString());
+                FileDescriptor fd = pfd.getFileDescriptor();
+                bm = BitmapFactory.decodeFileDescriptor(fd);
+            } else {
+                Log.i("ART", "NOOOOO");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return bm;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
 
         Log.i(TAG, "onCreate()");
 
@@ -218,15 +334,7 @@ public class ActivityMain extends AppCompatActivity
         super.onStop();
         Log.i(TAG, "onStop()");
 
-        if (!ServiceMusic.exiting) {
-            SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sp.edit();
-            editor.putInt(SPREF_INT_CURRENT_POSITION, ServiceMusic.mPlayer.getCurrentPosition());
-            editor.putInt(SPREF_INT_LIST_POSITION, ServiceMusic.songPosition);
-            editor.putInt(SPREF_INT_BOOKMARK_ORDER, bookmarkSortInt);
-            editor.apply();
-        }
-
+        saveSharedPreferences();
     }
 
     /**
@@ -237,10 +345,24 @@ public class ActivityMain extends AppCompatActivity
         super.onDestroy();
         Log.i(TAG, "onDestroy()");
 
+        saveSharedPreferences();
+
         exitApp();
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(FragmentNowPlaying.mNotificationId);
+    }
+
+    public void saveSharedPreferences() {
+
+        if (!ServiceMusic.exiting) {
+            SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sp.edit();
+            editor.putInt(SPREF_INT_CURRENT_POSITION, ServiceMusic.mPlayer.getCurrentPosition());
+            editor.putInt(SPREF_INT_LIST_POSITION, ServiceMusic.songPosition);
+            editor.putInt(SPREF_INT_BOOKMARK_ORDER, bookmarkSortInt);
+            editor.apply();
+        }
     }
 
     /**
@@ -248,10 +370,19 @@ public class ActivityMain extends AppCompatActivity
      */
     @Override
     public void onBackPressed() {
-        Intent startMain = new Intent(Intent.ACTION_MAIN);
-        startMain.addCategory(Intent.CATEGORY_HOME);
-        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(startMain);
+        Log.i(TAG, "NOW, NOW - Fragment active: " + !fragmentNowPlaying.isFragmentUIActive());
+
+        if (!fragmentNowPlaying.isFragmentUIActive()) {
+            super.onBackPressed();
+
+        } else {
+            Intent startMain = new Intent(Intent.ACTION_MAIN);
+            startMain.addCategory(Intent.CATEGORY_HOME);
+            startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(startMain);
+        }
+
+
     }
 
     /**
@@ -259,13 +390,21 @@ public class ActivityMain extends AppCompatActivity
      */
     public boolean getSongList() {
 
-        int appMode = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE).getInt(SPREF_INT_APP_MODE, APP_MODE_AUDIO);
-
         int positionInSongList = 0;
         // Retrieve song info
         ContentResolver musicResolver = getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
+
+        // Get preference to check if in Podcast Mode
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean podcastMode = sharedPref.getBoolean(getResources().getString(R.string.pref_key_podcastmode), true);
+
+        if (podcastMode) {
+            Log.i(TAG, "AudioMode: Podcast Only");
+        } else {
+            Log.i(TAG, "AudioMode: All Audio");
+        }
 
         if (musicCursor != null && musicCursor.moveToFirst()) {
             // Get columns
@@ -293,7 +432,8 @@ public class ActivityMain extends AppCompatActivity
                 // Workaround for filtering invalid tracks and podcasts todo - invert to get podcasts
                 if (thisDuration != null && musicCursor.getString(songPodcast) != null) {
 
-                    if (appMode == APP_MODE_PODCASTS) {
+
+                    if (podcastMode) {
 
                         if (musicCursor.getString(songPodcast).equals("1")) {
 
@@ -309,9 +449,9 @@ public class ActivityMain extends AppCompatActivity
                             positionInSongList += 1;
 
                         }
-                    } else if (appMode == APP_MODE_AUDIO) {
+                    } else {
 
-                        if (!musicCursor.getString(songPodcast).equals("-1")){
+                        if (!musicCursor.getString(songPodcast).equals("-1")) {
                             audioFileList.add(new AudioFile(thisId, thisTitle, thisArtist, thisDuration, positionInSongList, thisAlbumID));
                             positionInSongList += 1;
                         }
@@ -335,10 +475,8 @@ public class ActivityMain extends AppCompatActivity
         }
     }
 
-
     @Override
     public void onNavigationDrawerItemSelected(int position) {
-        Log.i(TAG, "Position " + position);
         if (position == 0) {
             getNewPlayerFragment(position);
         } else if (position == 1) {
@@ -346,9 +484,9 @@ public class ActivityMain extends AppCompatActivity
         } else if (position == 2) {
             getNewLibraryFragment(position);
         } else if (position == 3) {
-            // getNewLibraryFragment(position);
+            getNewPreferenceFragment(position);
         } else if (position == 4) {
-            //getNewLibraryFragment(position);
+            getNewHelpFragment(position);
         } else {
             Log.e(TAG, "Nav drawer id error");
         }
@@ -361,11 +499,20 @@ public class ActivityMain extends AppCompatActivity
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        fragmentNowPlaying = FragmentNowPlaying.newInstance(position + 1);
+        if (fragmentNowPlaying == null) {
+            fragmentNowPlaying = FragmentNowPlaying.newInstance(position + 1);
+        } else {
+            mTitle = "Now Playing";
+        }
 
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragmentNowPlaying)
-                .commit();
+        if (fragmentNowPlaying.isVisible()) {
+            // do nothing
+        } else {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, fragmentNowPlaying)
+                    .commit();
+        }
+
     }
 
     /**
@@ -375,11 +522,29 @@ public class ActivityMain extends AppCompatActivity
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        FragmentBookmark fragmentBookmark = FragmentBookmark.newInstance(position + 1);
+        if (fragmentBookmark == null) {
+            fragmentBookmark = FragmentBookmark.newInstance(position + 1);
+        } else {
+            mTitle = "Bookmarks";
+        }
 
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragmentBookmark)
-                .commit();
+        if (fragmentNowPlaying.isFragmentUIActive()) {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, fragmentBookmark)
+                    .addToBackStack("bookmarkFragment")
+                    .commit();
+
+            // If desired IS current, ignore
+        } else if (fragmentBookmark.isVisible()) {
+            // do nothing
+
+        } else {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, fragmentBookmark)
+                    .commit();
+        }
+
+
     }
 
     /**
@@ -388,11 +553,86 @@ public class ActivityMain extends AppCompatActivity
     private void getNewLibraryFragment(int position) {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        FragmentLibrary fragmentLibrary = FragmentLibrary.newInstance(position + 1);
+        if (fragmentLibrary == null) {
+            fragmentLibrary = FragmentLibrary.newInstance(position + 1);
+        } else {
+            mTitle = "Library"; // todo - strings refffff
+        }
 
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragmentLibrary)
-                .commit();
+        if (fragmentNowPlaying.isFragmentUIActive()) {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, fragmentLibrary)
+                    .addToBackStack("libraryFragment")
+                    .commit();
+
+            // If desired IS current, ignore
+        } else if (fragmentLibrary.isVisible()) {
+            // do nothing
+
+        } else {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, fragmentLibrary)
+                    .commit();
+        }
+
+    }
+
+    /**
+     * Create a new PreferenceFragment and start with the FragmentManager
+     */
+    private void getNewPreferenceFragment(int position) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        if (fragmentPreferences == null) {
+            fragmentPreferences = FragmentPreferences.newInstance(position + 1);
+        } else {
+            mTitle = "Settings";
+        }
+
+        if (fragmentNowPlaying.isFragmentUIActive()) {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, fragmentPreferences)
+                    .addToBackStack("prefFragment")
+                    .commit();
+
+            // If desired IS current, ignore
+        } else if (fragmentPreferences.isVisible()) {
+            // do nothing
+
+        } else {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, fragmentPreferences)
+                    .commit();
+        }
+    }
+
+    /**
+     * Create a new HelpFragment and start with the FragmentManager
+     */
+    private void getNewHelpFragment(int position) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        if (fragmentHelp == null) {
+            fragmentHelp = FragmentHelp.newInstance(position + 1);
+        } else {
+            mTitle = "Help";
+        }
+
+        if (fragmentNowPlaying.isFragmentUIActive()) {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, fragmentHelp)
+                    .addToBackStack("helpFragment")
+                    .commit();
+
+            // If desired IS current, ignore
+        } else if (fragmentHelp.isVisible()) {
+            // do nothing
+
+        } else {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, fragmentHelp)
+                    .commit();
+        }
     }
 
     public void exitApp() {
@@ -473,123 +713,6 @@ public class ActivityMain extends AppCompatActivity
 
         return super.onOptionsItemSelected(item);
     }
-
-    // Get album art for specified album. This method will not try to
-    // fall back to getting artwork directly from the file, nor will
-    // it attempt to repair the database.
-    public static Bitmap getArtworkQuick(Context context, long album_id, Uri artUri, int w, int h) {
-        // NOTE: There is in fact a 1 pixel border on the right side in the ImageView
-        // used to display this drawable. Take it into account now, so we don't have to
-        // scale later.
-
-        w -= 1;
-        ContentResolver res = context.getContentResolver();
-        Uri uri = ContentUris.withAppendedId(artUri, album_id);
-        if (uri != null) {
-            ParcelFileDescriptor fd = null;
-            try {
-                fd = res.openFileDescriptor(uri, "r");
-                int sampleSize = 1;
-
-                // Compute the closest power-of-two scale factor
-                // and pass that to sBitmapOptionsCache.inSampleSize, which will
-                // result in faster decoding and better quality
-                sBitmapOptionsCache.inJustDecodeBounds = true;
-                BitmapFactory.decodeFileDescriptor(
-                        fd.getFileDescriptor(), null, sBitmapOptionsCache);
-                int nextWidth = sBitmapOptionsCache.outWidth >> 1;
-                int nextHeight = sBitmapOptionsCache.outHeight >> 1;
-                while (nextWidth>w && nextHeight>h) {
-                    sampleSize <<= 1;
-                    nextWidth >>= 1;
-                    nextHeight >>= 1;
-                }
-
-                sBitmapOptionsCache.inSampleSize = sampleSize;
-                sBitmapOptionsCache.inJustDecodeBounds = false;
-                Bitmap b = BitmapFactory.decodeFileDescriptor(
-                        fd.getFileDescriptor(), null, sBitmapOptionsCache);
-
-                if (b != null) {
-                    // finally rescale to exactly the size we need
-                    if (sBitmapOptionsCache.outWidth != w || sBitmapOptionsCache.outHeight != h) {
-                        Bitmap tmp = Bitmap.createScaledBitmap(b, w, h, true);
-                        // Bitmap.createScaledBitmap() can return the same bitmap
-                        if (tmp != b) b.recycle();
-                        b = tmp;
-                    }
-                }
-
-                return b;
-            } catch (FileNotFoundException e) {
-            } finally {
-                try {
-                    if (fd != null)
-                        fd.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        Log.i("BITMAP FAC", "NULL URI");
-        return null;
-    }
-
-
-    static public Bitmap albumArt(Context c, long albumId) {
-        Bitmap artwork = BitmapFactory.decodeResource(c.getResources(),
-                R.drawable.audio_icon);
-        Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
-        Uri uri = ContentUris.withAppendedId(sArtworkUri, albumId);
-        ContentResolver res = c.getContentResolver();
-        InputStream in;
-        try {
-            in = res.openInputStream(uri);
-            artwork = BitmapFactory.decodeStream(in);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return artwork;
-    }
-
-
-    public static Bitmap getAlbumart(Long album_id, Context c)
-    {
-        Bitmap bm = BitmapFactory.decodeResource(c.getResources(),
-                R.drawable.audio_icon);
-
-        try
-        {
-            final Uri sArtworkUri = Uri
-                    .parse("content://media/external/audio/albumart");
-
-            Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
-
-            Log.i("ART", "URI; " + uri.toString() + "  /  " + uri.getPath());
-
-            ParcelFileDescriptor pfd = c.getContentResolver()
-                    .openFileDescriptor(uri, "r");
-
-
-            if (pfd != null)
-            {
-                Log.i("ART", "pfd: " + pfd.toString());
-                FileDescriptor fd = pfd.getFileDescriptor();
-                bm = BitmapFactory.decodeFileDescriptor(fd);
-            }
-            else {
-                Log.i("ART", "NOOOOO");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return bm;
-    }
-
-
 
     public void onFragmentInteraction(String id) {
         Log.i(TAG, "onFragInteraction: " + id);

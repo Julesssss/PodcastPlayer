@@ -1,1 +1,2 @@
-include ':app'
+include ':app', 'android-support-v4-preferencefragment-master'
+project(':android-support-v4-preferencefragment-master').projectDir = new File('libs/android-support-v4-preferencefragment-master')

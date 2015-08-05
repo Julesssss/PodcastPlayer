@@ -8,6 +8,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
+import website.julianrosser.podcastplayer.objects.Bookmark;
+
 /**
  * Class for helping with DataBase operations and requests
  */
@@ -27,19 +29,16 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     // Only the columns that are to be passed to ListView for display
     final public static String[] columnsForCursorAdaptor = {ARTIST_NAME, TRACK_NAME, BOOKMARK_FORMATTED, BOOKMARK_NOTE, BOOKMARK_PERCENT};
-
-    // Sting array of current bookmarks, to be deleted
-    public static ArrayList<String> bookmarksToDelete;
-
     // Command for initializing database
     final private static String CREATE_CMD =
             "CREATE TABLE bookmarks (" + _ID
                     + " INTEGER PRIMARY KEY AUTOINCREMENT, " + UNIQUE_ID + " TEXT NOT NULL, "
                     + ARTIST_NAME + " TEXT NOT NULL, " + TRACK_NAME + " TEXT NOT NULL, " + BOOKMARK_FORMATTED
                     + " TEXT NOT NULL," + BOOKMARK_MILLIS + " TEXT NOT NULL," + BOOKMARK_NOTE + " TEXT NOT NULL," + BOOKMARK_PERCENT + " INTEGER)";
-
     final private static String NAME = "bookmark_db";
     final private static Integer VERSION = 1;
+    // Sting array of current bookmarks, to be deleted
+    public static ArrayList<String> bookmarksToDelete;
 
     public DatabaseOpenHelper(Context context) {
         super(context, NAME, null, VERSION);
@@ -149,6 +148,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
                 DatabaseOpenHelper._ID + "=?",
                 new String[]{id});
     }
+
     /**
      * Delete Bookmark entry from Database
      */
@@ -164,6 +164,31 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
                 new String[]{id});
     }
 
+    public ArrayList<Bookmark> getBookmarksForCurrentTrack(long id) {
+
+        ArrayList<Bookmark> bookmarks = new ArrayList<>();
+
+        String selectQuery = "SELECT " + UNIQUE_ID + ", " + BOOKMARK_PERCENT + ", " + BOOKMARK_MILLIS + ", " + BOOKMARK_NOTE + " FROM " + TABLE_NAME;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        while (cursor.moveToNext()) {
+
+            if (String.valueOf(id).equals(cursor.getString(0))) {
+                // match, so add to array
+
+                Bookmark newBookmark = new Bookmark(cursor.getString(0), cursor.getInt(1), cursor.getString(2), cursor.getString(3));
+
+                bookmarks.add(newBookmark);
+            }
+        }
+
+        cursor.close();
+
+        return bookmarks;
+
+    }
 
 
     public boolean bookmarkAlreadyExists(long id) {

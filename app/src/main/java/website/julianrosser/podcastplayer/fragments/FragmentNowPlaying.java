@@ -29,7 +29,10 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.objects.Bookmark;
 import website.julianrosser.podcastplayer.services.ServiceMusic;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
@@ -60,6 +63,8 @@ public class FragmentNowPlaying extends android.support.v4.app.Fragment {
     public static TextView textSongArtist;
     public static TextView textSongCurrent;
     public static TextView textSongLength;
+
+    public static ArrayList<Bookmark> bookmarks;
 
     public static final int DIALOG_VIEW_BOOKMARKS = 200;
     public static final int DIALOG_SAVE_BOOKMARK = 250;
@@ -123,6 +128,8 @@ public class FragmentNowPlaying extends android.support.v4.app.Fragment {
 
         // Add values to new database row
         ActivityMain.mDB.insert(DatabaseOpenHelper.TABLE_NAME, null, values);
+
+        checkForBookmarks();
 
     }
 
@@ -224,7 +231,7 @@ public class FragmentNowPlaying extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
                 ServiceMusic.loadFromBookmark = false;
-                if (ActivityMain.shuffleMode) {
+                if (ServiceMusic.shuffleMode(getActivity())) {
                     ActivityMain.musicSrv.playRandom();
                 } else {
                     ActivityMain.musicSrv.playNext();
@@ -233,24 +240,6 @@ public class FragmentNowPlaying extends android.support.v4.app.Fragment {
                 if (!ActivityMain.firstSongPlayed) {
                     startTimer();
                 }
-            }
-        });
-
-        // Shuffle Button
-        ImageButton buttonShuffle = (ImageButton) view.findViewById(R.id.buttonShuffle);
-        buttonShuffle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if (ActivityMain.shuffleMode) {
-                    Toast.makeText(getActivity(), "Shuffle Mode OFF", Toast.LENGTH_SHORT).show();
-                    ActivityMain.shuffleMode = false;
-
-                } else {
-                    Toast.makeText(getActivity(), "Shuffle Mode ON", Toast.LENGTH_SHORT).show();
-                    ActivityMain.shuffleMode = true;
-                }
-
             }
         });
 
@@ -391,6 +380,8 @@ public class FragmentNowPlaying extends android.support.v4.app.Fragment {
     public void onResume() {
         super.onResume();
 
+        ActivityMain.mTitle = "Now Playing";
+
         checkForBookmarks();
 
         if (ServiceMusic.isPreparing) {
@@ -413,6 +404,9 @@ public class FragmentNowPlaying extends android.support.v4.app.Fragment {
     public static void checkForBookmarks() {
         if (ActivityMain.mDbHelper.bookmarkAlreadyExists(ActivityMain.audioFileList.get(ServiceMusic.songPosition).getID())) {
 
+            bookmarks = ActivityMain.mDbHelper.getBookmarksForCurrentTrack(ActivityMain.audioFileList.get(ServiceMusic.songPosition).getID());
+
+            Log.i(TAG, "Bookmarks length: "+ bookmarks.size());
             // todo - add helper which checks for bookmarks, and returns Bookmarks class
 
             // todo - bookmarksForCurrentSong = DatabaseOpenHelper.getBookmarkArrayIfAvaliable();
@@ -465,6 +459,12 @@ public class FragmentNowPlaying extends android.support.v4.app.Fragment {
         super.onDestroy();
         // AudioPlayerService.stop();
     }
+
+    public boolean isFragmentUIActive() {
+        return isAdded() && !isDetached() && !isRemoving() && isResumed();
+    }
+
+
 
     /**
      * Workaround function for having swipeable notification when paused. Can't work out how to update
@@ -550,7 +550,7 @@ public class FragmentNowPlaying extends android.support.v4.app.Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
-        inflater.inflate(R.menu.menu_fragment_player, menu);
+        inflater.inflate(R.menu.menu_fragment_nowplaying, menu);
     }
 
     @Override

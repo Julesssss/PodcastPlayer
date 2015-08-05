@@ -4,12 +4,14 @@ Android application for bookmarking Audiobooks & podcasts. Easily track progress
 ![](http://julianrosser.website/images/app_screenshots/pp_9.png) ![](http://julianrosser.website/images/app_screenshots/pp_8.png)
 
 TODO
-- Settings - AUDIO / PODCAST MODE, shuffle mode
-- Temporary HelpFragment
+- Combine Fragment add method to super method
+- Open nowPlayingFragment instead of help, settings
 - DialogViewBookmark custom ListView adapter, and delete icon with undo button/toast/thing
 - Service function for DBHelper.getBookmarkArrayORClass
+- on Phone call, music plays
 
 Log
+- 05/08 - Bookmark class. ViewBMDialog adapter. Fragment navigation, & back stack. Converted shuffle & play mode to prefs. Preference Fragment, ext support library & xml. Fragment titles.
 - 04/08 - UI redesign, functionality & Dialog for managing Bookmarks in FragmentNowPlaying. Restructured packages, renamed Classes.
 - 03/08 - Filtered audio content. App lifecycle correctly destroys with swipe away. View bugs while loading. PlayerFragment SharedPrefs.
 - 02/08 - Added SortBookmarkDialog Fragment. Refactored arrays. Fixed dark styles. New Toast when bookmark is saved.
@@ -36,9 +38,12 @@ Log
 Notes & things to do later
 - DialogFragment Ripple effect
 - Library design
+- ActionBarIcon alpha, for when no bookmarks are availible
 - White Theme, material theme
 - Settings
+- ARG_SELECTION_MODE to static MainActivity, not each frag
 - Help
+- make scroll bar slightly ligher
 - Library context menu: delete all BM, add BM, play, delete, play next
 - If I change the bookmark format, will be hard to implement new tables. Formatting of displayed bookmarks, should formatt when needed.
 - Should % be kept as sql row? or formatted when displaying from data??

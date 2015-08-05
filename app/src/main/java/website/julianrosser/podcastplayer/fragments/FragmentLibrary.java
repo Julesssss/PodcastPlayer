@@ -122,13 +122,17 @@ public class FragmentLibrary extends android.support.v4.app.Fragment implements 
 
         FragmentNavigationDrawer.mDrawerListView.setItemChecked(0, true);
 
-        // Launch player fragment
-        // update the main content by replacing fragments
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, FragmentNowPlaying.newInstance(position + 1))
-                .commit();
 
+        if (ActivityMain.fragmentNowPlaying == null) {
+            ActivityMain.fragmentNowPlaying = FragmentNowPlaying.newInstance(position + 1);
+        } else {
+            ActivityMain.mTitle = "Now Playing";
+        }
+
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, ActivityMain.fragmentNowPlaying)
+                .commit();
 
         // Update ActionBar title
         getActionBar().setTitle(getString(R.string.title_section1));
@@ -136,6 +140,10 @@ public class FragmentLibrary extends android.support.v4.app.Fragment implements 
         // update textviews
         ServiceMusic.updateTextViews();
 
+    }
+
+    public boolean isFragmentUIActive() {
+        return isAdded() && !isDetached() && !isRemoving();
     }
 
     private ActionBar getActionBar() {
