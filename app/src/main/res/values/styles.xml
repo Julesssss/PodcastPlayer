@@ -16,11 +16,11 @@
     <style name="AppCompatAlertDialogStyle" parent="Theme.AppCompat.Dialog.Alert">
         <item name="colorAccent">@color/primary_turq</item>
         <item name="android:textColorPrimary">@color/white_light</item>
-        <item name="android:background">@color/mat_grey_light</item>
+        <item name="android:background">@color/mat_grey_mid</item>
     </style>
 
     <style name="AlertDialogCustom" parent="@android:style/Theme.Dialog">
-        <item name="android:background">@color/mat_grey_light</item>
+        <item name="android:background">@color/mat_grey_mid</item>
         <item name="android:textColor">@color/white_light</item>
     </style>
 

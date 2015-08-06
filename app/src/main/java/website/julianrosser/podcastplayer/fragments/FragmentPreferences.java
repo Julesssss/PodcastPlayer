@@ -3,7 +3,6 @@ package website.julianrosser.podcastplayer.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.SwitchPreference;
@@ -16,10 +15,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import java.util.List;
-
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.activities.MainActivity;
 
 public class FragmentPreferences extends PreferenceFragment {
 
@@ -104,7 +101,7 @@ public class FragmentPreferences extends PreferenceFragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((ActivityMain) activity).onSectionAttached(
+        ((MainActivity) activity).onSectionAttached(
                 getArguments().getInt(ARG_SECTION_NUMBER));
     }
 

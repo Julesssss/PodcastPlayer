@@ -1,6 +1,7 @@
 package website.julianrosser.podcastplayer.activities;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -40,13 +41,13 @@ import website.julianrosser.podcastplayer.fragments.FragmentBookmark;
 import website.julianrosser.podcastplayer.fragments.FragmentHelp;
 import website.julianrosser.podcastplayer.fragments.FragmentLibrary;
 import website.julianrosser.podcastplayer.fragments.FragmentNavigationDrawer;
-import website.julianrosser.podcastplayer.fragments.FragmentNowPlaying;
+import website.julianrosser.podcastplayer.fragments.FragmentPlayer;
 import website.julianrosser.podcastplayer.fragments.FragmentPreferences;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 import website.julianrosser.podcastplayer.services.ServiceMusic;
 
-public class ActivityMain extends AppCompatActivity
+public class MainActivity extends AppCompatActivity
         implements FragmentNavigationDrawer.NavigationDrawerCallbacks, FragmentHelp.OnFragmentInteractionListener, FragmentPreferences.OnFragmentInteractionListener, FragmentLibrary.OnFragmentInteractionListener, FragmentBookmark.OnFragmentInteractionListener {
 
 
@@ -66,7 +67,7 @@ public class ActivityMain extends AppCompatActivity
     // Reference to music service
     public static ServiceMusic musicSrv;
     // Reference to PlayerFragment
-    public static FragmentNowPlaying fragmentNowPlaying;
+    public static FragmentPlayer fragmentPlayer;
     public static FragmentBookmark fragmentBookmark;
     public static FragmentLibrary fragmentLibrary;
     public static FragmentPreferences fragmentPreferences;
@@ -108,7 +109,7 @@ public class ActivityMain extends AppCompatActivity
             // Get service
             musicSrv = binder.getService();
             // Pass song list to - Should I check for empty list here?
-            musicSrv.setList(ActivityMain.audioFileList);
+            musicSrv.setList(MainActivity.audioFileList);
             // update boolean to show service is bound
             musicBound = true;
 
@@ -119,19 +120,19 @@ public class ActivityMain extends AppCompatActivity
                 // Check if this is first open (Or error with last played song)
                 if (lastPlayedListPosition == -1 || lastPlayedCurrentPosition == -1) {
                     // First time
-                    ActivityMain.musicSrv.setSongAtPosButDontPlay(0);
+                    MainActivity.musicSrv.setSongAtPosButDontPlay(0);
                 } else {
                     if (!ServiceMusic.mPlayer.isPlaying()) {
 
-                        ActivityMain.firstPreparedSong = true;
+                        MainActivity.firstPreparedSong = true;
 
                         ServiceMusic.millisecondToSeekTo = lastPlayedCurrentPosition;
 
-                        ActivityMain.musicSrv.setSongAtPosButDontPlay(lastPlayedListPosition);
+                        MainActivity.musicSrv.setSongAtPosButDontPlay(lastPlayedListPosition);
 
-                        if (ActivityMain.musicSrv != null && FragmentNowPlaying.seekBar != null) {
-                            FragmentNowPlaying.seekBar.setProgress((int) ServiceMusic.songBookmarkSeekPosition);
-                            FragmentNowPlaying.textSongCurrent.setText(AudioFile.convertTime(String.valueOf(ServiceMusic.millisecondToSeekTo)));
+                        if (MainActivity.musicSrv != null && FragmentPlayer.seekBar != null) {
+                            FragmentPlayer.seekBar.setProgress((int) ServiceMusic.songBookmarkSeekPosition);
+                            FragmentPlayer.textSongCurrent.setText(AudioFile.convertTime(String.valueOf(ServiceMusic.millisecondToSeekTo)));
                         }
                     } else {
                         // Already playing, so just set TextViews
@@ -350,12 +351,12 @@ public class ActivityMain extends AppCompatActivity
         exitApp();
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(FragmentNowPlaying.mNotificationId);
+        notificationManager.cancel(FragmentPlayer.mNotificationId);
     }
 
     public void saveSharedPreferences() {
 
-        if (!ServiceMusic.exiting) {
+        if (!ServiceMusic.exiting && ServiceMusic.mPlayer != null ) {
             SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = sp.edit();
             editor.putInt(SPREF_INT_CURRENT_POSITION, ServiceMusic.mPlayer.getCurrentPosition());
@@ -370,9 +371,9 @@ public class ActivityMain extends AppCompatActivity
      */
     @Override
     public void onBackPressed() {
-        Log.i(TAG, "NOW, NOW - Fragment active: " + !fragmentNowPlaying.isFragmentUIActive());
+        Log.i(TAG, "NOW, NOW - Fragment active: " + !fragmentPlayer.isFragmentUIActive());
 
-        if (!fragmentNowPlaying.isFragmentUIActive()) {
+        if (!fragmentPlayer.isFragmentUIActive()) {
             super.onBackPressed();
 
         } else {
@@ -398,7 +399,7 @@ public class ActivityMain extends AppCompatActivity
 
         // Get preference to check if in Podcast Mode
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean podcastMode = sharedPref.getBoolean(getResources().getString(R.string.pref_key_podcastmode), true);
+        boolean podcastMode = sharedPref.getBoolean(getResources().getString(R.string.pref_key_podcastmode), false);
 
         if (podcastMode) {
             Log.i(TAG, "AudioMode: Podcast Only");
@@ -477,6 +478,9 @@ public class ActivityMain extends AppCompatActivity
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
+
+        getNewFragment(position);
+
         if (position == 0) {
             getNewPlayerFragment(position);
         } else if (position == 1) {
@@ -492,6 +496,20 @@ public class ActivityMain extends AppCompatActivity
         }
     }
 
+    public void getNewFragment(int i) {
+
+        android.support.v4.app.Fragment newFragment;
+
+        //if (i == 0) {
+            // If already exists, use. else get new
+        //    if (fragmentPlayer == null) {
+        //        fragmentPlayer = FragmentPlayer.newInstance(i + 1);
+        //    }
+
+            newFragment = fragmentPlayer;
+        //}
+    }
+
     /**
      * Create a new PlayerFragment and start with the FragmentManager
      */
@@ -499,17 +517,17 @@ public class ActivityMain extends AppCompatActivity
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        if (fragmentNowPlaying == null) {
-            fragmentNowPlaying = FragmentNowPlaying.newInstance(position + 1);
+        if (fragmentPlayer == null) {
+            fragmentPlayer = FragmentPlayer.newInstance(position + 1);
         } else {
             mTitle = "Now Playing";
         }
 
-        if (fragmentNowPlaying.isVisible()) {
+        if (fragmentPlayer.isVisible()) {
             // do nothing
         } else {
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, fragmentNowPlaying)
+                    .replace(R.id.container, fragmentPlayer)
                     .commit();
         }
 
@@ -528,7 +546,7 @@ public class ActivityMain extends AppCompatActivity
             mTitle = "Bookmarks";
         }
 
-        if (fragmentNowPlaying.isFragmentUIActive()) {
+        if (fragmentPlayer.isFragmentUIActive()) {
             fragmentManager.beginTransaction()
                     .replace(R.id.container, fragmentBookmark)
                     .addToBackStack("bookmarkFragment")
@@ -559,7 +577,7 @@ public class ActivityMain extends AppCompatActivity
             mTitle = "Library"; // todo - strings refffff
         }
 
-        if (fragmentNowPlaying.isFragmentUIActive()) {
+        if (fragmentPlayer.isFragmentUIActive()) {
             fragmentManager.beginTransaction()
                     .replace(R.id.container, fragmentLibrary)
                     .addToBackStack("libraryFragment")
@@ -589,7 +607,7 @@ public class ActivityMain extends AppCompatActivity
             mTitle = "Settings";
         }
 
-        if (fragmentNowPlaying.isFragmentUIActive()) {
+        if (fragmentPlayer.isFragmentUIActive()) {
             fragmentManager.beginTransaction()
                     .replace(R.id.container, fragmentPreferences)
                     .addToBackStack("prefFragment")
@@ -618,7 +636,7 @@ public class ActivityMain extends AppCompatActivity
             mTitle = "Help";
         }
 
-        if (fragmentNowPlaying.isFragmentUIActive()) {
+        if (fragmentPlayer.isFragmentUIActive()) {
             fragmentManager.beginTransaction()
                     .replace(R.id.container, fragmentHelp)
                     .addToBackStack("helpFragment")
@@ -650,7 +668,7 @@ public class ActivityMain extends AppCompatActivity
         }
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(FragmentNowPlaying.mNotificationId);
+        notificationManager.cancel(FragmentPlayer.mNotificationId);
 
         finish();
     }

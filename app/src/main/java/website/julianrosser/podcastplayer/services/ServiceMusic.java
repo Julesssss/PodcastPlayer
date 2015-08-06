@@ -24,9 +24,9 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.Random;
 
-import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.activities.MainActivity;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.fragments.FragmentNowPlaying;
+import website.julianrosser.podcastplayer.fragments.FragmentPlayer;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 
 
@@ -80,22 +80,22 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
         songCurrentPosition = AudioFile.convertTime(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
 
         // If Fragment is in view & not null, update track information TextViews
-        if (ActivityMain.fragmentNowPlaying != null) {
+        if (MainActivity.fragmentPlayer != null) {
 
-            if (FragmentNowPlaying.textSongTitle != null) {
-                FragmentNowPlaying.textSongTitle.setText(songTitle);
+            if (FragmentPlayer.textSongTitle != null) {
+                FragmentPlayer.textSongTitle.setText(songTitle);
             }
 
-            if (FragmentNowPlaying.textSongArtist != null) {
-                FragmentNowPlaying.textSongArtist.setText(songArtist);
+            if (FragmentPlayer.textSongArtist != null) {
+                FragmentPlayer.textSongArtist.setText(songArtist);
             }
 
-            if (FragmentNowPlaying.textSongLength != null) {
-                FragmentNowPlaying.textSongLength.setText(songDuration);
+            if (FragmentPlayer.textSongLength != null) {
+                FragmentPlayer.textSongLength.setText(songDuration);
             }
 
-            if (FragmentNowPlaying.textSongCurrent != null) {
-                FragmentNowPlaying.textSongCurrent.setText(songCurrentPosition);
+            if (FragmentPlayer.textSongCurrent != null) {
+                FragmentPlayer.textSongCurrent.setText(songCurrentPosition);
             }
         }
     }
@@ -103,7 +103,7 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
     public static int getCurrentProgress() {
         double pos = mPlayer.getCurrentPosition();
         double dur = mPlayer.getDuration();
-        double prog = (pos / dur) * ActivityMain.SEEKBAR_RATIO;
+        double prog = (pos / dur) * MainActivity.SEEKBAR_RATIO;
 
         return (int) Math.round(prog * 10) / 10;
     }
@@ -163,7 +163,7 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
             // Get reference to current song
             AudioFile playAudioFile = audioFiles.get(songPosition);
 
-            FragmentNowPlaying.progressBarLoading.setVisibility(View.VISIBLE);
+            FragmentPlayer.progressBarLoading.setVisibility(View.VISIBLE);
 
             // Get song ID, then create track URI
             long currSong = playAudioFile.getID();
@@ -257,7 +257,7 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.i(TAG, "onPrepared");
 
-        FragmentNowPlaying.progressBarLoading.setVisibility(View.INVISIBLE); // todo - need to check fragment is alive????????/ --V
+        FragmentPlayer.progressBarLoading.setVisibility(View.INVISIBLE); // todo - need to check fragment is alive????????/ --V
 
         isPreparing = false;
 
@@ -267,8 +267,8 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
             millisecondToSeekTo = 0;
         }
 
-        if (ActivityMain.firstPreparedSong) {
-            ActivityMain.firstPreparedSong = false;
+        if (MainActivity.firstPreparedSong) {
+            MainActivity.firstPreparedSong = false;
             mediaPlayer.start();
             mediaPlayer.pause();
 
@@ -277,13 +277,13 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
             mediaPlayer.start();
             launchNotification(NOTI_PLAY);
             //noinspection deprecation
-            FragmentNowPlaying.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
-
-            FragmentNowPlaying.checkForBookmarks();
+            FragmentPlayer.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
 
             removePauseNotification();
 
         }
+
+        FragmentPlayer.checkForBookmarks();
 
         loadFromBookmark = false;
     }
@@ -294,7 +294,7 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
         if (noti.equals(NOTI_PLAY) || noti.equals(NOTI_RESUME)) {
 
             // Create Intents for notification builder
-            Intent notIntent = new Intent(this, ActivityMain.class);
+            Intent notIntent = new Intent(this, MainActivity.class);
             notIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             PendingIntent pendInt = PendingIntent.getActivity(this, 0,
                     notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -364,7 +364,7 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
 
     public void removePauseNotification() {
         NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(FragmentNowPlaying.mNotificationId);
+        notificationManager.cancel(FragmentPlayer.mNotificationId);
     }
 
 
@@ -417,7 +417,7 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
     }
 
     public void seek(int position) {
-        mPlayer.seekTo((getLength() / ActivityMain.SEEKBAR_RATIO) * position);
+        mPlayer.seekTo((getLength() / MainActivity.SEEKBAR_RATIO) * position);
     }
 
     public int getLength() {

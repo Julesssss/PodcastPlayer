@@ -6,13 +6,15 @@ public class Bookmark {
     int percent;
     int position;
     String note;
+    String formattedPosition;
 
-    public Bookmark(String idInt, int pct, String pos, String noteText) {
+    public Bookmark(String idInt, int pct, String pos, String noteText, String formattedPos) {
 
         id = Integer.valueOf(idInt);
         percent = pct;
         position = Integer.valueOf(pos);
         note = noteText;
+        formattedPosition = formattedPos;
     }
 
     public int getId() {
@@ -29,5 +31,9 @@ public class Bookmark {
 
     public String getNote() {
         return note;
+    }
+
+    public String getFormattedPosition() {
+        return formattedPosition;
     }
 }

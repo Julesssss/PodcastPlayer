@@ -168,7 +168,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
         ArrayList<Bookmark> bookmarks = new ArrayList<>();
 
-        String selectQuery = "SELECT " + UNIQUE_ID + ", " + BOOKMARK_PERCENT + ", " + BOOKMARK_MILLIS + ", " + BOOKMARK_NOTE + " FROM " + TABLE_NAME;
+        String selectQuery = "SELECT " + UNIQUE_ID + ", " + BOOKMARK_PERCENT + ", " + BOOKMARK_MILLIS + ", " + BOOKMARK_NOTE + ", " + BOOKMARK_MILLIS + " FROM " + TABLE_NAME;
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
@@ -178,7 +178,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
             if (String.valueOf(id).equals(cursor.getString(0))) {
                 // match, so add to array
 
-                Bookmark newBookmark = new Bookmark(cursor.getString(0), cursor.getInt(1), cursor.getString(2), cursor.getString(3));
+                Bookmark newBookmark = new Bookmark(cursor.getString(0), cursor.getInt(1), cursor.getString(2), cursor.getString(3), cursor.getString(4));
 
                 bookmarks.add(newBookmark);
             }

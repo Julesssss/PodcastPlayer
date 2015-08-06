@@ -14,7 +14,7 @@
         <SwitchPreference
             android:key="@string/pref_key_podcastmode"
             android:title="Podcast Only Mode"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:summary="Ignore music when searching for audio files"
             />
 

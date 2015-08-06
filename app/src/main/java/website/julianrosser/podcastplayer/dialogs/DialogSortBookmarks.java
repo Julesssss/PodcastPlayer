@@ -10,21 +10,24 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.AbsListView;
 
-import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.activities.MainActivity;
 import website.julianrosser.podcastplayer.R;
 
 public class DialogSortBookmarks extends DialogFragment {
 
     public static String DATA_SORTING_KEY = "SortBookmarkFragmentKey";
 
-    public static ActivityMain mActivityContext;
+    public static MainActivity mActivityContext;
 
-    public int tempBookmarkSort = ActivityMain.bookmarkSortInt;
+    public int tempBookmarkSort = MainActivity.bookmarkSortInt;
 
     public static android.support.v4.app.DialogFragment newInstance(int num, Context mContext) {
 
-        mActivityContext = (ActivityMain) mContext;
+        mActivityContext = (MainActivity) mContext;
 
         DialogSortBookmarks dialogFragment = new DialogSortBookmarks();
         Bundle bundle = new Bundle();
@@ -42,15 +45,14 @@ public class DialogSortBookmarks extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivityContext, R.style.AppCompatAlertDialogStyle);
 
         // Creating and Building the Dialog
-        builder.setSingleChoiceItems(getResources().getStringArray(R.array.arraySortOptions), ActivityMain.bookmarkSortInt, new DialogInterface.OnClickListener() {
+        builder.setSingleChoiceItems(getResources().getStringArray(R.array.arraySortOptions), MainActivity.bookmarkSortInt, new DialogInterface.OnClickListener() {
 
             @Override
             public void onClick(DialogInterface dialogInterface, int item) {
-
+                //dialogInterface.dismiss();
                 tempBookmarkSort = item;
             }
         });
-
 
         builder.setPositiveButton(R.string.dialog_bookmark_sort_positive, new DialogInterface.OnClickListener() {
             @Override
@@ -60,7 +62,7 @@ public class DialogSortBookmarks extends DialogFragment {
                 Log.i("SortBD", "Data: " + tempBookmarkSort);
                 getTargetFragment().onActivityResult(getTargetRequestCode(), Activity.RESULT_OK, data);
 
-                ActivityMain.bookmarkSortInt = tempBookmarkSort;
+                MainActivity.bookmarkSortInt = tempBookmarkSort;
             }
         });
 
@@ -68,7 +70,7 @@ public class DialogSortBookmarks extends DialogFragment {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
 
-                tempBookmarkSort = ActivityMain.bookmarkSortInt;
+                tempBookmarkSort = MainActivity.bookmarkSortInt;
             }
         });
 

@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.activities.MainActivity;
 
 public class FragmentHelp extends Fragment {
 
@@ -38,7 +38,7 @@ public class FragmentHelp extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((ActivityMain) activity).onSectionAttached(
+        ((MainActivity) activity).onSectionAttached(
                 getArguments().getInt(ARG_SECTION_NUMBER));
     }
 

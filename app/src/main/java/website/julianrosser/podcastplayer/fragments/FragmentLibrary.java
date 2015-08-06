@@ -13,7 +13,7 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.TextView;
 
-import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.activities.MainActivity;
 import website.julianrosser.podcastplayer.services.ServiceMusic;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.adapters.AdapterLibrarySongList;
@@ -88,7 +88,7 @@ public class FragmentLibrary extends android.support.v4.app.Fragment implements 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((ActivityMain) activity).onSectionAttached(
+        ((MainActivity) activity).onSectionAttached(
                 getArguments().getInt(ARG_SECTION_NUMBER));
 
         try {
@@ -108,30 +108,30 @@ public class FragmentLibrary extends android.support.v4.app.Fragment implements 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        ActivityMain.firstSongPlayed = true;
+        MainActivity.firstSongPlayed = true;
         ServiceMusic.loadFromBookmark = false;
 
-        ActivityMain.musicSrv.setSong(position);
+        MainActivity.musicSrv.setSong(position);
 
         Log.i(getClass().getSimpleName(), "onItemClick: " + position);
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onFragmentInteraction(String.valueOf(ActivityMain.audioFileList.get(position).getTitle()));
+            mListener.onFragmentInteraction(String.valueOf(MainActivity.audioFileList.get(position).getTitle()));
         }
 
         FragmentNavigationDrawer.mDrawerListView.setItemChecked(0, true);
 
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
 
-        if (ActivityMain.fragmentNowPlaying == null) {
-            ActivityMain.fragmentNowPlaying = FragmentNowPlaying.newInstance(position + 1);
+        if (MainActivity.fragmentPlayer == null) {
+            MainActivity.fragmentPlayer = FragmentPlayer.newInstance(position + 1);
         } else {
-            ActivityMain.mTitle = "Now Playing";
+            MainActivity.mTitle = "Now Playing";
         }
 
         fragmentManager.beginTransaction()
-                .replace(R.id.container, ActivityMain.fragmentNowPlaying)
+                .replace(R.id.container, MainActivity.fragmentPlayer)
                 .commit();
 
         // Update ActionBar title

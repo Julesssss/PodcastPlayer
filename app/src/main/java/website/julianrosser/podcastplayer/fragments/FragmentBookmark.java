@@ -25,7 +25,7 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.activities.MainActivity;
 import website.julianrosser.podcastplayer.services.ServiceMusic;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
@@ -73,28 +73,28 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
 
     // Returns all bookmark records in the database
     public static Cursor bookmarksByDate() {
-        return ActivityMain.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
                 DatabaseOpenHelper.columns, null, new String[]{}, null, null,
                 DatabaseOpenHelper._ID + " ASC");
     }
 
     // Returns all bookmark records in the database
     public static Cursor bookmarksByTitle() {
-        return ActivityMain.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
                 DatabaseOpenHelper.columns, null, new String[]{}, null, null,
                 DatabaseOpenHelper.TRACK_NAME + " ASC");
     }
 
     // Returns all bookmark records in the database
     public static Cursor bookmarksByArtist() {
-        return ActivityMain.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
                 DatabaseOpenHelper.columns, null, new String[]{}, null, null,
                 DatabaseOpenHelper.ARTIST_NAME + " ASC");
     }
 
     // Returns all bookmark records in the database
     public static Cursor bookmarksByPercent() {
-        return ActivityMain.mDB.query(DatabaseOpenHelper.TABLE_NAME,
+        return MainActivity.mDB.query(DatabaseOpenHelper.TABLE_NAME,
                 DatabaseOpenHelper.columns, null, new String[]{}, null, null,
                 DatabaseOpenHelper.BOOKMARK_PERCENT + " ASC");
     }
@@ -124,16 +124,16 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
         Cursor c;
 
         // If first use, set sorting to date added
-        if (ActivityMain.bookmarkSortInt == -1) {
-            ActivityMain.bookmarkSortInt = 0;
+        if (MainActivity.bookmarkSortInt == -1) {
+            MainActivity.bookmarkSortInt = 0;
         }
 
         // Set Cursor depending on preference // todo - combine this with other method, below
-        if (ActivityMain.bookmarkSortInt == 0) {
+        if (MainActivity.bookmarkSortInt == 0) {
             c = bookmarksByDate();
-        } else if (ActivityMain.bookmarkSortInt == 1) {
+        } else if (MainActivity.bookmarkSortInt == 1) {
             c = bookmarksByTitle();
-        } else if (ActivityMain.bookmarkSortInt == 2) {
+        } else if (MainActivity.bookmarkSortInt == 2) {
             c = bookmarksByArtist();
         } else {
             c = bookmarksByPercent();
@@ -155,8 +155,12 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
 
                 // If percentage, set to
                 if (view.getId() == R.id.text_percent) {
-                    view.getHeight();
+                    // view.getHeight();
                     ((TextView) view).setText(cursor.getString(columnIndex) + "%");
+                }
+
+                if (view.getId() == R.id.songListTitle) {
+                    ((TextView) view).setText(cursor.getString(columnIndex) + " - ");
                 }
 
                 // If note empty, hide. Add ""
@@ -242,7 +246,7 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
 
     public void changeBookmarkSorting(int sortKey) {
 
-        ActivityMain.bookmarkSortInt = sortKey;
+        MainActivity.bookmarkSortInt = sortKey;
 
         switch(sortKey) {
             case 0:
@@ -266,7 +270,7 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((ActivityMain) activity).onSectionAttached(
+        ((MainActivity) activity).onSectionAttached(
                 getArguments().getInt(ARG_SECTION_NUMBER));
     }
 
@@ -279,14 +283,14 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         // Find bookmark information in database
-        String[] returnedData = ActivityMain.mDbHelper.getData(position);
+        String[] returnedData = MainActivity.mDbHelper.getData(position);
 
         // todo use view to find place in db
 
         // find song from list
         boolean matched = false;
         int songTrackPos = 0;
-        for (AudioFile s : ActivityMain.audioFileList) {
+        for (AudioFile s : MainActivity.audioFileList) {
 
             if (s.getIDString().contentEquals(returnedData[0])) {
                 matched = true;
@@ -297,11 +301,11 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
 
         if (matched) {
 
-            ActivityMain.firstSongPlayed = true;
+            MainActivity.firstSongPlayed = true;
             ServiceMusic.loadFromBookmark = false;
 
             // Load song and start
-            ActivityMain.musicSrv.setSongAtPos(songTrackPos);
+            MainActivity.musicSrv.setSongAtPos(songTrackPos);
 
             // Seek to
             ServiceMusic.millisecondToSeekTo = Integer.valueOf(returnedData[1]);
@@ -314,14 +318,14 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
 
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
 
-            if (ActivityMain.fragmentNowPlaying == null) {
-                ActivityMain.fragmentNowPlaying = FragmentNowPlaying.newInstance(position + 1);
+            if (MainActivity.fragmentPlayer == null) {
+                MainActivity.fragmentPlayer = FragmentPlayer.newInstance(position + 1);
             } else {
-                ActivityMain.mTitle = "Now Playing";
+                MainActivity.mTitle = "Now Playing";
             }
 
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, ActivityMain.fragmentNowPlaying)
+                    .replace(R.id.container, MainActivity.fragmentPlayer)
                     .commit();
 
             // Update ActionBar title
@@ -368,8 +372,8 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
 
         switch (item.getItemId()) {
             case R.id.action_context_delete:
-                ActivityMain.mDbHelper.deleteEntry(position);
-                changeBookmarkSorting(ActivityMain.bookmarkSortInt);
+                MainActivity.mDbHelper.deleteEntry(position);
+                changeBookmarkSorting(MainActivity.bookmarkSortInt);
                 return true;
         }
         return super.onContextItemSelected(item);

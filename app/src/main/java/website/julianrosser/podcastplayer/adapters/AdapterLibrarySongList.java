@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import website.julianrosser.podcastplayer.activities.ActivityMain;
+import website.julianrosser.podcastplayer.activities.MainActivity;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 
@@ -21,17 +21,17 @@ public class AdapterLibrarySongList extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return ActivityMain.audioFileList.size();
+        return MainActivity.audioFileList.size();
     }
 
     @Override
     public AudioFile getItem(int i) {
-        return ActivityMain.audioFileList.get(i);
+        return MainActivity.audioFileList.get(i);
     }
 
     @Override
     public long getItemId(int i) {
-        return ActivityMain.audioFileList.get(i).getID();
+        return MainActivity.audioFileList.get(i).getID();
     }
 
     @Override

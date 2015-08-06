@@ -6,11 +6,12 @@ Android application for bookmarking Audiobooks & podcasts. Easily track progress
 TODO
 - Combine Fragment add method to super method
 - Open nowPlayingFragment instead of help, settings
-- DialogViewBookmark custom ListView adapter, and delete icon with undo button/toast/thing
-- Service function for DBHelper.getBookmarkArrayORClass
+- DialogViewBookmark delete icon delete, with undo button/toast/thing
 - on Phone call, music plays
+- hide nav drawer fragment if other opened
 
 Log
+- 06/08 - DialogViewBookmark custom list adapter. UI: Add bookmark using icon. List listener to close dialog. Background drawable for onClick. Delete icon listener.
 - 05/08 - Bookmark class. ViewBMDialog adapter. Fragment navigation, & back stack. Converted shuffle & play mode to prefs. Preference Fragment, ext support library & xml. Fragment titles.
 - 04/08 - UI redesign, functionality & Dialog for managing Bookmarks in FragmentNowPlaying. Restructured packages, renamed Classes.
 - 03/08 - Filtered audio content. App lifecycle correctly destroys with swipe away. View bugs while loading. PlayerFragment SharedPrefs.
@@ -36,6 +37,8 @@ Log
 - 11/06 - Started log. Opened project for the first time in weeks, NOT a good idea to leave unfixed bugs, took me a while to debug.
 
 Notes & things to do later
+
+- Let app open if no songs
 - DialogFragment Ripple effect
 - Library design
 - ActionBarIcon alpha, for when no bookmarks are availible
