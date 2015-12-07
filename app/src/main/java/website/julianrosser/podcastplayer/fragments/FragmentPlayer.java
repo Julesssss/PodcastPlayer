@@ -13,6 +13,8 @@ import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -20,7 +22,9 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -46,6 +50,14 @@ import website.julianrosser.podcastplayer.services.ServiceMusic;
  */
 public class FragmentPlayer extends android.support.v4.app.Fragment {
 
+    private Handler mFastForwardHandler;
+    Runnable mFastForwardAction = null;
+    private Handler mRewindHandler;
+    Runnable mRewindAction = null;
+
+    public int AUDIO_SKIP_MILLIS = 3000;
+    public int AUDIO_SKIP_UPDATE_RATE = 250;
+    public int AUDIO_LENGTH_TO_SKIP = 300;
 
     public static final int DIALOG_VIEW_BOOKMARKS = 200;
     public static final int DIALOG_SAVE_BOOKMARK = 250;
@@ -147,7 +159,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
         }
     }
 
-    public  void closeOpenDialog() {
+    public void closeOpenDialog() {
         if (dialogView != null) {
             dialogView.closeDialog();
         }
@@ -234,42 +246,143 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
             }
         }
 
-        // Rewind button listener
+        /**
+         * REWIND BUTTON
+         */
         ImageButton rewind = (ImageButton) view.findViewById(R.id.buttonRewind);
-        rewind.setOnClickListener(new View.OnClickListener() {
+
+        /* Runnable. While button is pressed skip forward at a increasing speed */
+        mRewindAction = new Runnable() {
             @Override
-            public void onClick(View view) {
-                ServiceMusic.loadFromBookmark = false;
+            public void run() {
+                System.out.println("Rewinding...");
 
-                if (ServiceMusic.mPlayer.getCurrentPosition() < 3000) {
-                    MainActivity.musicSrv.playPrev();
-                } else {
-                    MainActivity.musicSrv.playCurrent();
-                }
+                int currentMillis = ServiceMusic.mPlayer.getCurrentPosition();
 
-                if (!MainActivity.firstSongPlayed) {
-                    startTimer();
-                }
+                ServiceMusic.mPlayer.seekTo(currentMillis - AUDIO_SKIP_MILLIS); // todo Check for and prevent - 0ms
 
+                mRewindHandler.postDelayed(this, AUDIO_SKIP_UPDATE_RATE);
             }
+        };
+
+        rewind.setOnTouchListener(new OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) { // todo increase speed
+
+                switch (event.getAction()) {
+
+                    case MotionEvent.ACTION_DOWN:
+
+//                        try {
+//                            Thread.sleep(800);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+
+                        if (mRewindHandler != null) return true;
+                        mRewindHandler = new Handler();
+                        mRewindHandler.postDelayed(mRewindAction, AUDIO_SKIP_UPDATE_RATE);
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+
+                        long timeElapsed = SystemClock.uptimeMillis() - event.getDownTime();
+                        Log.d(TAG, "Length held: " + timeElapsed);
+
+                        if (timeElapsed < AUDIO_LENGTH_TO_SKIP) {
+                            // Skip Track, don't rewind
+                            ServiceMusic.loadFromBookmark = false;
+
+                            if (ServiceMusic.mPlayer.getCurrentPosition() < 3000) {
+                                MainActivity.musicSrv.playPrev();
+                            } else {
+                                MainActivity.musicSrv.playCurrent();
+                            }
+
+                            if (!MainActivity.firstSongPlayed) {
+                                startTimer();
+                            }
+
+                        }
+
+                        cancelForwardRewindListeners();
+
+                        return true;
+                }
+                return false;
+            }
+
+
         });
 
-        // Forward button listener
+        /**
+         * FORWARD BUTTON
+         */
         ImageButton forward = (ImageButton) view.findViewById(R.id.buttonForward);
-        forward.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ServiceMusic.loadFromBookmark = false;
-                if (ServiceMusic.shuffleMode(getActivity())) {
-                    MainActivity.musicSrv.playRandom();
-                } else {
-                    MainActivity.musicSrv.playNext();
-                }
 
-                if (!MainActivity.firstSongPlayed) {
-                    startTimer();
-                }
+        /* Runnable. While button is pressed skip forward at a increasing speed */
+        mFastForwardAction = new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("FastForward...");
+
+                int currentMillis = ServiceMusic.mPlayer.getCurrentPosition();
+
+                ServiceMusic.mPlayer.seekTo(currentMillis + AUDIO_SKIP_MILLIS);
+                mFastForwardHandler.postDelayed(this, AUDIO_SKIP_UPDATE_RATE);
             }
+        };
+
+        forward.setOnTouchListener(new OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) { // todo increase speed
+
+                switch (event.getAction()) {
+
+                    case MotionEvent.ACTION_DOWN:
+
+//                        try {
+//                            Thread.sleep(800);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+
+                        if (mFastForwardHandler != null) return true;
+                        mFastForwardHandler = new Handler();
+                        mFastForwardHandler.postDelayed(mFastForwardAction, AUDIO_SKIP_UPDATE_RATE);
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+
+                        long timeElapsed = SystemClock.uptimeMillis() - event.getDownTime();
+                        Log.d(TAG, "Length held: " + timeElapsed);
+
+                        if (timeElapsed < AUDIO_LENGTH_TO_SKIP) {
+                            // Skip Track, don't forawrd
+                            ServiceMusic.loadFromBookmark = false;
+
+                            if (ServiceMusic.shuffleMode(getActivity())) {
+                                MainActivity.musicSrv.playRandom();
+                            } else {
+                                MainActivity.musicSrv.playNext();
+                            }
+
+                            if (!MainActivity.firstSongPlayed) {
+                                startTimer();
+                            }
+
+                        }
+
+                        cancelForwardRewindListeners();
+
+                        return true;
+                }
+                return false;
+            }
+
+
         });
 
         /* Bookmark listener
@@ -303,6 +416,8 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
         seekBar = (SeekBar) view.findViewById(R.id.seekBar);
         seekBar.setMax(MainActivity.SEEKBAR_RATIO);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean fromUser) {
                 if (fromUser && MainActivity.musicSrv != null) {
@@ -322,6 +437,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
+
         });
 
         ImageView im = (ImageView) view.findViewById(R.id.imageView);
@@ -337,7 +453,9 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
 
         // Start timer if not the first time fragment is opened
-        if (MainActivity.firstSongPlayed) {
+        if (MainActivity.firstSongPlayed)
+
+        {
             startTimer();
         }
 
@@ -345,7 +463,9 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
 
         // If playing, show pause button.
-        if (MainActivity.musicBound && ServiceMusic.mPlayer != null && ServiceMusic.mPlayer.isPlaying()) {
+        if (MainActivity.musicBound && ServiceMusic.mPlayer != null && ServiceMusic.mPlayer.isPlaying())
+
+        {
             //noinspection deprecation
             playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
         }
@@ -354,9 +474,22 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
     }
 
+    private void cancelForwardRewindListeners() {
+        if (mFastForwardHandler != null) {
+            mFastForwardHandler.removeCallbacks(mFastForwardAction);
+            mFastForwardHandler = null;
+        }
+
+        if (mRewindHandler != null) {
+            mRewindHandler.removeCallbacks(mRewindAction);
+            mRewindHandler = null;
+        }
+    }
+
     /**
      * Thread which updates seekbar and position textviews. First ensure Sevice has started
      */
+
     public void startTimer() {
         new Thread(new Runnable() {
             @Override
@@ -425,6 +558,13 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
             seekBar.setProgress(sp.getInt(SPREF_INT_POS_SEEKBAR, 0));
 
         }
+    }
+
+    /* Ensure the fast forward and rewind listeners stop if Button isn't released. (Fragmnet closes)*/
+    @Override
+    public void onPause() {
+        super.onPause();
+        cancelForwardRewindListeners();
     }
 
     @Override

@@ -1,7 +1,6 @@
 package website.julianrosser.podcastplayer.activities;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -356,7 +355,7 @@ public class MainActivity extends AppCompatActivity
 
     public void saveSharedPreferences() {
 
-        if (!ServiceMusic.exiting && ServiceMusic.mPlayer != null ) {
+        if (!ServiceMusic.exiting && ServiceMusic.mPlayer != null) {
             SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = sp.edit();
             editor.putInt(SPREF_INT_CURRENT_POSITION, ServiceMusic.mPlayer.getCurrentPosition());
@@ -500,14 +499,14 @@ public class MainActivity extends AppCompatActivity
 
         android.support.v4.app.Fragment newFragment;
 
-        //if (i == 0) {
+        if (i == 0) {
             // If already exists, use. else get new
-        //    if (fragmentPlayer == null) {
-        //        fragmentPlayer = FragmentPlayer.newInstance(i + 1);
-        //    }
+            if (fragmentPlayer == null) {
+                fragmentPlayer = FragmentPlayer.newInstance(i + 1);
+            }
 
             newFragment = fragmentPlayer;
-        //}
+        }
     }
 
     /**
