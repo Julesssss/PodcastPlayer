@@ -8,6 +8,7 @@
         android:id="@+id/navDrawerListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:divider="@color/mat_grey_light"
         android:background="@color/mat_grey_mid"
         android:choiceMode="singleChoice"
         tools:context=".NavigationDrawerFragment" />

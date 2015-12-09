@@ -2,27 +2,28 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:background="@color/mat_grey_mid"
     android:layout_height="match_parent"
-    tools:context="website.julianrosser.podcastplayer.fragments.LibraryFragment">
+    android:background="@color/mat_grey_mid"
+    tools:context="website.julianrosser.podcastplayer.fragments.FragmentLibrary">
 
     <ListView
         android:id="@android:id/list"
-        android:fadeScrollbars="false"
-        android:dividerHeight="1dp"
-        android:divider="@color/mat_grey_light"
-        android:scrollbarAlwaysDrawVerticalTrack="true"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:divider="@color/mat_grey_light"
+        android:scrollbarThumbVertical="@drawable/custom_scroll_bar_dark"
+        android:dividerHeight="1dp"
+        android:fadeScrollbars="false"
+        android:scrollbarAlwaysDrawVerticalTrack="true" />
 
     <TextView
         android:id="@android:id/empty"
-        android:padding="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="16dp"
         android:text="@string/bookmark_list_empty_text"
         android:textColor="@color/white_light"
-        android:textSize="16sp"
-        android:gravity="center" />
+        android:textSize="16sp" />
 
 </FrameLayout>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Audio Settings">
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_shuffle"
+            android:summary="Shuffle tracks when playing"
+            android:defaultValue="false"
+            android:title="Shuffle Tracks" />
+
+    </PreferenceCategory>
+
+        <SwitchPreference
+            android:key="@string/pref_key_podcastmode"
+            android:title="Podcast Only Mode"
+            android:defaultValue="false"
+            android:summary="Ignore music when searching for audio files"
+            />
+
+
+</PreferenceScreen>

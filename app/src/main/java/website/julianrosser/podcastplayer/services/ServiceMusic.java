@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer;
+package website.julianrosser.podcastplayer.services;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
@@ -16,16 +17,20 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
 
 import java.util.ArrayList;
 import java.util.Random;
 
-import website.julianrosser.podcastplayer.fragments.PlayerFragment;
-import website.julianrosser.podcastplayer.objects.Song;
+import website.julianrosser.podcastplayer.activities.MainActivity;
+import website.julianrosser.podcastplayer.R;
+import website.julianrosser.podcastplayer.fragments.FragmentPlayer;
+import website.julianrosser.podcastplayer.objects.AudioFile;
 
 
-public class MusicService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
+public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
     public static final String ACTION_PREVIOUS = "action_previous";
@@ -46,10 +51,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public static boolean exiting;
     // Ensure MediaPlayer isn;t preparing
     public static boolean isPreparing = false;
+
     // Millisecond value of current bookmark
     public static int millisecondToSeekTo;
     // ArrayList of songs
-    private static ArrayList<Song> songs;
+    private static ArrayList<AudioFile> audioFiles;
     // Binder returned to Activity
     private final IBinder musicBind = new MusicBinder();
     public String NOTI_PLAY = "notificationPlay";
@@ -61,39 +67,35 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public static void updateTextViews() {
 
         // Song reference
-        Song playSong = songs.get(songPosition);
+        AudioFile playAudioFile = audioFiles.get(songPosition);
 
         //Get song Object and update information references
-        songTitle = playSong.getTitle();
-        songArtist = playSong.getArtist();
-        songDuration = playSong.getLength();
+        songTitle = playAudioFile.getTitle();
+        songArtist = playAudioFile.getArtist();
+        songDuration = playAudioFile.getLength();
 
-        songBookmarkSeekPosition = ((double) millisecondToSeekTo / (double) playSong.getLengthMillis()) * 1000;
+        songBookmarkSeekPosition = ((double) millisecondToSeekTo / (double) playAudioFile.getLengthMillis()) * 1000;
         // TODO - What if this is called while prepping?? -  if (!MusicService.isPreparing);
 
-        // Format time to minutes, secs
-        long second = (millisecondToSeekTo / 1000) % 60;
-        int minutes = (millisecondToSeekTo / 1000) / 60;
-
-        songCurrentPosition = Song.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+        songCurrentPosition = AudioFile.convertTime(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
 
         // If Fragment is in view & not null, update track information TextViews
-        if (MainActivity.playerFragment != null) {
+        if (MainActivity.fragmentPlayer != null) {
 
-            if (PlayerFragment.textSongTitle != null) {
-                PlayerFragment.textSongTitle.setText(songTitle);
+            if (FragmentPlayer.textSongTitle != null) {
+                FragmentPlayer.textSongTitle.setText(songTitle);
             }
 
-            if (PlayerFragment.textSongArtist != null) {
-                PlayerFragment.textSongArtist.setText(songArtist);
+            if (FragmentPlayer.textSongArtist != null) {
+                FragmentPlayer.textSongArtist.setText(songArtist);
             }
 
-            if (PlayerFragment.textSongLength != null) {
-                PlayerFragment.textSongLength.setText(songDuration);
+            if (FragmentPlayer.textSongLength != null) {
+                FragmentPlayer.textSongLength.setText(songDuration);
             }
 
-            if (PlayerFragment.textSongCurrent != null) {
-                PlayerFragment.textSongCurrent.setText(songCurrentPosition);
+            if (FragmentPlayer.textSongCurrent != null) {
+                FragmentPlayer.textSongCurrent.setText(songCurrentPosition);
             }
         }
     }
@@ -139,7 +141,6 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public void onDestroy() {
         Log.i(TAG, "onDestroy");
-        exiting = true;
         mPlayer.release();
         // Remove Service from foreground when closed
         stopForeground(true);
@@ -157,13 +158,15 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mPlayer.reset();
 
         // Ensure track list isn't empty
-        if (songs.size() >= 0) {
+        if (audioFiles.size() >= 0) {
 
             // Get reference to current song
-            Song playSong = songs.get(songPosition);
+            AudioFile playAudioFile = audioFiles.get(songPosition);
+
+            FragmentPlayer.progressBarLoading.setVisibility(View.VISIBLE);
 
             // Get song ID, then create track URI
-            long currSong = playSong.getID();
+            long currSong = playAudioFile.getID();
             Uri trackUri = ContentUris.withAppendedId(
                     android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     currSong);
@@ -190,8 +193,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     /**
      * Method for passing device song list from MainActivity
      */
-    public void setList(ArrayList<Song> theSongs) {
-        songs = theSongs;
+    public void setList(ArrayList<AudioFile> theAudioFiles) {
+        audioFiles = theAudioFiles;
     }
 
     /**
@@ -202,7 +205,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         Log.i(TAG, "onCompletion()");
         mPlayer.reset();
 
-        if (MainActivity.shuffleMode) {
+        if (shuffleMode(this)) {
             playRandom();
         } else {
             playNext();
@@ -254,6 +257,8 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.i(TAG, "onPrepared");
 
+        FragmentPlayer.progressBarLoading.setVisibility(View.INVISIBLE); // todo - need to check fragment is alive????????/ --V
+
         isPreparing = false;
 
         // If loading from a bookmark, seek to required position
@@ -267,17 +272,18 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             mediaPlayer.start();
             mediaPlayer.pause();
 
-
         } else {
             // Start playback
             mediaPlayer.start();
             launchNotification(NOTI_PLAY);
             //noinspection deprecation
-            PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+            FragmentPlayer.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
 
             removePauseNotification();
 
         }
+
+        FragmentPlayer.checkForBookmarks();
 
         loadFromBookmark = false;
     }
@@ -358,7 +364,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public void removePauseNotification() {
         NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(PlayerFragment.mNotificationId);
+        notificationManager.cancel(FragmentPlayer.mNotificationId);
     }
 
 
@@ -425,20 +431,20 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     public void playPrev() {
         songPosition--;
-        if (songPosition < 0) songPosition = songs.size() - 1;
+        if (songPosition < 0) songPosition = audioFiles.size() - 1;
         playSong();
     }
 
     // play current song again
     public void playCurrent() {
-        if (songPosition == songs.size()) songPosition = 0;
+        if (songPosition == audioFiles.size()) songPosition = 0;
         playSong();
     }
 
     //skip to next
     public void playNext() {
         songPosition++;
-        if (songPosition == songs.size()) songPosition = 0;
+        if (songPosition == audioFiles.size()) songPosition = 0;
         playSong();
     }
 
@@ -447,17 +453,17 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
         int oldPos = songPosition;
 
-        songPosition = new Random().nextInt(songs.size() + 1);
+        songPosition = new Random().nextInt(audioFiles.size() + 1);
 
         for (int j = 0; j < 5; j++) {
             if (oldPos == songPosition) {
-                songPosition = new Random().nextInt(songs.size() + 1);
+                songPosition = new Random().nextInt(audioFiles.size() + 1);
             } else {
                 break;
             }
         }
 
-        if (songPosition == songs.size()) {
+        if (songPosition == audioFiles.size()) {
             songPosition = 0;
         }
 
@@ -478,12 +484,19 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         return false;
     }
 
+    public static boolean shuffleMode(Context c) {
+        // Get preference to check if in shuffle mode
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(c);
+
+        return sharedPref.getBoolean("checkbox_pref_shuffle", false);
+    }
+
     /**
      * Required Bind Methods
      */
     public class MusicBinder extends Binder {
-        MusicService getService() {
-            return MusicService.this;
+        public ServiceMusic getService() {
+            return ServiceMusic.this;
         }
     }
 }

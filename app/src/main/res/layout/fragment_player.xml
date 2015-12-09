@@ -11,10 +11,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_margin="8dp"
         android:background="@color/mat_grey_mid"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingBottom="8dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="16dp">
 
         <TextView
             android:id="@+id/songTitle"
@@ -39,96 +41,200 @@
     <RelativeLayout
         android:id="@+id/controlLayout"
         android:layout_width="match_parent"
-        android:layout_height="105sp"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:background="@color/mat_grey_mid"
         android:orientation="horizontal"
         android:paddingBottom="8dp"
-        android:paddingTop="4dp">
+        android:paddingTop="8dp">
 
         <ImageButton
             android:id="@+id/buttonPlay"
-            android:layout_width="90sp"
-            android:layout_height="match_parent"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:layout_centerHorizontal="true"
-            android:background="@color/mat_grey_mid"
+            android:layout_marginLeft="4dp"
+            android:layout_marginRight="4dp"
+            android:background="@drawable/circle_background"
             android:contentDescription="@string/description_play_button"
+            android:elevation="8dp"
+            android:padding="2dp"
             android:scaleType="fitCenter"
             android:src="@drawable/play" />
 
         <ImageButton
             android:id="@+id/buttonRewind"
-            android:layout_width="80sp"
-            android:layout_height="match_parent"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_centerVertical="true"
             android:layout_toLeftOf="@id/buttonPlay"
-            android:background="@color/mat_grey_mid"
+            android:background="@drawable/circle_background"
             android:contentDescription="@string/description_rewind_button"
-            android:paddingBottom="10dp"
-            android:paddingRight="5dp"
-            android:paddingTop="10dp"
-            android:scaleType="fitEnd"
+            android:elevation="8dp"
+            android:padding="2dp"
+            android:scaleType="fitStart"
             android:src="@drawable/rewind" />
 
         <ImageButton
             android:id="@+id/buttonBookmark"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_toLeftOf="@id/buttonRewind"
             android:background="@color/mat_grey_mid"
             android:contentDescription="@string/description_rewind_button"
             android:padding="5sp"
             android:scaleType="fitCenter"
-            android:src="@drawable/bookmark" />
+            android:src="@drawable/bookmark"
+            android:visibility="invisible" />
 
         <ImageButton
             android:id="@+id/buttonForward"
-            android:layout_width="80sp"
-            android:layout_height="wrap_content"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_centerVertical="true"
             android:layout_toRightOf="@id/buttonPlay"
-            android:background="@color/mat_grey_mid"
+            android:background="@drawable/circle_background"
             android:contentDescription="@string/description_forward_button"
-            android:paddingBottom="10dp"
-            android:paddingLeft="5dp"
-            android:paddingTop="10dp"
+            android:elevation="8dp"
+            android:padding="2dp"
             android:scaleType="fitStart"
             android:src="@drawable/forward" />
 
         <ImageButton
             android:id="@+id/buttonShuffle"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_toRightOf="@id/buttonForward"
             android:background="@color/mat_grey_mid"
             android:contentDescription="@string/description_rewind_button"
             android:padding="5dp"
             android:scaleType="fitCenter"
-            android:src="@drawable/shuffle" />
+            android:src="@drawable/shuffle"
+            android:visibility="invisible" />
 
     </RelativeLayout>
 
-    <SeekBar
-        android:id="@+id/seekBar"
+    <RelativeLayout
+        android:id="@+id/seekbarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/controlLayout"
-        android:layout_marginBottom="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp">
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/mat_grey_mid" />
+
+        <View
+            android:id="@+id/seek_divider_1"
+            android:layout_width="2dp"
+            android:layout_height="15dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="22dp"
+            android:background="@color/primary_turq" />
+
+        <View
+            android:id="@+id/seek_divider_2"
+            android:layout_width="2dp"
+            android:layout_height="15dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="22dp"
+            android:background="@color/primary_turq" />
+
+        <View
+            android:id="@+id/seek_divider_3"
+            android:layout_width="2dp"
+            android:layout_height="15dp"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:background="@color/primary_turq" />
+
+    </RelativeLayout>
+
+    <!-- Bookmark Controls -->
+    <RelativeLayout
+        android:id="@+id/bookmarkLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/seekbarLayout"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        android:background="@color/mat_grey_mid" />
+        android:paddingBottom="8dp"
+        android:paddingTop="8dp">
+
+        <LinearLayout
+            android:id="@+id/bookmarkSaveLoadLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:layout_centerHorizontal="true">
+
+            <ImageButton
+                android:id="@+id/buttonBookmarkSkipPrev"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/circle_background"
+                android:elevation="4dp"
+                android:padding="1dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/prev" />
+
+            <ImageButton
+                android:id="@+id/mainBookmarkButtonSave"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_marginLeft="3dp"
+                android:layout_marginRight="3dp"
+                android:background="@drawable/circle_background"
+                android:elevation="4dp"
+                android:padding="1dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/bookmark" />
+
+            <ImageButton
+                android:id="@+id/buttonBookmarkSkipNext"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/circle_background"
+                android:elevation="4dp"
+                android:padding="1dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/next" />
+
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bookmarkLayout"
+        android:layout_below="@id/songInformation"
+        android:contentDescription="@string/image_audio_dsc"
+        android:padding="16dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/audio_icon" />
+
 
     <TextView
         android:id="@+id/textSongTimeCurrent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/seekBar"
-        android:layout_alignLeft="@id/seekBar"
-        android:layout_marginBottom="8dp"
+        android:layout_above="@id/seekbarLayout"
+        android:layout_alignLeft="@id/seekbarLayout"
+        android:layout_marginBottom="4dp"
         android:layout_marginLeft="16dp"
+        android:text="0:00"
         android:textColor="@color/white_light"
         android:textSize="13sp" />
 
@@ -136,20 +242,21 @@
         android:id="@+id/textSongTimeLength"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/seekBar"
-        android:layout_alignRight="@id/seekBar"
-        android:layout_marginBottom="8dp"
+        android:layout_above="@id/seekbarLayout"
+        android:layout_alignRight="@id/seekbarLayout"
+        android:layout_marginBottom="4dp"
         android:layout_marginRight="16dp"
+        android:text="0:00"
         android:textColor="@color/white_light"
         android:textSize="13sp" />
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/controlLayout"
-        android:layout_below="@id/songInformation"
-        android:contentDescription="@string/image_audio_dsc"
-        android:scaleType="fitCenter"
-        android:src="@drawable/audio_icon" />
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:visibility="invisible" />
 
 </RelativeLayout>

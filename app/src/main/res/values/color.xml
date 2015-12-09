@@ -22,4 +22,10 @@
     <color name="mat_grey_dark">#212121</color>
     <color name="mat_grey_mid">#303030</color>
     <color name="mat_grey_light">#424242</color>
+
+
+
+    <color name="transparent">#00ffffff</color>
+
+
 </resources>

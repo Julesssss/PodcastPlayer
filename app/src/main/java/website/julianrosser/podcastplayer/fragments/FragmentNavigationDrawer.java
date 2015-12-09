@@ -12,8 +12,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,20 +19,19 @@ import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
-import java.util.LinkedHashMap;
 import java.util.Random;
 
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.adapters.NavDrawerListAdapter;
+import website.julianrosser.podcastplayer.adapters.AdapterNavDrawerList;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
  * See the <a href="https://developer.android.com/design/patterns/navigation-drawer.html#Interaction">
  * design guidelines</a> for a complete explanation of the behaviors implemented here.
  */
-public class NavigationDrawerFragment extends Fragment {
+public class FragmentNavigationDrawer extends Fragment {
 
     /**
      * Remember the position of the selected item.
@@ -62,7 +59,7 @@ public class NavigationDrawerFragment extends Fragment {
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
 
-    public NavigationDrawerFragment() {
+    public FragmentNavigationDrawer() {
     }
 
     @Override
@@ -106,13 +103,9 @@ public class NavigationDrawerFragment extends Fragment {
             }
         });
 
-        sections = new String[]{
-                getString(R.string.title_section1),
-                getString(R.string.title_section2),
-                getString(R.string.title_section3),"Settings", "Help", "Exit"
-        };
+        sections = getResources().getStringArray(R.array.arrayNavDrawerTitles);
 
-        mDrawerListView.setAdapter(new NavDrawerListAdapter(getActivity(), sections));
+        mDrawerListView.setAdapter(new AdapterNavDrawerList(getActivity(), sections));
 
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
 
