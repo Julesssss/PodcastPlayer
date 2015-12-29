@@ -3,7 +3,6 @@ package website.julianrosser.podcastplayer.adapters;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +13,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.activities.MainActivity;
 import website.julianrosser.podcastplayer.fragments.FragmentPlayer;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 import website.julianrosser.podcastplayer.objects.Bookmark;
@@ -91,7 +89,8 @@ public class AdapterDialogViewBookmarks extends BaseAdapter {
         holder.imageDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(mContext, "Delete()", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "Delete() ", Toast.LENGTH_SHORT).show();
+                // TODO - delete bookmark at this position
             }
         });
 

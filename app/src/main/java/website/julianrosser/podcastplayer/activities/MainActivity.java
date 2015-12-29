@@ -24,6 +24,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -263,6 +264,9 @@ public class MainActivity extends AppCompatActivity
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
+        // Pass toolbar as ActionBar for functionality
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
 
         Log.i(TAG, "onCreate()");
 
@@ -285,7 +289,7 @@ public class MainActivity extends AppCompatActivity
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
         // Get current Fragment title
-        //mTitle = getTitle();
+        mTitle = getTitle();
 
         // Create a new DatabaseHelper
         mDbHelper = new DatabaseOpenHelper(this);
@@ -319,7 +323,6 @@ public class MainActivity extends AppCompatActivity
         Log.i(TAG, "onStart()");
 
         // if already alive, just bind
-
         if (playIntent == null) {
             playIntent = new Intent(this, ServiceMusic.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
@@ -381,8 +384,6 @@ public class MainActivity extends AppCompatActivity
             startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(startMain);
         }
-
-
     }
 
     /**

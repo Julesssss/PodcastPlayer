@@ -30,16 +30,7 @@
             android:enabled="true"
             android:exported="true" >
         </service>
-        <service
-            android:name=".services.ServiceMusic"
-            android:enabled="true"
-            android:exported="true" >
-        </service>
 
-        <activity
-            android:name=".TestActivity"
-            android:label="@string/title_activity_test" >
-        </activity>
     </application>
 
 </manifest>

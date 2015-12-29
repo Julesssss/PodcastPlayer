@@ -1,16 +1,19 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat">
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
         <!-- Customize your theme here. -->
         <!-- Set AppCompat’s color theming attrs -->
         <item name="colorPrimary">@color/mat_grey_dark</item>
         <item name="colorPrimaryDark">@color/mat_black</item>
         <item name="colorAccent">@color/primary_turq</item>
         <item name="android:textColor">@color/white_light</item>
-        <item name="android:windowBackground">@color/mat_grey_mid</item>
-        <item name="android:actionModeBackground">@color/material_deep</item>
-        <item name="android:textColorPrimary">@color/white_light</item>
+        <item name="android:windowNoTitle">true</item>
+        <!--We will be using the toolbar so no need to show ActionBar-->
+        <item name="android:windowActionBar">false</item>
+        <!--<item name="android:windowBackground">@color/mat_grey_mid</item>-->
+        <!--<item name="android:actionModeBackground">@color/material_deep</item>-->
+        <!--<item name="android:textColorPrimary">@color/white_light</item>-->
     </style>
 
     <style name="AppCompatAlertDialogStyle" parent="Theme.AppCompat.Dialog.Alert">
@@ -24,21 +27,21 @@
         <item name="android:textColor">@color/white_light</item>
     </style>
 
-    <style name="CustomActionBarTheme"
-        parent="@style/Theme.AppCompat.Light.DarkActionBar">
-        <item name="android:actionBarStyle">@style/MyActionBar</item>
+    <!--&lt;!&ndash;<style name="CustomActionBarTheme"&ndash;&gt;-->
+        <!--&lt;!&ndash;parent="@style/Theme.AppCompat.Light.DarkActionBar">&ndash;&gt;-->
+        <!--&lt;!&ndash;<item name="android:actionBarStyle">@style/MyActionBar</item>&ndash;&gt;-->
 
-        <!-- Support library compatibility -->
-        <item name="actionBarStyle">@style/MyActionBar</item>
-    </style>
+        <!--&lt;!&ndash; Support library compatibility &ndash;&gt;-->
+        <!--<item name="actionBarStyle">@style/MyActionBar</item>-->
+    <!--</style>-->
 
-    <!-- ActionBar styles -->
-    <style name="MyActionBar"
-        parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
-        <item name="android:background">@color/material_deep</item>
+    <!--&lt;!&ndash; ActionBar styles &ndash;&gt;-->
+    <!--<style name="MyActionBar"-->
+        <!--parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">-->
+        <!--<item name="android:background">@color/material_deep</item>-->
 
-        <!-- Support library compatibility -->
-        <item name="background">@color/material_deep</item>
-    </style>
+        <!--&lt;!&ndash; Support library compatibility &ndash;&gt;-->
+        <!--<item name="background">@color/material_deep</item>-->
+    <!--</style>-->
 
 </resources>
