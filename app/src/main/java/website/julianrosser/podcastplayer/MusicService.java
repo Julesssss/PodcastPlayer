@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer.services;
+package website.julianrosser.podcastplayer;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -24,13 +24,11 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.Random;
 
-import website.julianrosser.podcastplayer.activities.MainActivity;
-import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.fragments.FragmentPlayer;
+import website.julianrosser.podcastplayer.fragments.PlayerFragment;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 
 
-public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
+public class MusicService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
         MediaPlayer.OnCompletionListener, AudioManager.OnAudioFocusChangeListener {
 
     public static final String ACTION_PREVIOUS = "action_previous";
@@ -77,25 +75,25 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
         songBookmarkSeekPosition = ((double) millisecondToSeekTo / (double) playAudioFile.getLengthMillis()) * 1000;
         // TODO - What if this is called while prepping?? -  if (!MusicService.isPreparing);
 
-        songCurrentPosition = AudioFile.convertTime(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
+        songCurrentPosition = AudioFile.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
 
         // If Fragment is in view & not null, update track information TextViews
-        if (MainActivity.fragmentPlayer != null) {
+        if (MainActivity.playerFragment != null) {
 
-            if (FragmentPlayer.textSongTitle != null) {
-                FragmentPlayer.textSongTitle.setText(songTitle);
+            if (PlayerFragment.textSongTitle != null) {
+                PlayerFragment.textSongTitle.setText(songTitle);
             }
 
-            if (FragmentPlayer.textSongArtist != null) {
-                FragmentPlayer.textSongArtist.setText(songArtist);
+            if (PlayerFragment.textSongArtist != null) {
+                PlayerFragment.textSongArtist.setText(songArtist);
             }
 
-            if (FragmentPlayer.textSongLength != null) {
-                FragmentPlayer.textSongLength.setText(songDuration);
+            if (PlayerFragment.textSongLength != null) {
+                PlayerFragment.textSongLength.setText(songDuration);
             }
 
-            if (FragmentPlayer.textSongCurrent != null) {
-                FragmentPlayer.textSongCurrent.setText(songCurrentPosition);
+            if (PlayerFragment.textSongCurrent != null) {
+                PlayerFragment.textSongCurrent.setText(songCurrentPosition);
             }
         }
     }
@@ -163,7 +161,7 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
             // Get reference to current song
             AudioFile playAudioFile = audioFiles.get(songPosition);
 
-            FragmentPlayer.progressBarLoading.setVisibility(View.VISIBLE);
+            PlayerFragment.progressBarLoading.setVisibility(View.VISIBLE);
 
             // Get song ID, then create track URI
             long currSong = playAudioFile.getID();
@@ -257,7 +255,7 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
     public void onPrepared(MediaPlayer mediaPlayer) {
         Log.i(TAG, "onPrepared");
 
-        FragmentPlayer.progressBarLoading.setVisibility(View.INVISIBLE); // todo - need to check fragment is alive????????/ --V
+        PlayerFragment.progressBarLoading.setVisibility(View.INVISIBLE); // todo - need to check fragment is alive????????/ --V
 
         isPreparing = false;
 
@@ -277,13 +275,13 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
             mediaPlayer.start();
             launchNotification(NOTI_PLAY);
             //noinspection deprecation
-            FragmentPlayer.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
+            PlayerFragment.playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
 
             removePauseNotification();
 
         }
 
-        FragmentPlayer.checkForBookmarks();
+        PlayerFragment.checkForBookmarks();
 
         loadFromBookmark = false;
     }
@@ -364,7 +362,7 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
 
     public void removePauseNotification() {
         NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(FragmentPlayer.mNotificationId);
+        notificationManager.cancel(PlayerFragment.mNotificationId);
     }
 
 
@@ -495,8 +493,8 @@ public class ServiceMusic extends Service implements MediaPlayer.OnPreparedListe
      * Required Bind Methods
      */
     public class MusicBinder extends Binder {
-        public ServiceMusic getService() {
-            return ServiceMusic.this;
+        public MusicService getService() {
+            return MusicService.this;
         }
     }
 }

@@ -15,7 +15,7 @@
         android:screenOrientation="portrait"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
             <intent-filter>
@@ -26,20 +26,11 @@
         </activity>
 
         <service
-            android:name=".services.ServiceMusic"
-            android:enabled="true"
-            android:exported="true" >
-        </service>
-        <service
-            android:name=".services.ServiceMusic"
+            android:name=".MusicService"
             android:enabled="true"
             android:exported="true" >
         </service>
 
-        <activity
-            android:name=".TestActivity"
-            android:label="@string/title_activity_test" >
-        </activity>
     </application>
 
 </manifest>

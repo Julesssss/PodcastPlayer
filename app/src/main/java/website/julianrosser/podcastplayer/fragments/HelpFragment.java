@@ -9,19 +9,19 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.activities.MainActivity;
+import website.julianrosser.podcastplayer.MainActivity;
 
-public class FragmentHelp extends Fragment {
+public class HelpFragment extends Fragment {
 
     private static final String ARG_SECTION_NUMBER = "section_number";
 
 
-    public FragmentHelp() {
+    public HelpFragment() {
         // Required empty public constructor
     }
 
-    public static FragmentHelp newInstance(int sectionNumber) {
-        FragmentHelp fragment = new FragmentHelp();
+    public static HelpFragment newInstance(int sectionNumber) {
+        HelpFragment fragment = new HelpFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);

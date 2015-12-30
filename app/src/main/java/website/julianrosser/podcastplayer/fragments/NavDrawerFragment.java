@@ -24,14 +24,14 @@ import java.util.Random;
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.adapters.AdapterNavDrawerList;
+import website.julianrosser.podcastplayer.adapters.NavDrawerListAdapter;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
  * See the <a href="https://developer.android.com/design/patterns/navigation-drawer.html#Interaction">
  * design guidelines</a> for a complete explanation of the behaviors implemented here.
  */
-public class FragmentNavigationDrawer extends Fragment {
+public class NavDrawerFragment extends Fragment {
 
     /**
      * Remember the position of the selected item.
@@ -59,7 +59,7 @@ public class FragmentNavigationDrawer extends Fragment {
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
 
-    public FragmentNavigationDrawer() {
+    public NavDrawerFragment() {
     }
 
     @Override
@@ -105,7 +105,7 @@ public class FragmentNavigationDrawer extends Fragment {
 
         sections = getResources().getStringArray(R.array.arrayNavDrawerTitles);
 
-        mDrawerListView.setAdapter(new AdapterNavDrawerList(getActivity(), sections));
+        mDrawerListView.setAdapter(new NavDrawerListAdapter(getActivity(), sections));
 
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
 

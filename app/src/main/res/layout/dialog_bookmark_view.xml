@@ -9,8 +9,9 @@
         android:id="@+id/nowplaying_dialog_view_listview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:dividerHeight="1dp"
-        android:divider="@color/mat_grey_light">
+        android:layout_marginBottom="8dp"
+        android:divider="@color/mat_grey_light"
+        android:dividerHeight="1dp">
 
     </ListView>
 

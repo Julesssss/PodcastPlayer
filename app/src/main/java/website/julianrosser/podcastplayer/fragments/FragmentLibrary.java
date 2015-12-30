@@ -13,10 +13,10 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.TextView;
 
-import website.julianrosser.podcastplayer.activities.MainActivity;
-import website.julianrosser.podcastplayer.services.ServiceMusic;
+import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.adapters.AdapterLibrarySongList;
+import website.julianrosser.podcastplayer.adapters.LibraryListAdapter;
 
 
 /**
@@ -33,7 +33,7 @@ public class FragmentLibrary extends android.support.v4.app.Fragment implements 
      * The Adapter which will be used to populate the ListView/GridView with
      * Views.
      */
-    public AdapterLibrarySongList adapterLibrarySongList;
+    public LibraryListAdapter libraryListAdapter;
     private OnFragmentInteractionListener mListener;
 
     /**
@@ -56,7 +56,7 @@ public class FragmentLibrary extends android.support.v4.app.Fragment implements 
         super.onCreate(savedInstanceState);
 
         // Create custom adapter
-        adapterLibrarySongList = new AdapterLibrarySongList(getActivity());
+        libraryListAdapter = new LibraryListAdapter(getActivity());
 
     }
 
@@ -68,7 +68,7 @@ public class FragmentLibrary extends android.support.v4.app.Fragment implements 
         AbsListView mListView = (AbsListView) view.findViewById(android.R.id.list);
 
         // Set the custom adapter
-        mListView.setAdapter(adapterLibrarySongList);
+        mListView.setAdapter(libraryListAdapter);
 
         // This is to ensure 5.0+ works
         mListView.setBackgroundColor(getResources().getColor(R.color.mat_grey_mid));
@@ -109,7 +109,7 @@ public class FragmentLibrary extends android.support.v4.app.Fragment implements 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         MainActivity.firstSongPlayed = true;
-        ServiceMusic.loadFromBookmark = false;
+        MusicService.loadFromBookmark = false;
 
         MainActivity.musicSrv.setSong(position);
 
@@ -120,25 +120,25 @@ public class FragmentLibrary extends android.support.v4.app.Fragment implements 
             mListener.onFragmentInteraction(String.valueOf(MainActivity.audioFileList.get(position).getTitle()));
         }
 
-        FragmentNavigationDrawer.mDrawerListView.setItemChecked(0, true);
+        NavDrawerFragment.mDrawerListView.setItemChecked(0, true);
 
         FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
 
-        if (MainActivity.fragmentPlayer == null) {
-            MainActivity.fragmentPlayer = FragmentPlayer.newInstance(position + 1);
+        if (MainActivity.playerFragment == null) {
+            MainActivity.playerFragment = PlayerFragment.newInstance(position + 1);
         } else {
             MainActivity.mTitle = "Now Playing";
         }
 
         fragmentManager.beginTransaction()
-                .replace(R.id.container, MainActivity.fragmentPlayer)
+                .replace(R.id.container, MainActivity.playerFragment)
                 .commit();
 
         // Update ActionBar title
         getActionBar().setTitle(getString(R.string.title_section1));
 
         // update textviews
-        ServiceMusic.updateTextViews();
+        MusicService.updateTextViews();
 
     }
 

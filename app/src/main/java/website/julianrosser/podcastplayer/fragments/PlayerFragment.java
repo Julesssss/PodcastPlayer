@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -36,19 +37,18 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.activities.MainActivity;
-import website.julianrosser.podcastplayer.dialogs.DialogSaveBookmark;
-import website.julianrosser.podcastplayer.dialogs.DialogViewBookmarks;
+import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.dialogs.PlayerSaveBookmarkDialog;
+import website.julianrosser.podcastplayer.dialogs.ViewBookmarksDialog;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 import website.julianrosser.podcastplayer.objects.Bookmark;
-import website.julianrosser.podcastplayer.services.ServiceMusic;
-
+import website.julianrosser.podcastplayer.MusicService;
 
 /**
  * A fragment containing a the player / controlls
  */
-public class FragmentPlayer extends android.support.v4.app.Fragment {
+public class PlayerFragment extends android.support.v4.app.Fragment {
 
     private Handler mFastForwardHandler;
     Runnable mFastForwardAction = null;
@@ -71,15 +71,13 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
     // View references
     public static SeekBar seekBar;
     public static ImageButton playPause;
-    public static ImageButton bookmarkSkipPrev;
-    public static ImageButton bookmarkSkipNext;
     public static TextView textSongTitle;
     public static TextView textSongArtist;
     public static TextView textSongCurrent;
     public static TextView textSongLength;
     public static ArrayList<Bookmark> bookmarks;
     public static ProgressBar progressBarLoading;
-    static DialogViewBookmarks dialogView;
+    static ViewBookmarksDialog dialogView;
     int mStackLevel = 0;
     private String SPREF_STRING_POS_FORMATTED = "trackCurrentPosFormatted";
     private String SPREF_INT_POS_SEEKBAR = "trackCurrentPosSeekbar";
@@ -87,15 +85,15 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
     /**
      * Required empty public constructor
      */
-    public FragmentPlayer() {
+    public PlayerFragment() {
     }
 
     /**
      * Returns a new instance of this fragment for the given section
      * number.
      */
-    public static FragmentPlayer newInstance(int sectionNumber) {
-        FragmentPlayer fragment = new FragmentPlayer();
+    public static PlayerFragment newInstance(int sectionNumber) {
+        PlayerFragment fragment = new PlayerFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
@@ -107,7 +105,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
         ContentValues values = new ContentValues();
 
         // Get song
-        AudioFile s = MainActivity.audioFileList.get(ServiceMusic.songPosition);
+        AudioFile s = MainActivity.audioFileList.get(MusicService.songPosition);
 
         // Get String values of names, other info
         values.put(DatabaseOpenHelper.ARTIST_NAME, s.getArtist());
@@ -116,7 +114,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
         values.put(DatabaseOpenHelper.UNIQUE_ID, s.getIDString());
         values.put(DatabaseOpenHelper.BOOKMARK_NOTE, note);
 
-        double songCurrentPos = Double.valueOf(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
+        double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
         values.put(DatabaseOpenHelper.BOOKMARK_MILLIS, ((int) songCurrentPos));
 
         // Format bookmark percent
@@ -138,24 +136,13 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
      * Return an object array which holds all bookmarks for the current song. Set Alpha for skip buttons
      */
     public static void checkForBookmarks() {
-        if (MainActivity.mDbHelper.bookmarkAlreadyExists(MainActivity.audioFileList.get(ServiceMusic.songPosition).getID())) {
+        if (MainActivity.mDbHelper.bookmarkAlreadyExists(MainActivity.audioFileList.get(MusicService.songPosition).getID())) {
 
-            bookmarks = MainActivity.mDbHelper.getBookmarksForCurrentTrack(MainActivity.audioFileList.get(ServiceMusic.songPosition).getID());
+            bookmarks = MainActivity.mDbHelper.getBookmarksForCurrentTrack(MainActivity.audioFileList.get(MusicService.songPosition).getID());
 
             Log.i(TAG, "Bookmarks length: " + bookmarks.size());
 
             // todo use Service.bookmarkArray to populate skippable PlayerFragment array
-            /*
-            bookmarkSkipPrev.setAlpha(1f);
-            bookmarkSkipNext.setAlpha(1f);
-            bookmarkSkipPrev.setClickable(true);
-            bookmarkSkipNext.setClickable(true);
-
-        } else {
-            bookmarkSkipPrev.setAlpha(0.5f);
-            bookmarkSkipNext.setAlpha(0.5f);
-            bookmarkSkipPrev.setClickable(false);
-            bookmarkSkipNext.setClickable(false); // todo - check these */
         }
     }
 
@@ -191,7 +178,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View view) {
 
-                if (MainActivity.musicSrv != null && MainActivity.musicBound && !ServiceMusic.isPreparing) {
+                if (MainActivity.musicSrv != null && MainActivity.musicBound && !MusicService.isPreparing) {
                     // if already playing, pause
                     if (MainActivity.musicSrv.isPng()) {
                         MainActivity.musicSrv.pausePlayer();
@@ -209,7 +196,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
                         playPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
 
                         NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-                        notificationManager.cancel(FragmentPlayer.mNotificationId);
+                        notificationManager.cancel(PlayerFragment.mNotificationId);
                     }
 
                 } else {
@@ -234,10 +221,10 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
         // Set track information if service is initialised
         if (MainActivity.musicBound && MainActivity.musicSrv != null) { // or still loading
 
-            textSongTitle.setText(ServiceMusic.songTitle);
-            textSongArtist.setText(ServiceMusic.songArtist);
-            textSongCurrent.setText(ServiceMusic.songCurrentPosition);
-            textSongLength.setText(ServiceMusic.songDuration);
+            textSongTitle.setText(MusicService.songTitle);
+            textSongArtist.setText(MusicService.songArtist);
+            textSongCurrent.setText(MusicService.songCurrentPosition);
+            textSongLength.setText(MusicService.songDuration);
 
             // set button to play
             if (MainActivity.musicSrv.isPng()) {
@@ -257,9 +244,9 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
             public void run() {
                 System.out.println("Rewinding...");
 
-                int currentMillis = ServiceMusic.mPlayer.getCurrentPosition();
+                int currentMillis = MusicService.mPlayer.getCurrentPosition();
 
-                ServiceMusic.mPlayer.seekTo(currentMillis - AUDIO_SKIP_MILLIS); // todo Check for and prevent - 0ms
+                MusicService.mPlayer.seekTo(currentMillis - AUDIO_SKIP_MILLIS); // todo Check for and prevent - 0ms
 
                 mRewindHandler.postDelayed(this, AUDIO_SKIP_UPDATE_RATE);
             }
@@ -274,12 +261,6 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
                     case MotionEvent.ACTION_DOWN:
 
-//                        try {
-//                            Thread.sleep(800);
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-
                         if (mRewindHandler != null) return true;
                         mRewindHandler = new Handler();
                         mRewindHandler.postDelayed(mRewindAction, AUDIO_SKIP_UPDATE_RATE);
@@ -292,9 +273,9 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
                         if (timeElapsed < AUDIO_LENGTH_TO_SKIP) {
                             // Skip Track, don't rewind
-                            ServiceMusic.loadFromBookmark = false;
+                            MusicService.loadFromBookmark = false;
 
-                            if (ServiceMusic.mPlayer.getCurrentPosition() < 3000) {
+                            if (MusicService.mPlayer.getCurrentPosition() < 3000) {
                                 MainActivity.musicSrv.playPrev();
                             } else {
                                 MainActivity.musicSrv.playCurrent();
@@ -327,9 +308,9 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
             public void run() {
                 System.out.println("FastForward...");
 
-                int currentMillis = ServiceMusic.mPlayer.getCurrentPosition();
+                int currentMillis = MusicService.mPlayer.getCurrentPosition();
 
-                ServiceMusic.mPlayer.seekTo(currentMillis + AUDIO_SKIP_MILLIS);
+                MusicService.mPlayer.seekTo(currentMillis + AUDIO_SKIP_MILLIS);
                 mFastForwardHandler.postDelayed(this, AUDIO_SKIP_UPDATE_RATE);
             }
         };
@@ -361,9 +342,9 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
                         if (timeElapsed < AUDIO_LENGTH_TO_SKIP) {
                             // Skip Track, don't forawrd
-                            ServiceMusic.loadFromBookmark = false;
+                            MusicService.loadFromBookmark = false;
 
-                            if (ServiceMusic.shuffleMode(getActivity())) {
+                            if (MusicService.shuffleMode(getActivity())) {
                                 MainActivity.musicSrv.playRandom();
                             } else {
                                 MainActivity.musicSrv.playNext();
@@ -385,32 +366,14 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
         });
 
-        /* Bookmark listener
-        ImageButton buttonBookmark = (ImageButton) view.findViewById(R.id.mainBookmarkButtonSave);
-        buttonBookmark.setOnClickListener(new View.OnClickListener() {
+        // FloatingActionBar
+        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.floatingActionButton);
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-
+            public void onClick(View v) {
                 showDialog(DIALOG_SAVE_BOOKMARK);
-
             }
         });
-
-        bookmarkSkipPrev = (ImageButton) view.findViewById(R.id.buttonBookmarkSkipPrev);
-        bookmarkSkipPrev.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // todo
-            }
-        });
-
-        bookmarkSkipNext = (ImageButton) view.findViewById(R.id.buttonBookmarkSkipNext);
-        bookmarkSkipNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // todo
-            }
-        }); */
 
         // Seek bar listener
         seekBar = (SeekBar) view.findViewById(R.id.seekBar);
@@ -424,8 +387,8 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
                     MainActivity.musicSrv.seek(i);
 
-                    String formatted = AudioFile.convertTime(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
-                    FragmentPlayer.textSongCurrent.setText(formatted);
+                    String formatted = AudioFile.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+                    PlayerFragment.textSongCurrent.setText(formatted);
                 }
 
             }
@@ -463,7 +426,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
 
         // If playing, show pause button.
-        if (MainActivity.musicBound && ServiceMusic.mPlayer != null && ServiceMusic.mPlayer.isPlaying())
+        if (MainActivity.musicBound && MusicService.mPlayer != null && MusicService.mPlayer.isPlaying())
 
         {
             //noinspection deprecation
@@ -497,7 +460,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
             public void run() {
                 // Ensure Service is initialized
                 for (int i = 0; i < 30; i++) {
-                    if (ServiceMusic.mPlayer == null) {
+                    if (MusicService.mPlayer == null) {
                         Log.i(getClass().getSimpleName(), "Player Progress Tracker - Music Service not initialized: " + i);
                         try {
                             Thread.sleep(200);
@@ -509,7 +472,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
                 Log.i(TAG, "Thread started");
 
                 // update textview while service is alive
-                while (ServiceMusic.mPlayer != null && FragmentPlayer.seekBar != null && !ServiceMusic.exiting) {
+                while (MusicService.mPlayer != null && PlayerFragment.seekBar != null && !MusicService.exiting) {
 
                     try {
                         Thread.sleep(200);
@@ -524,10 +487,10 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
                             public void run() {
                                 // Local reference for millis
 
-                                if (FragmentPlayer.seekBar != null && !ServiceMusic.isPreparing && !ServiceMusic.exiting) {
-                                    FragmentPlayer.seekBar.setProgress(ServiceMusic.getCurrentProgress());
-                                    String formatted = AudioFile.convertTime(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
-                                    FragmentPlayer.textSongCurrent.setText(formatted);
+                                if (PlayerFragment.seekBar != null && !MusicService.isPreparing && !MusicService.exiting) {
+                                    PlayerFragment.seekBar.setProgress(MusicService.getCurrentProgress());
+                                    String formatted = AudioFile.convertTime(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
+                                    PlayerFragment.textSongCurrent.setText(formatted);
                                 }
                             }
                         });
@@ -546,11 +509,11 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
         checkForBookmarks();
 
-        if (ServiceMusic.isPreparing) {
+        if (MusicService.isPreparing) {
             progressBarLoading.setVisibility(View.VISIBLE);
         }
 
-        if (ServiceMusic.mPlayer != null && MainActivity.musicBound) {
+        if (MusicService.mPlayer != null && MainActivity.musicBound) {
 
             // Load position and id of last played
             SharedPreferences sp = getActivity().getSharedPreferences(MainActivity.SPREF_KEY, Activity.MODE_PRIVATE);
@@ -570,7 +533,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
     @Override
     public void onStop() {
         super.onStop();
-        if (!ServiceMusic.exiting) {
+        if (!MusicService.exiting) {
             SharedPreferences sp = getActivity().getSharedPreferences(MainActivity.SPREF_KEY, Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = sp.edit();
             editor.putString(SPREF_STRING_POS_FORMATTED, textSongCurrent.getText().toString());
@@ -613,9 +576,9 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(getActivity())
                         .setSmallIcon(R.drawable.ic_pause_dark)
-                        .setTicker(ServiceMusic.songTitle)
-                        .setContentTitle(ServiceMusic.songTitle)
-                        .setContentText(ServiceMusic.songArtist)
+                        .setTicker(MusicService.songTitle)
+                        .setContentTitle(MusicService.songTitle)
+                        .setContentText(MusicService.songArtist)
                         .setAutoCancel(true);
 
         Intent resultIntent = new Intent(getActivity(), MainActivity.class);
@@ -660,13 +623,13 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
             case DIALOG_VIEW_BOOKMARKS:
 
-                if (!MainActivity.mDbHelper.bookmarkAlreadyExists(MainActivity.audioFileList.get(ServiceMusic.songPosition).getID())) {
-                    Toast.makeText(getActivity(), "No bookmarks saved for 'TRACK_NAME'", Toast.LENGTH_SHORT).show();
+                if (!MainActivity.mDbHelper.bookmarkAlreadyExists(MainActivity.audioFileList.get(MusicService.songPosition).getID())) {
+                    Toast.makeText(getActivity(), "No bookmarks saved for " + MusicService.songTitle, Toast.LENGTH_SHORT).show();
 
                     break;
 
                 } else {
-                    dialogView = (DialogViewBookmarks) DialogViewBookmarks.newInstance(123, getActivity());
+                    dialogView = (ViewBookmarksDialog) ViewBookmarksDialog.newInstance(123, getActivity());
                     dialogView.setTargetFragment(this, DIALOG_VIEW_BOOKMARKS);
                     dialogView.show(getFragmentManager().beginTransaction(), "dialogView");
 
@@ -676,7 +639,7 @@ public class FragmentPlayer extends android.support.v4.app.Fragment {
 
             case DIALOG_SAVE_BOOKMARK:
 
-                DialogFragment dialogFragmentSave = DialogSaveBookmark.newInstance(123, getActivity());
+                DialogFragment dialogFragmentSave = PlayerSaveBookmarkDialog.newInstance(123, getActivity());
                 dialogFragmentSave.setTargetFragment(this, DIALOG_SAVE_BOOKMARK);
                 dialogFragmentSave.show(getFragmentManager().beginTransaction(), "dialogSave");
 
