@@ -1,6 +1,7 @@
 package website.julianrosser.podcastplayer.adapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,16 +11,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.fragments.FragmentNavigationDrawer;
+import website.julianrosser.podcastplayer.fragments.NavDrawerFragment;
 
-public class AdapterNavDrawerList extends BaseAdapter {
+public class NavDrawerListAdapter extends BaseAdapter {
 
     final Typeface fontRobotoMedium;
     public LayoutInflater inflater;
     String[] sections;
     Context mContext;
 
-    public AdapterNavDrawerList(Context c, String[] sectionsInput) {
+    public NavDrawerListAdapter(Context c, String[] sectionsInput) {
 
         inflater = LayoutInflater.from(c);
         mContext = c;
@@ -31,7 +32,7 @@ public class AdapterNavDrawerList extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return FragmentNavigationDrawer.sections.length;
+        return NavDrawerFragment.sections.length;
     }
 
     @Override
@@ -55,6 +56,7 @@ public class AdapterNavDrawerList extends BaseAdapter {
 
             holder.title = (TextView) convertView.findViewById(R.id.navListTitle);
             holder.title.setTypeface(fontRobotoMedium);
+            holder.title.setTextColor(Color.WHITE);
 
             // Get Icon ImageView reference and set NavDrawer icons
             holder.icon = (ImageView) convertView.findViewById(R.id.navListImageViewIcon);

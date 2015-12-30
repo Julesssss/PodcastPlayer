@@ -17,13 +17,13 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
-import website.julianrosser.podcastplayer.activities.MainActivity;
-import website.julianrosser.podcastplayer.services.ServiceMusic;
+import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.fragments.FragmentPlayer;
+import website.julianrosser.podcastplayer.fragments.PlayerFragment;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 
-public class DialogSaveBookmark extends DialogFragment {
+public class PlayerSaveBookmarkDialog extends DialogFragment {
 
     public static MainActivity mActivityContext;
 
@@ -31,7 +31,7 @@ public class DialogSaveBookmark extends DialogFragment {
 
         mActivityContext = (MainActivity) mContext;
 
-        DialogSaveBookmark dialogFragment = new DialogSaveBookmark();
+        PlayerSaveBookmarkDialog dialogFragment = new PlayerSaveBookmarkDialog();
         Bundle bundle = new Bundle();
         bundle.putInt("num", num);
         dialogFragment.setArguments(bundle);
@@ -83,11 +83,11 @@ public class DialogSaveBookmark extends DialogFragment {
                 String note = et.getText().toString();
 
                 // Call method to add bookmark
-                FragmentPlayer.addNewBookmark(note);
+                PlayerFragment.addNewBookmark(note);
 
                 // Get song
-                AudioFile s = MainActivity.audioFileList.get(ServiceMusic.songPosition);
-                double songCurrentPos = Double.valueOf(String.valueOf(ServiceMusic.mPlayer.getCurrentPosition()));
+                AudioFile s = MainActivity.audioFileList.get(MusicService.songPosition);
+                double songCurrentPos = Double.valueOf(String.valueOf(MusicService.mPlayer.getCurrentPosition()));
                 int percentFormatted = (int) ((songCurrentPos / s.getLengthMillis()) * 100);
 
                 // Notify user that the bookmark was saved
@@ -107,7 +107,7 @@ public class DialogSaveBookmark extends DialogFragment {
         builder.setNegativeButton(R.string.dialog_bookmark_negative, null);
 
         // If no bookmarks exist, no need to ask question, so hide checkbox layout
-        if (!MainActivity.mDbHelper.bookmarkAlreadyExists(MainActivity.audioFileList.get(ServiceMusic.songPosition).getID())) {
+        if (!MainActivity.mDbHelper.bookmarkAlreadyExists(MainActivity.audioFileList.get(MusicService.songPosition).getID())) {
 
             final LinearLayout ll = (LinearLayout) v.findViewById(R.id.dialog_bookmark_old_layout);
             ll.setVisibility(View.GONE);

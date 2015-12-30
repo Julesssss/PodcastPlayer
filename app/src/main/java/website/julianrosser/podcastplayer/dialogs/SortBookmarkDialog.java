@@ -10,14 +10,11 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.AbsListView;
 
-import website.julianrosser.podcastplayer.activities.MainActivity;
+import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.R;
 
-public class DialogSortBookmarks extends DialogFragment {
+public class SortBookmarkDialog extends DialogFragment {
 
     public static String DATA_SORTING_KEY = "SortBookmarkFragmentKey";
 
@@ -29,7 +26,7 @@ public class DialogSortBookmarks extends DialogFragment {
 
         mActivityContext = (MainActivity) mContext;
 
-        DialogSortBookmarks dialogFragment = new DialogSortBookmarks();
+        SortBookmarkDialog dialogFragment = new SortBookmarkDialog();
         Bundle bundle = new Bundle();
         bundle.putInt("num", num);
         dialogFragment.setArguments(bundle);

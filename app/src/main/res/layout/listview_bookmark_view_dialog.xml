@@ -1,71 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/layout_dialog_view_list"
-    android:layout_width="match_parent"
-    android:layout_height="48dp"
-    android:background="@drawable/dialog_view_list_selector"
+    android:layout_width="wrap_content"
+    android:layout_height="44dp"
+    android:background="@color/background_material_dark"
+    android:clipToPadding="false"
     android:orientation="horizontal">
 
-    <ImageView
-        android:id="@+id/dialog_view_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:layout_gravity="right"
+    <TextView
+        android:id="@+id/percent_icon"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginBottom="8dp"
         android:layout_marginLeft="16dp"
-        android:paddingBottom="12dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/circle_background"
+        android:clipToPadding="false"
+        android:elevation="6dp"
+        android:gravity="center"
+        android:padding="4dp"
+        android:text="77%"
+        android:textColor="@color/white"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/dialogViewTextFormatted"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:baselineAligned="false"
+        android:singleLine="true"
+        android:text="(4:83)"
+        android:textColor="@color/white"
+        android:textSize="14sp">
+
+    </TextView>
+
+    <ImageView
+        android:id="@+id/delete_icon"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:contentDescription="delete icon"
+        android:paddingBottom="8dp"
+        android:paddingEnd="16dp"
         android:paddingLeft="8dp"
-        android:paddingRight="16dp"
-        android:paddingTop="12dp"
+        android:paddingRight="8dp"
+        android:layout_marginRight="8dp"
+        android:paddingStart="8dp"
+        android:paddingTop="8dp"
         android:src="@drawable/ic_delete_white_18dp" />
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp">
-
-        <TextView
-            android:id="@+id/dialog_view_percent"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
-            android:layout_centerVertical="true"
-            android:background="@drawable/circle_background"
-            android:elevation="6dp"
-            android:gravity="center"
-            android:text="77%"
-            android:textColor="@color/dim_white_text"
-            android:textSize="15sp" />
-
-        <!--
-        <ImageView todo change name here!!!!!!!!!!!!!!!!!
-            android:id="@+id/navListImageViewIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="center"
-            android:layout_marginRight="16dp"
-            android:src="@drawable/ic_headset_white_24dp" />
-            -->
-
-        <TextView
-            android:id="@+id/dialogViewTextFormatted"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="16dp"
-            android:layout_toRightOf="@id/dialog_view_percent"
-            android:baselineAligned="false"
-            android:singleLine="true"
-            android:text="(4:83)"
-            android:textColor="@color/white_light"
-            android:textSize="14sp">
-
-        </TextView>
-
-    </RelativeLayout>
+    <!--</RelativeLayout>-->
 
 
-</RelativeLayout>
+</LinearLayout>

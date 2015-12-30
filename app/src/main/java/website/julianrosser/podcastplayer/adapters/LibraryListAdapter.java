@@ -7,15 +7,15 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import website.julianrosser.podcastplayer.activities.MainActivity;
+import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 
-public class AdapterLibrarySongList extends BaseAdapter {
+public class LibraryListAdapter extends BaseAdapter {
 
     public LayoutInflater inflater;
 
-    public AdapterLibrarySongList(Context c) {
+    public LibraryListAdapter(Context c) {
         inflater = LayoutInflater.from(c);
     }
 
@@ -44,7 +44,7 @@ public class AdapterLibrarySongList extends BaseAdapter {
         if (null == convertView) {
             holder = new ViewHolder();
 
-            convertView = inflater.inflate(R.layout.listview_library, null);
+            convertView = inflater.inflate(R.layout.library_list_item, null);
 
             holder.title = (TextView) convertView.findViewById(R.id.songListTitle);
             holder.artist = (TextView) convertView.findViewById(R.id.songListArtist);

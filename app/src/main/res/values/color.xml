@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#00BCD4</color>
-    <color name="primary_dark">#0097A7</color>
-    <color name="primary_light">#B2EBF2</color>
-    <color name="accent">#FFC107</color>
+    <color name="cyan_100">#B2EBF2</color>
+    <color name="cyan_400">#26c6da</color>
+    <color name="cyan_500">#00BCD4</color>
+    <color name="cyan_700">#0097a7</color>
+
+    <color name="amber_300">#ffd54f</color>
+
+    <color name="white">#fff</color>
+
     <color name="primary_text">#212121</color>
     <color name="secondary_text">#727272</color>
     <color name="light_text">#ffe8e8e8</color>
@@ -23,9 +28,15 @@
     <color name="mat_grey_mid">#303030</color>
     <color name="mat_grey_light">#424242</color>
 
-
-
     <color name="transparent">#00ffffff</color>
+
+    <!-- Material Theme  -->
+    <color name="colorPrimary">@color/cyan_500</color>
+    <color name="colorPrimaryDark">@color/cyan_700</color>
+    <color name="textColorPrimary">#FFFFFF</color>
+    <color name="windowBackground">@color/cyan_500</color>
+    <color name="navigationBarColor">@color/cyan_100</color>
+    <color name="colorAccent">@color/amber_300</color>
 
 
 </resources>
