@@ -29,7 +29,7 @@ import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
-import website.julianrosser.podcastplayer.dialogs.BookmarkSortDialog;
+import website.julianrosser.podcastplayer.dialogs.SortBookmarkDialog;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 
 
@@ -139,7 +139,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
             c = bookmarksByPercent();
         }
 
-        mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.listview_bookmark, c,
+        mAdapter = new SimpleCursorAdapter(getActivity(), R.layout.bookmark_list_item, c,
                 DatabaseOpenHelper.columnsForCursorAdaptor, new int[]{R.id.songListArtist, R.id.songListTitle,
                 R.id.songListPosition, R.id.bookmarkNote, R.id.text_percent}, 0);
 
@@ -218,7 +218,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
             case DIALOG_SORT_BOOKMARK:
 
-                DialogFragment dialogFrag = BookmarkSortDialog.newInstance(123, getActivity());
+                DialogFragment dialogFrag = SortBookmarkDialog.newInstance(123, getActivity());
                 dialogFrag.setTargetFragment(this, DIALOG_SORT_BOOKMARK);
                 dialogFrag.show(getFragmentManager().beginTransaction(), "dialogSort");
 
@@ -233,7 +233,7 @@ public class BookmarkFragment extends android.support.v4.app.Fragment implements
 
                 if (resultCode == Activity.RESULT_OK) {
 
-                    changeBookmarkSorting(data.getExtras().getInt(BookmarkSortDialog.DATA_SORTING_KEY));
+                    changeBookmarkSorting(data.getExtras().getInt(SortBookmarkDialog.DATA_SORTING_KEY));
 
                 } else if (resultCode == Activity.RESULT_CANCELED) {
 

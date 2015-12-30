@@ -8,8 +8,10 @@ TODO
 - Combine Fragment add method to super method
 - Open nowPlayingFragment instead of help, settings
 - DialogViewBookmark delete icon delete, with undo button/toast/thing
+- Takes a second to load bookmarks
 
 Log
+- 30/12 - Added FloatingActionButton. Bookmark ListView layout.
 - 29/12 - Replaced ActionBar with Toolbar.
 - 07/12 - Restarted project. Added Forward and Rewind functionality to ImageButtons.
 

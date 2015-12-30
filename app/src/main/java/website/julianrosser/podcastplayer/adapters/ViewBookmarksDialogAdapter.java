@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -60,13 +60,13 @@ public class ViewBookmarksDialogAdapter extends BaseAdapter {
 
             convertView = inflater.inflate(R.layout.listview_bookmark_view_dialog, null);
 
-            holder.layout_dialog_view_list = (RelativeLayout) convertView.findViewById(R.id.layout_dialog_view_list);
+            holder.layout_dialog_view_list = (LinearLayout) convertView.findViewById(R.id.layout_dialog_view_list);
 
             holder.title = (TextView) convertView.findViewById(R.id.dialogViewTextFormatted);
 
-            holder.percent = (TextView) convertView.findViewById(R.id.dialog_view_percent);
+            holder.percent = (TextView) convertView.findViewById(R.id.percent_icon);
 
-            holder.imageDelete = (ImageView) convertView.findViewById(R.id.dialog_view_image);
+            holder.imageDelete = (ImageView) convertView.findViewById(R.id.delete_icon);
 
             convertView.setTag(holder);
 
@@ -99,7 +99,7 @@ public class ViewBookmarksDialogAdapter extends BaseAdapter {
 
     // classes
     static class ViewHolder {
-        RelativeLayout layout_dialog_view_list;
+        LinearLayout layout_dialog_view_list;
         TextView title;
         TextView percent;
         ImageView imageDelete;

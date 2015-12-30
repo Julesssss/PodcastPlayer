@@ -11,7 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-
         android:orientation="vertical"
         android:paddingBottom="8dp"
         android:paddingLeft="16dp"
@@ -23,7 +22,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="Song title"
             android:textColor="#fff"
             android:textSize="20sp" />
 
@@ -32,7 +30,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="Artist title"
             android:textColor="#ffd7d7d7"
             android:textSize="18sp" />
 
@@ -45,9 +42,9 @@
         android:layout_alignParentBottom="true"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
+        android:clipToPadding="false"
         android:orientation="horizontal"
         android:paddingBottom="8dp"
-        android:clipToPadding="false"
         android:paddingTop="8dp">
 
         <ImageButton
@@ -69,49 +66,28 @@
             android:layout_height="80dp"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@id/buttonPlay"
+            android:layout_toStartOf="@id/buttonPlay"
             android:background="@drawable/circle_background"
+            android:clipToPadding="false"
             android:contentDescription="@string/description_rewind_button"
             android:elevation="4dp"
-            android:clipToPadding="false"
             android:scaleType="fitStart"
             android:src="@drawable/rewind" />
 
-        <ImageButton
-            android:id="@+id/buttonBookmark"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_toLeftOf="@id/buttonRewind"
-            android:background="@color/mat_grey_mid"
-            android:contentDescription="@string/description_rewind_button"
-            android:padding="5sp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/bookmark"
-            android:visibility="invisible" />
 
         <ImageButton
             android:id="@+id/buttonForward"
-            android:clipToPadding="false"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_centerVertical="true"
+            android:layout_toEndOf="@id/buttonPlay"
             android:layout_toRightOf="@id/buttonPlay"
             android:background="@drawable/circle_background"
+            android:clipToPadding="false"
             android:contentDescription="@string/description_forward_button"
             android:elevation="4dp"
             android:scaleType="fitStart"
             android:src="@drawable/forward" />
-
-        <ImageButton
-            android:id="@+id/buttonShuffle"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_toRightOf="@id/buttonForward"
-            android:background="@color/mat_grey_mid"
-            android:contentDescription="@string/description_rewind_button"
-            android:padding="5dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/shuffle"
-            android:visibility="invisible" />
 
     </RelativeLayout>
 
@@ -134,16 +110,20 @@
             android:layout_width="2dp"
             android:layout_height="15dp"
             android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:layout_marginLeft="22dp"
+            android:layout_marginStart="22dp"
             android:background="@color/primary_turq" />
 
         <View
             android:id="@+id/seek_divider_2"
             android:layout_width="2dp"
             android:layout_height="15dp"
+            android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
+            android:layout_marginEnd="22dp"
             android:layout_marginRight="22dp"
             android:background="@color/primary_turq" />
 
@@ -157,68 +137,11 @@
 
     </RelativeLayout>
 
-    <!-- Bookmark Controls -->
-    <RelativeLayout
-        android:id="@+id/bookmarkLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/seekbarLayout"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:paddingBottom="8dp"
-        android:paddingTop="8dp">
-
-        <LinearLayout
-            android:id="@+id/bookmarkSaveLoadLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="invisible"
-            android:layout_centerHorizontal="true">
-
-            <ImageButton
-                android:id="@+id/buttonBookmarkSkipPrev"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/circle_background"
-                android:elevation="4dp"
-                android:padding="1dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/prev" />
-
-            <ImageButton
-                android:id="@+id/mainBookmarkButtonSave"
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:layout_marginLeft="3dp"
-                android:layout_marginRight="3dp"
-                android:background="@drawable/circle_background"
-                android:elevation="4dp"
-                android:padding="1dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/bookmark" />
-
-            <ImageButton
-                android:id="@+id/buttonBookmarkSkipNext"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/circle_background"
-                android:elevation="4dp"
-                android:padding="1dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/next" />
-
-
-        </LinearLayout>
-
-    </RelativeLayout>
-
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/bookmarkLayout"
+        android:layout_above="@id/seekbarLayout"
         android:layout_below="@id/songInformation"
         android:contentDescription="@string/image_audio_dsc"
         android:padding="16dp"
@@ -232,9 +155,10 @@
         android:layout_height="wrap_content"
         android:layout_above="@id/seekbarLayout"
         android:layout_alignLeft="@id/seekbarLayout"
+        android:layout_alignStart="@id/seekbarLayout"
         android:layout_marginBottom="4dp"
         android:layout_marginLeft="16dp"
-        android:text="0:00"
+        android:layout_marginStart="16dp"
         android:textColor="@color/white_light"
         android:textSize="13sp" />
 
@@ -243,10 +167,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@id/seekbarLayout"
+        android:layout_alignEnd="@id/seekbarLayout"
         android:layout_alignRight="@id/seekbarLayout"
         android:layout_marginBottom="4dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
-        android:text="0:00"
         android:textColor="@color/white_light"
         android:textSize="13sp" />
 
@@ -258,5 +183,18 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:visibility="invisible" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/textSongTimeLength"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:elevation="6dp"
+        android:src="@drawable/ic_bookmark_border_white_18dp" />
 
 </RelativeLayout>

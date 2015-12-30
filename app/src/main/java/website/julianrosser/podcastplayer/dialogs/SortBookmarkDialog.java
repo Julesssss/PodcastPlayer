@@ -14,7 +14,7 @@ import android.util.Log;
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.R;
 
-public class BookmarkSortDialog extends DialogFragment {
+public class SortBookmarkDialog extends DialogFragment {
 
     public static String DATA_SORTING_KEY = "SortBookmarkFragmentKey";
 
@@ -26,7 +26,7 @@ public class BookmarkSortDialog extends DialogFragment {
 
         mActivityContext = (MainActivity) mContext;
 
-        BookmarkSortDialog dialogFragment = new BookmarkSortDialog();
+        SortBookmarkDialog dialogFragment = new SortBookmarkDialog();
         Bundle bundle = new Bundle();
         bundle.putInt("num", num);
         dialogFragment.setArguments(bundle);

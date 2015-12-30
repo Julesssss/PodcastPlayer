@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -38,12 +39,11 @@ import java.util.ArrayList;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.dialogs.PlayerSaveBookmarkDialog;
-import website.julianrosser.podcastplayer.dialogs.BookmarkViewDialog;
+import website.julianrosser.podcastplayer.dialogs.ViewBookmarksDialog;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 import website.julianrosser.podcastplayer.objects.Bookmark;
 import website.julianrosser.podcastplayer.MusicService;
-
 
 /**
  * A fragment containing a the player / controlls
@@ -71,15 +71,13 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
     // View references
     public static SeekBar seekBar;
     public static ImageButton playPause;
-    public static ImageButton bookmarkSkipPrev;
-    public static ImageButton bookmarkSkipNext;
     public static TextView textSongTitle;
     public static TextView textSongArtist;
     public static TextView textSongCurrent;
     public static TextView textSongLength;
     public static ArrayList<Bookmark> bookmarks;
     public static ProgressBar progressBarLoading;
-    static BookmarkViewDialog dialogView;
+    static ViewBookmarksDialog dialogView;
     int mStackLevel = 0;
     private String SPREF_STRING_POS_FORMATTED = "trackCurrentPosFormatted";
     private String SPREF_INT_POS_SEEKBAR = "trackCurrentPosSeekbar";
@@ -145,17 +143,6 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
             Log.i(TAG, "Bookmarks length: " + bookmarks.size());
 
             // todo use Service.bookmarkArray to populate skippable PlayerFragment array
-            /*
-            bookmarkSkipPrev.setAlpha(1f);
-            bookmarkSkipNext.setAlpha(1f);
-            bookmarkSkipPrev.setClickable(true);
-            bookmarkSkipNext.setClickable(true);
-
-        } else {
-            bookmarkSkipPrev.setAlpha(0.5f);
-            bookmarkSkipNext.setAlpha(0.5f);
-            bookmarkSkipPrev.setClickable(false);
-            bookmarkSkipNext.setClickable(false); // todo - check these */
         }
     }
 
@@ -379,32 +366,14 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
 
         });
 
-        /* Bookmark listener
-        ImageButton buttonBookmark = (ImageButton) view.findViewById(R.id.mainBookmarkButtonSave);
-        buttonBookmark.setOnClickListener(new View.OnClickListener() {
+        // FloatingActionBar
+        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.floatingActionButton);
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-
+            public void onClick(View v) {
                 showDialog(DIALOG_SAVE_BOOKMARK);
-
             }
         });
-
-        bookmarkSkipPrev = (ImageButton) view.findViewById(R.id.buttonBookmarkSkipPrev);
-        bookmarkSkipPrev.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // todo
-            }
-        });
-
-        bookmarkSkipNext = (ImageButton) view.findViewById(R.id.buttonBookmarkSkipNext);
-        bookmarkSkipNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // todo
-            }
-        }); */
 
         // Seek bar listener
         seekBar = (SeekBar) view.findViewById(R.id.seekBar);
@@ -660,7 +629,7 @@ public class PlayerFragment extends android.support.v4.app.Fragment {
                     break;
 
                 } else {
-                    dialogView = (BookmarkViewDialog) BookmarkViewDialog.newInstance(123, getActivity());
+                    dialogView = (ViewBookmarksDialog) ViewBookmarksDialog.newInstance(123, getActivity());
                     dialogView.setTargetFragment(this, DIALOG_VIEW_BOOKMARKS);
                     dialogView.show(getFragmentManager().beginTransaction(), "dialogView");
 

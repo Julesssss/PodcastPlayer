@@ -1,6 +1,7 @@
 package website.julianrosser.podcastplayer.adapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -55,6 +56,7 @@ public class NavDrawerListAdapter extends BaseAdapter {
 
             holder.title = (TextView) convertView.findViewById(R.id.navListTitle);
             holder.title.setTypeface(fontRobotoMedium);
+            holder.title.setTextColor(Color.WHITE);
 
             // Get Icon ImageView reference and set NavDrawer icons
             holder.icon = (ImageView) convertView.findViewById(R.id.navListImageViewIcon);

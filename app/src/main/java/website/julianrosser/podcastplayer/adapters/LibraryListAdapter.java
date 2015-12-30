@@ -44,7 +44,7 @@ public class LibraryListAdapter extends BaseAdapter {
         if (null == convertView) {
             holder = new ViewHolder();
 
-            convertView = inflater.inflate(R.layout.listview_library, null);
+            convertView = inflater.inflate(R.layout.library_list_item, null);
 
             holder.title = (TextView) convertView.findViewById(R.id.songListTitle);
             holder.artist = (TextView) convertView.findViewById(R.id.songListArtist);
