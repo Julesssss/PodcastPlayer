@@ -15,10 +15,10 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.activities.MainActivity;
-import website.julianrosser.podcastplayer.adapters.AdapterDialogViewBookmarks;
+import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.adapters.ViewBookmarksDialogAdapter;
 
-public class DialogViewBookmarks extends DialogFragment {
+public class BookmarkViewDialog extends DialogFragment {
 
     public static String DATA_SORTING_KEY = "ViewBookmarksFragmentKey";
 
@@ -31,7 +31,7 @@ public class DialogViewBookmarks extends DialogFragment {
 
         mActivityContext = (MainActivity) mContext;
 
-        DialogViewBookmarks dialogFragment = new DialogViewBookmarks();
+        BookmarkViewDialog dialogFragment = new BookmarkViewDialog();
         Bundle bundle = new Bundle();
         bundle.putInt("num", num);
         dialogFragment.setArguments(bundle);
@@ -52,7 +52,7 @@ public class DialogViewBookmarks extends DialogFragment {
         View v = inflater.inflate(R.layout.dialog_bookmark_view, null);
 
         ListView listView = (ListView) v.findViewById(R.id.nowplaying_dialog_view_listview);
-        listView.setAdapter(new AdapterDialogViewBookmarks(getActivity(), builder.create()));
+        listView.setAdapter(new ViewBookmarksDialogAdapter(getActivity(), builder.create()));
 
         builder.setView(v);
 

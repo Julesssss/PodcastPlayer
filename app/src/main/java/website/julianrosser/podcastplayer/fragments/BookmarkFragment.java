@@ -25,11 +25,11 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import website.julianrosser.podcastplayer.activities.MainActivity;
-import website.julianrosser.podcastplayer.services.ServiceMusic;
+import website.julianrosser.podcastplayer.MainActivity;
+import website.julianrosser.podcastplayer.MusicService;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
-import website.julianrosser.podcastplayer.dialogs.DialogSortBookmarks;
+import website.julianrosser.podcastplayer.dialogs.BookmarkSortDialog;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 
 
@@ -42,7 +42,7 @@ import website.julianrosser.podcastplayer.objects.AudioFile;
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
-public class FragmentBookmark extends android.support.v4.app.Fragment implements AbsListView.OnItemClickListener {
+public class BookmarkFragment extends android.support.v4.app.Fragment implements AbsListView.OnItemClickListener {
 
     public static final int DIALOG_SORT_BOOKMARK = 300;
     private static final String ARG_SECTION_NUMBER = "bookmark";
@@ -60,11 +60,11 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
-    public FragmentBookmark() {
+    public BookmarkFragment() {
     }
 
-    public static FragmentBookmark newInstance(int sectionNumber) {
-        FragmentBookmark fragment = new FragmentBookmark();
+    public static BookmarkFragment newInstance(int sectionNumber) {
+        BookmarkFragment fragment = new BookmarkFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
@@ -218,7 +218,7 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
 
             case DIALOG_SORT_BOOKMARK:
 
-                DialogFragment dialogFrag = DialogSortBookmarks.newInstance(123, getActivity());
+                DialogFragment dialogFrag = BookmarkSortDialog.newInstance(123, getActivity());
                 dialogFrag.setTargetFragment(this, DIALOG_SORT_BOOKMARK);
                 dialogFrag.show(getFragmentManager().beginTransaction(), "dialogSort");
 
@@ -233,7 +233,7 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
 
                 if (resultCode == Activity.RESULT_OK) {
 
-                    changeBookmarkSorting(data.getExtras().getInt(DialogSortBookmarks.DATA_SORTING_KEY));
+                    changeBookmarkSorting(data.getExtras().getInt(BookmarkSortDialog.DATA_SORTING_KEY));
 
                 } else if (resultCode == Activity.RESULT_CANCELED) {
 
@@ -302,37 +302,37 @@ public class FragmentBookmark extends android.support.v4.app.Fragment implements
         if (matched) {
 
             MainActivity.firstSongPlayed = true;
-            ServiceMusic.loadFromBookmark = false;
+            MusicService.loadFromBookmark = false;
 
             // Load song and start
             MainActivity.musicSrv.setSongAtPos(songTrackPos);
 
             // Seek to
-            ServiceMusic.millisecondToSeekTo = Integer.valueOf(returnedData[1]);
+            MusicService.millisecondToSeekTo = Integer.valueOf(returnedData[1]);
 
             Log.i("BookmarkFragment", "Song found, now playing");
 
-            FragmentNavigationDrawer.mDrawerListView.setItemChecked(0, true);
+            NavDrawerFragment.mDrawerListView.setItemChecked(0, true);
 
 
 
             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
 
-            if (MainActivity.fragmentPlayer == null) {
-                MainActivity.fragmentPlayer = FragmentPlayer.newInstance(position + 1);
+            if (MainActivity.playerFragment == null) {
+                MainActivity.playerFragment = PlayerFragment.newInstance(position + 1);
             } else {
                 MainActivity.mTitle = "Now Playing";
             }
 
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, MainActivity.fragmentPlayer)
+                    .replace(R.id.container, MainActivity.playerFragment)
                     .commit();
 
             // Update ActionBar title
             getActionBar().setTitle(getString(R.string.title_section1));
 
             // update textviews
-            ServiceMusic.updateTextViews();
+            MusicService.updateTextViews();
 
         } else {
             Toast.makeText(getActivity(), "Song not found, file may have been moved or renamed", Toast.LENGTH_SHORT).show();

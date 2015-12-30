@@ -1,4 +1,4 @@
-package website.julianrosser.podcastplayer.activities;
+package website.julianrosser.podcastplayer;
 
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -36,19 +36,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.fragments.FragmentBookmark;
-import website.julianrosser.podcastplayer.fragments.FragmentHelp;
+import website.julianrosser.podcastplayer.fragments.BookmarkFragment;
+import website.julianrosser.podcastplayer.fragments.HelpFragment;
 import website.julianrosser.podcastplayer.fragments.FragmentLibrary;
-import website.julianrosser.podcastplayer.fragments.FragmentNavigationDrawer;
-import website.julianrosser.podcastplayer.fragments.FragmentPlayer;
-import website.julianrosser.podcastplayer.fragments.FragmentPreferences;
+import website.julianrosser.podcastplayer.fragments.NavDrawerFragment;
+import website.julianrosser.podcastplayer.fragments.PlayerFragment;
+import website.julianrosser.podcastplayer.fragments.PreferencesFragment;
 import website.julianrosser.podcastplayer.helpers.DatabaseOpenHelper;
 import website.julianrosser.podcastplayer.objects.AudioFile;
-import website.julianrosser.podcastplayer.services.ServiceMusic;
 
 public class MainActivity extends AppCompatActivity
-        implements FragmentNavigationDrawer.NavigationDrawerCallbacks, FragmentHelp.OnFragmentInteractionListener, FragmentPreferences.OnFragmentInteractionListener, FragmentLibrary.OnFragmentInteractionListener, FragmentBookmark.OnFragmentInteractionListener {
+        implements NavDrawerFragment.NavigationDrawerCallbacks, HelpFragment.OnFragmentInteractionListener, PreferencesFragment.OnFragmentInteractionListener, FragmentLibrary.OnFragmentInteractionListener, BookmarkFragment.OnFragmentInteractionListener {
 
 
     private static final BitmapFactory.Options sBitmapOptionsCache = new BitmapFactory.Options();
@@ -65,13 +63,13 @@ public class MainActivity extends AppCompatActivity
 
     public static boolean firstSongPlayed = false;
     // Reference to music service
-    public static ServiceMusic musicSrv;
+    public static MusicService musicSrv;
     // Reference to PlayerFragment
-    public static FragmentPlayer fragmentPlayer;
-    public static FragmentBookmark fragmentBookmark;
+    public static PlayerFragment playerFragment;
+    public static BookmarkFragment bookmarkFragment;
     public static FragmentLibrary fragmentLibrary;
-    public static FragmentPreferences fragmentPreferences;
-    public static FragmentHelp fragmentHelp;
+    public static PreferencesFragment preferencesFragment;
+    public static HelpFragment helpFragment;
 
 
     // Used to store the last screen title. For use in {@link #restoreActionBar()}.
@@ -96,7 +94,7 @@ public class MainActivity extends AppCompatActivity
     // Intent used for binding service to Activity
     private Intent playIntent;
     // Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-    private FragmentNavigationDrawer mFragmentNavigationDrawer;
+    private NavDrawerFragment mNavDrawerFragment;
     /**
      * connect to the service
      */
@@ -105,7 +103,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.i(TAG, "onServiceConnected");
-            ServiceMusic.MusicBinder binder = (ServiceMusic.MusicBinder) service;
+            MusicService.MusicBinder binder = (MusicService.MusicBinder) service;
             // Get service
             musicSrv = binder.getService();
             // Pass song list to - Should I check for empty list here?
@@ -115,28 +113,28 @@ public class MainActivity extends AppCompatActivity
 
 
             // Check that songs exist on device
-            if (audioFileList.size() > 0 && ServiceMusic.mPlayer != null) {
+            if (audioFileList.size() > 0 && MusicService.mPlayer != null) {
 
                 // Check if this is first open (Or error with last played song)
                 if (lastPlayedListPosition == -1 || lastPlayedCurrentPosition == -1) {
                     // First time
                     MainActivity.musicSrv.setSongAtPosButDontPlay(0);
                 } else {
-                    if (!ServiceMusic.mPlayer.isPlaying()) {
+                    if (!MusicService.mPlayer.isPlaying()) {
 
                         MainActivity.firstPreparedSong = true;
 
-                        ServiceMusic.millisecondToSeekTo = lastPlayedCurrentPosition;
+                        MusicService.millisecondToSeekTo = lastPlayedCurrentPosition;
 
                         MainActivity.musicSrv.setSongAtPosButDontPlay(lastPlayedListPosition);
 
-                        if (MainActivity.musicSrv != null && FragmentPlayer.seekBar != null) {
-                            FragmentPlayer.seekBar.setProgress((int) ServiceMusic.songBookmarkSeekPosition);
-                            FragmentPlayer.textSongCurrent.setText(AudioFile.convertTime(String.valueOf(ServiceMusic.millisecondToSeekTo)));
+                        if (MainActivity.musicSrv != null && PlayerFragment.seekBar != null) {
+                            PlayerFragment.seekBar.setProgress((int) MusicService.songBookmarkSeekPosition);
+                            PlayerFragment.textSongCurrent.setText(AudioFile.convertTime(String.valueOf(MusicService.millisecondToSeekTo)));
                         }
                     } else {
                         // Already playing, so just set TextViews
-                        ServiceMusic.updateTextViews();
+                        MusicService.updateTextViews();
                     }
                 }
             }
@@ -280,11 +278,11 @@ public class MainActivity extends AppCompatActivity
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         // Get Navigation Drawer reference
-        mFragmentNavigationDrawer = (FragmentNavigationDrawer)
+        mNavDrawerFragment = (NavDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
 
         // Set up the navigation drawer.
-        mFragmentNavigationDrawer.setUp(
+        mNavDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
@@ -310,7 +308,7 @@ public class MainActivity extends AppCompatActivity
             // todo - now don't load from bookmark
         }
 
-        ServiceMusic.exiting = false;
+        MusicService.exiting = false;
 
     }
 
@@ -324,7 +322,7 @@ public class MainActivity extends AppCompatActivity
 
         // if already alive, just bind
         if (playIntent == null) {
-            playIntent = new Intent(this, ServiceMusic.class);
+            playIntent = new Intent(this, MusicService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
         } else {
@@ -353,16 +351,16 @@ public class MainActivity extends AppCompatActivity
         exitApp();
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(FragmentPlayer.mNotificationId);
+        notificationManager.cancel(PlayerFragment.mNotificationId);
     }
 
     public void saveSharedPreferences() {
 
-        if (!ServiceMusic.exiting && ServiceMusic.mPlayer != null) {
+        if (!MusicService.exiting && MusicService.mPlayer != null) {
             SharedPreferences sp = getSharedPreferences(SPREF_KEY, Activity.MODE_PRIVATE);
             SharedPreferences.Editor editor = sp.edit();
-            editor.putInt(SPREF_INT_CURRENT_POSITION, ServiceMusic.mPlayer.getCurrentPosition());
-            editor.putInt(SPREF_INT_LIST_POSITION, ServiceMusic.songPosition);
+            editor.putInt(SPREF_INT_CURRENT_POSITION, MusicService.mPlayer.getCurrentPosition());
+            editor.putInt(SPREF_INT_LIST_POSITION, MusicService.songPosition);
             editor.putInt(SPREF_INT_BOOKMARK_ORDER, bookmarkSortInt);
             editor.apply();
         }
@@ -373,9 +371,9 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void onBackPressed() {
-        Log.i(TAG, "NOW, NOW - Fragment active: " + !fragmentPlayer.isFragmentUIActive());
+        Log.i(TAG, "NOW, NOW - Fragment active: " + !playerFragment.isFragmentUIActive());
 
-        if (!fragmentPlayer.isFragmentUIActive()) {
+        if (!playerFragment.isFragmentUIActive()) {
             super.onBackPressed();
 
         } else {
@@ -502,11 +500,11 @@ public class MainActivity extends AppCompatActivity
 
         if (i == 0) {
             // If already exists, use. else get new
-            if (fragmentPlayer == null) {
-                fragmentPlayer = FragmentPlayer.newInstance(i + 1);
+            if (playerFragment == null) {
+                playerFragment = PlayerFragment.newInstance(i + 1);
             }
 
-            newFragment = fragmentPlayer;
+            newFragment = playerFragment;
         }
     }
 
@@ -517,17 +515,17 @@ public class MainActivity extends AppCompatActivity
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        if (fragmentPlayer == null) {
-            fragmentPlayer = FragmentPlayer.newInstance(position + 1);
+        if (playerFragment == null) {
+            playerFragment = PlayerFragment.newInstance(position + 1);
         } else {
             mTitle = "Now Playing";
         }
 
-        if (fragmentPlayer.isVisible()) {
+        if (playerFragment.isVisible()) {
             // do nothing
         } else {
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, fragmentPlayer)
+                    .replace(R.id.container, playerFragment)
                     .commit();
         }
 
@@ -540,25 +538,25 @@ public class MainActivity extends AppCompatActivity
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        if (fragmentBookmark == null) {
-            fragmentBookmark = FragmentBookmark.newInstance(position + 1);
+        if (bookmarkFragment == null) {
+            bookmarkFragment = BookmarkFragment.newInstance(position + 1);
         } else {
             mTitle = "Bookmarks";
         }
 
-        if (fragmentPlayer.isFragmentUIActive()) {
+        if (playerFragment.isFragmentUIActive()) {
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, fragmentBookmark)
+                    .replace(R.id.container, bookmarkFragment)
                     .addToBackStack("bookmarkFragment")
                     .commit();
 
             // If desired IS current, ignore
-        } else if (fragmentBookmark.isVisible()) {
+        } else if (bookmarkFragment.isVisible()) {
             // do nothing
 
         } else {
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, fragmentBookmark)
+                    .replace(R.id.container, bookmarkFragment)
                     .commit();
         }
 
@@ -577,7 +575,7 @@ public class MainActivity extends AppCompatActivity
             mTitle = "Library"; // todo - strings refffff
         }
 
-        if (fragmentPlayer.isFragmentUIActive()) {
+        if (playerFragment.isFragmentUIActive()) {
             fragmentManager.beginTransaction()
                     .replace(R.id.container, fragmentLibrary)
                     .addToBackStack("libraryFragment")
@@ -601,25 +599,25 @@ public class MainActivity extends AppCompatActivity
     private void getNewPreferenceFragment(int position) {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        if (fragmentPreferences == null) {
-            fragmentPreferences = FragmentPreferences.newInstance(position + 1);
+        if (preferencesFragment == null) {
+            preferencesFragment = PreferencesFragment.newInstance(position + 1);
         } else {
             mTitle = "Settings";
         }
 
-        if (fragmentPlayer.isFragmentUIActive()) {
+        if (playerFragment.isFragmentUIActive()) {
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, fragmentPreferences)
+                    .replace(R.id.container, preferencesFragment)
                     .addToBackStack("prefFragment")
                     .commit();
 
             // If desired IS current, ignore
-        } else if (fragmentPreferences.isVisible()) {
+        } else if (preferencesFragment.isVisible()) {
             // do nothing
 
         } else {
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, fragmentPreferences)
+                    .replace(R.id.container, preferencesFragment)
                     .commit();
         }
     }
@@ -630,32 +628,32 @@ public class MainActivity extends AppCompatActivity
     private void getNewHelpFragment(int position) {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
-        if (fragmentHelp == null) {
-            fragmentHelp = FragmentHelp.newInstance(position + 1);
+        if (helpFragment == null) {
+            helpFragment = HelpFragment.newInstance(position + 1);
         } else {
             mTitle = "Help";
         }
 
-        if (fragmentPlayer.isFragmentUIActive()) {
+        if (playerFragment.isFragmentUIActive()) {
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, fragmentHelp)
+                    .replace(R.id.container, helpFragment)
                     .addToBackStack("helpFragment")
                     .commit();
 
             // If desired IS current, ignore
-        } else if (fragmentHelp.isVisible()) {
+        } else if (helpFragment.isVisible()) {
             // do nothing
 
         } else {
             fragmentManager.beginTransaction()
-                    .replace(R.id.container, fragmentHelp)
+                    .replace(R.id.container, helpFragment)
                     .commit();
         }
     }
 
     public void exitApp() {
 
-        ServiceMusic.exiting = true;
+        MusicService.exiting = true;
 
         if (musicConnection != null && musicBound) {
             musicSrv.onDestroy();
@@ -668,7 +666,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(FragmentPlayer.mNotificationId);
+        notificationManager.cancel(PlayerFragment.mNotificationId);
 
         finish();
     }
@@ -710,7 +708,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (!mFragmentNavigationDrawer.isDrawerOpen()) {
+        if (!mNavDrawerFragment.isDrawerOpen()) {
             // Only show items in the action bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
             // decide what to show in the action bar.

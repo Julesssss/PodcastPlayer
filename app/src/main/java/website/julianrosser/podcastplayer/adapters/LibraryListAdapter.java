@@ -7,15 +7,15 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import website.julianrosser.podcastplayer.activities.MainActivity;
+import website.julianrosser.podcastplayer.MainActivity;
 import website.julianrosser.podcastplayer.R;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 
-public class AdapterLibrarySongList extends BaseAdapter {
+public class LibraryListAdapter extends BaseAdapter {
 
     public LayoutInflater inflater;
 
-    public AdapterLibrarySongList(Context c) {
+    public LibraryListAdapter(Context c) {
         inflater = LayoutInflater.from(c);
     }
 

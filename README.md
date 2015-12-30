@@ -4,15 +4,15 @@ Android application for bookmarking Audiobooks & podcasts. Easily track progress
 ![](http://julianrosser.website/images/app_screenshots/pp_9.png) ![](http://julianrosser.website/images/app_screenshots/pp_8.png)
 
 TODO
+- Pause/Play on PhoneCall
 - Combine Fragment add method to super method
 - Open nowPlayingFragment instead of help, settings
 - DialogViewBookmark delete icon delete, with undo button/toast/thing
-- on Phone call, music plays
-- hide nav drawer fragment if other opened
 
 Log
 - 29/12 - Replaced ActionBar with Toolbar.
 - 07/12 - Restarted project. Added Forward and Rewind functionality to ImageButtons.
+
 - 06/08 - DialogViewBookmark custom list adapter. UI: Add bookmark using icon. List listener to close dialog. Background drawable for onClick. Delete icon listener.
 - 05/08 - Bookmark class. ViewBMDialog adapter. Fragment navigation, & back stack. Converted shuffle & play mode to prefs. Preference Fragment, ext support library & xml. Fragment titles.
 - 04/08 - UI redesign, functionality & Dialog for managing Bookmarks in FragmentNowPlaying. Restructured packages, renamed Classes.

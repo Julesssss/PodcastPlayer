@@ -16,9 +16,9 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.activities.MainActivity;
+import website.julianrosser.podcastplayer.MainActivity;
 
-public class FragmentPreferences extends PreferenceFragment {
+public class PreferencesFragment extends PreferenceFragment {
 
 
     public ListView lv;
@@ -26,8 +26,8 @@ public class FragmentPreferences extends PreferenceFragment {
 
     private static final String ARG_SECTION_NUMBER = "section_number";
 
-    public static FragmentPreferences newInstance(int sectionNumber) {
-        FragmentPreferences fragment = new FragmentPreferences();
+    public static PreferencesFragment newInstance(int sectionNumber) {
+        PreferencesFragment fragment = new PreferencesFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);

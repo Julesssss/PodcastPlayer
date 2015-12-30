@@ -13,18 +13,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import website.julianrosser.podcastplayer.R;
-import website.julianrosser.podcastplayer.fragments.FragmentPlayer;
+import website.julianrosser.podcastplayer.fragments.PlayerFragment;
 import website.julianrosser.podcastplayer.objects.AudioFile;
 import website.julianrosser.podcastplayer.objects.Bookmark;
 
-public class AdapterDialogViewBookmarks extends BaseAdapter {
+public class ViewBookmarksDialogAdapter extends BaseAdapter {
 
     final Typeface fontRobotoRegular;
     public LayoutInflater inflater;
     Context mContext;
     AlertDialog parentDialog;
 
-    public AdapterDialogViewBookmarks(Context c, AlertDialog alertDialog) {
+    public ViewBookmarksDialogAdapter(Context c, AlertDialog alertDialog) {
 
         parentDialog =alertDialog;
         inflater = LayoutInflater.from(c);
@@ -36,7 +36,7 @@ public class AdapterDialogViewBookmarks extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return FragmentPlayer.bookmarks.size();
+        return PlayerFragment.bookmarks.size();
     }
 
     @Override
@@ -53,7 +53,7 @@ public class AdapterDialogViewBookmarks extends BaseAdapter {
     public View getView(final int position, View convertView, ViewGroup viewGroup) {
         final ViewHolder holder;
 
-        Bookmark b = FragmentPlayer.bookmarks.get(position);
+        Bookmark b = PlayerFragment.bookmarks.get(position);
 
         if (null == convertView) {
             holder = new ViewHolder();
