@@ -1,8 +1,8 @@
 # PodcastPlayer 0.3
 Android application for bookmarking Audiobooks & podcasts. Easily track progress of multiple audiobooks and shows.
 
-![](http://i.imgur.com/RMmonpJ.png) ![](http://i.imgur.com/vVlcJgd.png)
-![](http://i.imgur.com/P8NQIcI.png)![](http://i.imgur.com/BNtsSB8.png)
+![](http://i.imgur.com/lQfHS0U.png) ![](http://i.imgur.com/lf4h5Z0.png)
+![](http://i.imgur.com/DB1JhCY.png)![](http://i.imgur.com/L264zz1.png)
 
 TODO
 - Pause/Play on PhoneCall
